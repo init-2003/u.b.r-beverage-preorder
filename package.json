@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "node scripts/run-next.js dev",
     "build": "next build",
-    "start": "next start",
+    "start": "node scripts/run-next.js start",
     "lint": "eslint",
     "slip-service": "\"C:\\Users\\Windows11\\AppData\\Local\\Programs\\Python\\Python314\\python.exe\" -m uvicorn python-service.main:app --host 127.0.0.1 --port 8000"
   },

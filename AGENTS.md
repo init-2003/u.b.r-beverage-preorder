@@ -157,6 +157,9 @@ This document provides developer and AI agent instructions, system architecture,
 
 ## 5. Development & Testing Commands
 
-- **Dev Server**: `npm run dev` (starts on `http://localhost:3000`)
+- **Dev Server**: `npm run dev` (port ตาม `PORT` ใน `.env` ปัจจุบัน `http://localhost:3001`)
+  - `dev`/`start` รันผ่าน `scripts/run-next.js` ซึ่งเรียก `loadEnvConfig` จาก `@next/env` **ก่อน** ส่งต่อให้ Next.js CLI
+  - เหตุผล: ตัว CLI อ่าน `process.env.PORT` ตอน parse args *ก่อน* ที่ Next.js จะโหลด `.env` ( loader รันใน child process ทีหลัง) ทำให้ `PORT=` ใน `.env` ไม่มีผลถ้ารัน `next dev` ตรง ๆ
+  - แก้พอร์ต = แก้ `.env` อย่างเดียว (ค่ามากสุด: OS env > `.env.local` > `.env`)
 - **Build Verification**: `cmd /c npm.cmd run build` (Turbopack production build)
 - **Linting**: `npm run lint`
