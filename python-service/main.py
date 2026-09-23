@@ -25,7 +25,7 @@ def startup_event():
     try:
         print("[Microservice] Warming up RapidOCR model...")
         get_ocr()
-        print("[Microservice] Ready to accept slip verification requests on http://127.0.0.1:8000")
+        print("[Microservice] Ready to accept slip verification requests (OCR warmed up - port ดูตาม uvicorn log)")
     except Exception as e:
         print(f"[Microservice] Warning: OCR warmup encountered error: {e}")
 

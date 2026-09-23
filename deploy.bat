@@ -20,6 +20,8 @@ set "PROJECT_DIR=%~dp0"
 set "DEPLOY_DIR="
 for /f "usebackq delims=" %%A in (`node "%PROJECT_DIR%scripts\resolve-deploy-dir.js"`) do set "DEPLOY_DIR=%%A"
 if not defined DEPLOY_DIR set "DEPLOY_DIR=%PROJECT_DIR%"
+set "SLIP_PORT=8000"
+for /f "tokens=1,* delims==" %%A in ('findstr /b /c:"SLIP_SERVICE_PORT=" "%PROJECT_DIR%.env"') do set "SLIP_PORT=%%B"
 
 set "INPLACE=0"
 set "PDIR=%PROJECT_DIR:~0,-1%"
@@ -112,7 +114,7 @@ echo    Deploy สำเร็จ!
 echo =========================================================
 echo.
 echo    Next.js Server : http://localhost:3001
-echo    Slip Service   : http://127.0.0.1:8000
+echo    Slip Service   : http://127.0.0.1:%SLIP_PORT%
 echo    IIS Proxy      : http://localhost (or your domain)
 echo.
 echo    PM2 Commands:

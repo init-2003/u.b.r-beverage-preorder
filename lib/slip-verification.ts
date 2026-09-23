@@ -349,7 +349,9 @@ export async function verifySlipViaPythonMicroservice(
   imageBuffer: Buffer,
   expectedAmount?: number
 ): Promise<SlipVerificationFullResult | null> {
-  const serviceUrl = process.env.SLIP_VERIFIER_URL || 'http://127.0.0.1:8000';
+  // พอร์ตอ่านจาก .env (SLIP_SERVICE_PORT) — SLIP_VERIFIER_URL ให้ทับได้ (pm2 จะเซ็คให้เอง)
+  const serviceUrl =
+    process.env.SLIP_VERIFIER_URL || `http://127.0.0.1:${process.env.SLIP_SERVICE_PORT || '8000'}`;
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 3500);
 
