@@ -77,6 +77,7 @@ This document provides developer and AI agent instructions, system architecture,
   - Can only be viewed/printed/downloaded (`/orders/[docNo]/view-purchase-order`) when `Doc_Sts = '3'` (`ออกใบเสร็จแล้ว`).
   - When `Doc_Sts` is not `'3'`, the print button is hidden from the order details page, and direct access to `/view-purchase-order` shows a notification informing that the receipt must be issued first.
 - Slip upload endpoint: `/api/upload` (validates that image contains a readable QR code and matches the order amount before saving payment slips to `/public/uploads/slips/[docNo]/[originalFilename]` retaining original file name and storing `[originalFilename]` in `Fnt_Header_online.FILE_NAME_PIC`).
+  - **ทน build (durable path)**: standalone `server.js` ทำ `process.chdir(__dirname)` → `process.cwd()` = `.next/standalone` ซึ่งถูกลบทุกครั้งที่ `next build` — `/api/upload` จึงเขียนไฟล์สลิปทั้งที่ `public/uploads/slips` ของรูทโปรเจกต์ (รอด rebuild) และที่ public ที่ server กำลังเสิร์ฟ (เปิดดูได้ทันที) ถ้าทั้งสองที่เป็นที่เดียวกันจะเขียนแค่รอบเดียว
   - **High-Speed Python Microservice**: FastAPI service (`python-service/`) runs on `http://127.0.0.1:8000` with `zxing-cpp` QR detection and `RapidOCR` ONNX engine (< 0.5s response).
   - **Graceful Fallback**: If Python microservice is offline or times out (> 3.5s), `lib/slip-verification.ts` automatically and seamlessly falls back to the in-process Node.js engine (`sharp` + `jsQR` + `tesseract.js`).
   - **Start Command**: Run `run_slip_service.bat` or `npm run slip-service`.
@@ -161,5 +162,18 @@ This document provides developer and AI agent instructions, system architecture,
   - `dev`/`start` รันผ่าน `scripts/run-next.js` ซึ่งเรียก `loadEnvConfig` จาก `@next/env` **ก่อน** ส่งต่อให้ Next.js CLI
   - เหตุผล: ตัว CLI อ่าน `process.env.PORT` ตอน parse args *ก่อน* ที่ Next.js จะโหลด `.env` ( loader รันใน child process ทีหลัง) ทำให้ `PORT=` ใน `.env` ไม่มีผลถ้ารัน `next dev` ตรง ๆ
   - แก้พอร์ต = แก้ `.env` อย่างเดียว (ค่ามากสุด: OS env > `.env.local` > `.env`)
+- **Production Start**: `npm run start` — เพราะ `next.config.ts` ตั้ง `output: 'standalone'` → **`next start` ใช้ไม่ได้** (Next 16 เตือน: `Use "node .next/standalone/server.js" instead.`)
+  - `scripts/run-next.js start` โหลด `.env*` ก่อน แล้วตรวจ/คัดลอก `public` + `.next/static` เข้า `.next/standalone` ผ่าน `scripts/standalone-assets.js` (standalone ไม่ copy สองโฟลเดอร์นี้ให้เองตามเอกสาร Next.js → ไม่งั้น CSS/JS/รูป 404)
+  - รองรับทั้งแบบ in-place (`.next/standalone/server.js`) และแบบ copy-deploy (`server.js` ที่รูทโฟลเดอร์)
+  - พอร์ต production อ่านจาก `.env` (`PORT=3001`) — `npm run start -- -p xxxx` ไม่มีผล (server.js อ่าน env ไม่ใช่ argv)
+- **One-command Start/Stop**: `start_all.bat` / `stop_all.bat`
+  - `start_all.bat` อ่าน `PORT`/`SLIP_SERVICE_PORT` จาก `.env` → ปิดพอร์ตค้าง → เปิด Slip Service หน้าต่างแยก → `npm run dev` ในหน้าต่างปัจจุบัน
+  - `stop_all.bat` ปิดทั้งสองพอร์ตตามค่าจาก `.env`
 - **Build Verification**: `cmd /c npm.cmd run build` (Turbopack production build)
+  - `postbuild` (`node scripts/standalone-assets.js`) รันอัตโนมัติทุกครั้งหลัง build → คัดลอก `public` และ `.next/static` เข้า `.next/standalone/` (merge ไม่ลบไฟล์ที่มีอยู่ เช่น สลิปที่อัปโหลด runtime)
+- **Deploy**: `deploy.bat` — หา `DEPLOY_DIR` อัตโนมัติผ่าน `scripts/resolve-deploy-dir.js` (ลำดับ: env `UBR_DEPLOY_DIR` → physicalPath ของ IIS site `UBR-PreOrder` → โฟลเดอร์โปรเจกต์)
+  - ถ้าได้โฟลเดอร์เดียวกับโปรเจกต์ = โหมด **IN-PLACE** (build แล้วรันจากที่เดิม ไม่ copy ไฟล์)
+  - จะ `pm2 stop all` + `pm2 delete all` **ก่อน build** เพื่อปลด lock ที่ `.next\standalone` (กัน `EBUSY` ตอน build)
+  - โหมด COPY จะ copy `scripts\` ไปด้วย เพื่อให้ `npm run start` ในโฟลเดอร์ deploy ใช้ได้
+  - ไม่พบ pm2 → ข้าม step PM2 แล้วให้เริ่มเองด้วย `npm run start` หรือ `start_all.bat`
 - **Linting**: `npm run lint`

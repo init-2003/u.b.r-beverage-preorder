@@ -135,21 +135,35 @@ export async function POST(req: NextRequest) {
 
     // 4. เมื่อผ่านเงื่อนไข บันทึกไฟล์รูปสลิปลงเซิร์ฟเวอร์
     // รูปแบบการเก็บ: public/uploads/slips/[เลขออเดอร์]/[ชื่อเดิมของไฟล์สลิป]
+    //
+    // หมายเหตุ (output: 'standalone'): server.js ทำ process.chdir(__dirname) ทำให้
+    // process.cwd() ชี้ไปที่ `.next/standalone` ซึ่งถูกลบ/สร้างใหม่ทุกครั้งที่ `next build`
+    // → ถ้าเขียนเฉพาะที่นั่น ไฟล์สลิปจะหายทุกครั้งที่ build
+    // จึงเขียนลงโฟลเดอร์จริงของโปรเจกต์ (ทน build) และเขียนไปที่ public
+    // ที่ server กำลังเสิร์ฟอยู่ด้วย เปิดดูได้ทันที
     const originalFilename = path.basename(file.name || 'slip.jpg');
     const orderFolder = docNo ? docNo.trim() : '';
 
-    const uploadDir = orderFolder
-      ? path.join(process.cwd(), 'public', 'uploads', 'slips', orderFolder)
-      : path.join(process.cwd(), 'public', 'uploads', 'slips');
+    const cwd = process.cwd();
+    const relParts = ['public', 'uploads', 'slips'];
+    if (orderFolder) relParts.push(orderFolder);
 
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
+    const isStandaloneCwd =
+      path.basename(cwd) === 'standalone' && path.basename(path.dirname(cwd)) === '.next';
+    const durableRoot = isStandaloneCwd ? path.resolve(cwd, '..', '..') : cwd;
+
+    // turbopackIgnore: path สองจุดนี้เป็น runtime write target เท่านั้น (mkdir+writeFileSync)
+    // ไม่ต้องให้ NFT tracer ตาม — ถ้าไม่ ignore Turbopack จะ trace ทั้งโปรเจกต์เข้า output (bloat)
+    // และ public ก็ถูก postbuild (scripts/standalone-assets.js) คัดลอกเข้า standalone อยู่แล้ว
+    const durableDir = path.join(/*turbopackIgnore: true*/ durableRoot, ...relParts);
+    const servedDir = path.join(/*turbopackIgnore: true*/ cwd, ...relParts);
+    const writeDirs = durableDir === servedDir ? [durableDir] : [durableDir, servedDir];
 
     const filename = originalFilename;
-    const filePath = path.join(uploadDir, filename);
-
-    fs.writeFileSync(filePath, buffer);
+    for (const dir of writeDirs) {
+      fs.mkdirSync(dir, { recursive: true });
+      fs.writeFileSync(path.join(dir, filename), buffer);
+    }
 
     // จัดเก็บลงฟิลด์ FILE_NAME_PIC ใน MSSQL เป็น [ชื่อไฟล์เดิม] อย่างเดียว
     const dbFilename = filename;

@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "node scripts/run-next.js dev",
     "build": "next build",
+    "postbuild": "node scripts/standalone-assets.js",
     "start": "node scripts/run-next.js start",
     "lint": "eslint",
     "slip-service": "\"C:\\Users\\Windows11\\AppData\\Local\\Programs\\Python\\Python314\\python.exe\" -m uvicorn python-service.main:app --host 127.0.0.1 --port 8000"
