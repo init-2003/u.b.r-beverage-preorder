@@ -1,0 +1,228 @@
+================================================================================
+  คู่มือการติดตั้งและขึ้นระบบ PRODUCTION บน IIS (WINDOWS SERVER)
+  ระบบสั่งจองสินค้าออนไลน์: หจก. อุบลรุ่งเรืองเบฟเวอเรจ (U.B.R. Beverage Pre-Order)
+================================================================================
+
+เอกสารนี้จัดทำขึ้นสำหรับผู้ดูแลระบบ (System Administrator / DevOps) 
+เพื่อใช้เป็นแนวทางปฏิบัติในการนำระบบขึ้น Production บนเครื่อง Server เครื่องใหม่ 
+ที่รันระบบปฏิบัติการ Windows Server 2016 / 2019 / 2022 หรือ Windows 10/11 Pro ร่วมกับ IIS
+
+--------------------------------------------------------------------------------
+1. ภาพรวมสถาปัตยกรรมระบบ (SYSTEM ARCHITECTURE)
+--------------------------------------------------------------------------------
+
+[ ผู้ใช้งานภายนอก (Browser) ]
+         |
+         v (Port 80 หรือ 443 HTTPS)
++------------------------------------------------------------------------------+
+|  IIS Web Server (ทำหน้าที่เป็น Reverse Proxy)                                |
+|  - ควบคุมผ่านโมดูล: URL Rewrite 2.1 + Application Request Routing (ARR 3.0)   |
+|  - รับคำขอจากภายนอก แล้ว Forward ต่อไปยัง Next.js ที่ http://localhost:3000   |
+|  - รองรับ WebSocket และจำกัดขนาดการอัปโหลดไฟล์สลิปสูงสุด 10MB                 |
++------------------------------------------------------------------------------+
+         |
+         v (Forward ภายในเครื่อง http://localhost:3000)
++------------------------------------------------------------------------------+
+|  Next.js Standalone Server (รันบน Node.js ผ่าน PM2)                           |
+|  - จัดการหน้าเว็บทั้งหมด, ระบบแคตตาล็อก, สั่งจอง, ตะกร้าสินค้า, ใบสั่งซื้อ PO   |
++----------------------+-------------------------------------------------------+
+                       |
+                       +-----> (http://127.0.0.1:8000) 
+                       |       Python Slip Microservice (FastAPI + Uvicorn)
+                       |       - ถอดรหัส QR Code สลิปธนาคาร + OCR ยอดเงิน (<0.5 วิ)
+                       |
+                       +-----> (Port 1433)
+                               Microsoft SQL Server (IP: 192.168.2.3:1433)
+                               - ฐานข้อมูล: DBUbonRR (ตาราง Trade, Fnt_*, Cus_*)
+
+--------------------------------------------------------------------------------
+2. สิ่งที่ต้องดาวน์โหลดและติดตั้งบน SERVER ใหม่ (PREREQUISITES)
+--------------------------------------------------------------------------------
+
+ก่อนเริ่มวางไฟล์ กรุณาดาวน์โหลดและติดตั้งโปรแกรมเหล่านี้บน Server ให้ครบถ้วน:
+
+[2.1] เปิดฟีเจอร์ Web Server (IIS) บน Windows
+      - เปิด Server Manager -> Add Roles and Features
+      - เลือก Web Server (IIS)
+      - ในหมวด Application Development ให้ติ๊กเลือก:
+        [*] WebSocket Protocol
+        [*] HTTP Redirection
+
+[2.2] ติดตั้งส่วนขยายของ IIS (จำเป็นอย่างยิ่ง ขาดไม่ได้!)
+      1) URL Rewrite Module 2.1 (x64):
+         ดาวน์โหลดที่: https://www.iis.net/downloads/microsoft/url-rewrite
+      2) Application Request Routing (ARR) 3.0 (x64):
+         ดาวน์โหลดที่: https://www.iis.net/downloads/microsoft/application-request-routing
+
+[2.3] ติดตั้ง Runtimes
+      1) Node.js LTS (เวอร์ชัน 20.x หรือ 22.x แบบ 64-bit):
+         ดาวน์โหลดที่: https://nodejs.org
+      2) Python (เวอร์ชัน 3.10 - 3.14 แบบ 64-bit):
+         ดาวน์โหลดที่: https://www.python.org/downloads/
+         *** ข้อควรระวัง: ขณะติดตั้ง ให้ติ๊กถูกที่ช่อง "Add Python to PATH" ด้านล่างสุดด้วย ***
+      3) ติดตั้ง PM2 (Process Manager สำหรับคุม Service ให้รันตลอด 24 ชม.):
+         เปิด Command Prompt (cmd) แล้วพิมพ์คำสั่ง:
+         npm install -g pm2
+      4) เว็บเบราว์เซอร์สำหรับสร้างไฟล์ PDF ใบสั่งซื้อ:
+         ติดตั้ง Google Chrome หรือ Microsoft Edge ไว้ในเครื่อง
+
+--------------------------------------------------------------------------------
+3. จุดสำคัญที่สุดของ IIS: การเปิดใช้งาน ARR PROXY
+--------------------------------------------------------------------------------
+*** หากไม่ทำขั้นตอนนี้ IIS จะบล็อกไม่ยอมส่งต่อคำขอไปยัง Next.js ***
+
+วิธีเปิดใช้งาน:
+1. เปิดโปรแกรม "Internet Information Services (IIS) Manager"
+2. ที่หน้าต่างซ้ายสุด (Connections) ให้คลิกที่ "ชื่อเครื่อง Server" (โหนดบนสุด)
+3. ที่หน้าต่างตรงกลาง ดับเบิลคลิกที่ไอคอน "Application Request Routing Cache"
+4. ที่แถบขวาสุด (Actions panel) คลิกที่ "Server Proxy Settings..."
+5. ติ๊กถูกที่ช่อง [x] "Enable proxy"
+6. คลิก "Apply" ที่มุมขวาบน
+
+--------------------------------------------------------------------------------
+4. ขั้นตอนการติดตั้งและวางไฟล์ระบบ (DEPLOYMENT STEPS)
+--------------------------------------------------------------------------------
+
+ขั้นตอนที่ 1: วางไฟล์ระบบ
+1. นำไฟล์ "ubr-preorder-release.zip" ไปยัง Server ปลายทาง
+2. แตกไฟล์ทั้งหมดลงในโฟลเดอร์ที่ต้องการตามสะดวก 
+   (เช่น C:\inetpub\ubr-preorder\ หรือ ไดรฟ์ D:\ ตามที่ท่านจัดสรร)
+   * หมายเหตุ: สคริปต์ .bat และ .ps1 ทั้งหมดใช้ Dynamic Path (%~dp0 / $PSScriptRoot) 
+     จึงสามารถวางไว้ที่โฟลเดอร์หรือไดรฟ์ใดก็ได้ โดยไม่ต้องแก้โค้ด Path ใดๆ ทั้งสิ้น
+
+   (โครงสร้างภายในโฟลเดอร์จะมี server.js, web.config, ecosystem.config.js, 
+    .env.production, public, .next, python-service, สคริปต์ .ps1 และ .bat)
+
+ขั้นตอนที่ 2: รันสคริปต์เตรียมความพร้อมอัตโนมัติ
+1. เปิด PowerShell ด้วยสิทธิ์ Administrator (คลิกขวา -> Run as administrator)
+2. พิมพ์คำสั่ง:
+   cd C:\inetpub\ubr-preorder
+   powershell -ExecutionPolicy Bypass -File .\setup_target_server.ps1
+
+   * สคริปต์นี้จะทำการ:
+     - ติดตั้งโมดูล Python สำหรับตรวจสลิป (FastAPI, zxing, OCR, ฯลฯ) ให้อัตโนมัติ
+     - กำหนดสิทธิ์โฟลเดอร์ให้กลุ่ม IIS_IUSRS และ IUSR
+     - ทดสอบการเชื่อมต่อไปยังฐานข้อมูล MSSQL (192.168.2.3:1433)
+
+ขั้นตอนที่ 3: สร้าง IIS Web Site
+1. รันสคริปต์สร้าง Site อัตโนมัติในหน้าต่าง PowerShell เดิม:
+   powershell -ExecutionPolicy Bypass -File .\setup_iis_site.ps1
+
+   * สคริปต์จะทำการสร้าง AppPool "UBR-PreOrder-Pool" (No Managed Code) 
+     และสร้าง Web Site "UBR-PreOrder" ชี้ไปยัง C:\inetpub\ubr-preorder บนพอร์ต 80 ทันที
+
+ขั้นตอนที่ 4: สตาร์ตเปิดการทำงานของระบบ
+1. ดับเบิลคลิกไฟล์:
+   C:\inetpub\ubr-preorder\start_server.bat
+   (หรือเปิด cmd รัน: pm2 start ecosystem.config.js && pm2 save)
+2. สังเกตตารางสถานะของ PM2:
+   - ubr-preorder      : online
+   - ubr-slip-service  : online
+
+ขั้นตอนที่ 5: ทดสอบเปิดใช้งาน
+- เปิดเบราว์เซอร์เข้าที่: http://localhost หรือ http://[IP_ของเซิร์ฟเวอร์]
+
+--------------------------------------------------------------------------------
+5. การตั้งค่า PORT และการเชื่อมต่อ (ปรับแก้ที่จุดเดียวใน .env.production)
+--------------------------------------------------------------------------------
+
+ระบบถูกพัฒนาให้สามารถปรับเปลี่ยนพอร์ตและคอนฟิกได้ที่ "จุดเดียว" 
+ในไฟล์: C:\inetpub\ubr-preorder\.env.production
+
+ตัวอย่างเนื้อหาในไฟล์ .env.production:
+--------------------------------------------------
+# การเชื่อมต่อฐานข้อมูล MSSQL
+DB_CONNECTION=sqlsrv
+DB_HOST=192.168.2.3
+DB_PORT=1433
+DB_DATABASE=DBUbonRR
+DB_USERNAME=sa
+DB_PASSWORD=1201455
+
+# ข้อมูลระบบ
+NEXT_PUBLIC_APP_NAME=U.B.R Beverage Pre-Order
+NEXT_PUBLIC_BRANCH_ID=001
+JWT_SECRET=ubr_beverage_preorder_secret_key_2026
+
+# พอร์ตของระบบ (แก้ไขตรงนี้จุดเดียวได้เลย)
+PORT=3000
+SLIP_SERVICE_PORT=8000
+HOSTNAME=0.0.0.0
+NODE_ENV=production
+--------------------------------------------------
+
+* กลไกอัตโนมัติ:
+  หากคุณเปลี่ยน PORT เช่น เปลี่ยนเป็น 3001 แล้วสั่ง restart_server.bat
+  ระบบจะทำการ:
+  1) เปลี่ยนพอร์ตของ Next.js เป็น 3001
+  2) แก้ไขกฎ Rewrite ใน web.config ของ IIS ให้เป็น 3001 โดยอัตโนมัติ
+  3) ปรับพอร์ตของ Python และส่ง URL ตรวจสลิปให้ตรงกันโดยอัตโนมัติทันที
+
+--------------------------------------------------------------------------------
+6. การตั้งค่าให้ระบบเปิดอัตโนมัติเมื่อ SERVER รีสตาร์ต (AUTO-START ON REBOOT)
+--------------------------------------------------------------------------------
+
+เลือกทำวิธีใดวิธีหนึ่ง:
+
+[วิธีที่ 1] ติดตั้ง PM2 Windows Service (แนะนำ)
+เปิด Command Prompt (Run as Administrator) แล้วรันคำสั่ง:
+1. npm install -g pm2-windows-service
+2. pm2-service-install -n PM2
+   (เมื่อระบบถามว่า Perform environment setup? ให้ตอบ Y)
+3. pm2 save
+
+[วิธีที่ 2] ใช้ Windows Task Scheduler
+1. เปิดโปรแกรม Task Scheduler บน Windows
+2. คลิก "Create Basic Task..." ตั้งชื่อ: Start UBR Pre-Order
+3. Trigger: เลือก "When the computer starts"
+4. Action: เลือก "Start a program"
+5. Program/script: ใส่ C:\inetpub\ubr-preorder\start_server.bat
+6. กด Finish
+
+--------------------------------------------------------------------------------
+7. คำสั่งสำหรับดูแลรักษาระบบประจำวัน (OPERATIONS & MAINTENANCE)
+--------------------------------------------------------------------------------
+
+- ดูสถานะการทำงานของ Services:
+  เปิด cmd แล้วพิมพ์: pm2 status
+
+- ดู Log การทำงานแบบ Realtime:
+  เปิด cmd แล้วพิมพ์: pm2 logs
+
+- สั่งรีสตาร์ตระบบทั้งหมด:
+  ดับเบิลคลิกไฟล์: C:\inetpub\ubr-preorder\restart_server.bat
+  หรือเปิด cmd แล้วพิมพ์: pm2 restart all
+
+- สั่งหยุดการทำงานชั่วคราว:
+  ดับเบิลคลิกไฟล์: C:\inetpub\ubr-preorder\stop_server.bat
+
+- ตำแหน่งไฟล์ Logs สำหรับตรวจสอบข้อผิดพลาด:
+  C:\inetpub\ubr-preorder\logs\nextjs-out.log     (Log ปกติของเว็บ)
+  C:\inetpub\ubr-preorder\logs\nextjs-error.log   (Log แจ้งเตือนข้อผิดพลาดของเว็บ)
+  C:\inetpub\ubr-preorder\logs\slip-out.log       (Log ของระบบตรวจสลิป)
+  C:\inetpub\ubr-preorder\logs\slip-error.log     (Log ข้อผิดพลาดของระบบตรวจสลิป)
+
+--------------------------------------------------------------------------------
+8. ปัญหาที่พบบ่อยและการแก้ไข (TROUBLESHOOTING)
+--------------------------------------------------------------------------------
+
+[ปัญหา 1] เข้าเว็บผ่านพอร์ต 80 แล้วเจอ HTTP Error 500.50 หรือ 404
+สาเหตุ : ยังไม่ได้เปิด "Enable proxy" ใน Application Request Routing ของ IIS
+วิธีแก้ : ดูขั้นตอนในหัวข้อที่ 3 (เปิด Enable proxy ใน IIS Manager)
+
+[ปัญหา 2] เข้าเว็บแล้วขึ้น 502 Bad Gateway
+สาเหตุ : Service ของ Next.js ยังไม่ได้สตาร์ต หรือปิดตัวลง
+วิธีแก้ : ดับเบิลคลิก start_server.bat หรือรัน pm2 status ดูว่า ubr-preorder ขึ้น online หรือไม่
+
+[ปัญหา 3] หน้าเว็บโหลดได้ แต่สลิปไม่อ่าน QR หรืออ่านไม่สำเร็จ
+สาเหตุ : Python Slip Service ยังไม่ได้เปิด หรือยังไม่ได้ลง pip requirements
+วิธีแก้ : รัน setup_target_server.ps1 เพื่อให้ติดตั้ง requirements อีกครั้ง 
+         แล้วตรวจสอบ pm2 status ว่า ubr-slip-service ขึ้น online หรือไม่
+
+[ปัญหา 4] กดพิมพ์ใบสั่งซื้อ PO แล้วไม่ดาวน์โหลด PDF
+สาเหตุ : บน Server ยังไม่มี Chrome หรือ Edge
+วิธีแก้ : ดาวน์โหลดและติดตั้ง Google Chrome บน Server เพื่อให้ Puppeteer ใช้งานได้
+
+================================================================================
+จบเอกสารคู่มือ - หจก. อุบลรุ่งเรืองเบฟเวอเรจ
+================================================================================

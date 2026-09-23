@@ -1,69 +1,118 @@
-import Image from "next/image";
+'use client';
 
-export default function Home() {
+import React, { useEffect, useState, useCallback, Suspense } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
+import { Product } from '@/types/preorder';
+import ProductCatalog from '@/components/ProductCatalog';
+
+function HomeAppPageContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const urlSearch = searchParams.get('search') ?? '';
+  const urlCategory = searchParams.get('category') ?? 'all';
+
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loadingProducts, setLoadingProducts] = useState(true);
+
+  // โหลดรายการสินค้าตาม Category และ Search
+  const fetchProducts = useCallback(async (cat: string, search: string) => {
+    setLoadingProducts(true);
+    try {
+      const params = new URLSearchParams();
+      params.set('limit', '80');
+      if (cat && cat !== 'all' && cat !== 'ทั้งหมด') {
+        params.set('category', cat);
+      }
+      if (search && search.trim()) {
+        params.set('search', search.trim());
+      }
+
+      const res = await fetch(`/api/products?${params.toString()}`);
+      const data = await res.json();
+      if (data.success && Array.isArray(data.products)) {
+        const mapped: Product[] = data.products.map((p: any) => {
+          const price = Number(p.Sale_Price1 ?? 0);
+          const depositPrice = Number(p.Trade_deposit) || 0;
+          const depositPercent = (depositPrice > 0 && price > 0)
+            ? Math.round((depositPrice / price) * 100)
+            : 0;
+
+          return {
+            id: p.Trade_Id,
+            name: p.Trade_Name,
+            nameEN: p.Trade_NameEN,
+            category: p.Type_Name || 'Pre Order',
+            unitName: (p.Unit_Name || '').trim(),
+            price,
+            salePrice1: price,
+            depositPrice,
+            depositPercent,
+            leadTimeDays: 0,
+            origin: p.Trade_Province || '',
+            alcoholPercent: 0,
+            description: p.Trade_Note || '',
+            imageUrl: p.Trade_Part_Image ? p.Trade_Part_Image : '/images/ubr_beverage_logo.png',
+          };
+        });
+
+        setProducts(mapped);
+      }
+    } catch (e) {
+      console.error('Failed to load products', e);
+    } finally {
+      setLoadingProducts(false);
+    }
+  }, []);
+
+  // 3. เรียก fetchProducts เมื่อ URL parameters (category หรือ search) เปลี่ยน
+  useEffect(() => {
+    fetchProducts(urlCategory, urlSearch);
+  }, [urlCategory, urlSearch, fetchProducts]);
+
+  const handleSelectCategory = (cat: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (cat && cat !== 'all') {
+      params.set('category', cat);
+    } else {
+      params.delete('category');
+    }
+    const newUrl = params.toString() ? `/?${params.toString()}` : '/';
+    router.push(newUrl);
+  };
+
+  const handleSearchChange = (q: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (q && q.trim()) {
+      params.set('search', q.trim());
+    } else {
+      params.delete('search');
+    }
+    const newUrl = params.toString() ? `/?${params.toString()}` : '/';
+    router.push(newUrl);
+  };
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+    <div className="max-w-[1600px] mx-auto w-full px-4 sm:px-6 lg:px-8 pt-3 pb-12 flex-1 flex flex-col space-y-4">
+      <ProductCatalog
+        products={products}
+        loadingProducts={loadingProducts}
+        selectedCategory={urlCategory}
+        onSelectCategory={handleSelectCategory}
+        searchQuery={urlSearch}
+        onSearchChange={handleSearchChange}
+      />
     </div>
+  );
+}
+
+export default function HomeAppPage() {
+  return (
+    <Suspense fallback={
+      <div className="max-w-[1600px] mx-auto w-full px-4 sm:px-6 lg:px-8 pt-3 pb-8">
+        <div className="h-64 rounded-lg bg-white border border-slate-200 animate-pulse" />
+      </div>
+    }>
+      <HomeAppPageContent />
+    </Suspense>
   );
 }

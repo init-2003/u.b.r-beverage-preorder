@@ -6,15 +6,26 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "slip-service": "\"C:\\Users\\Windows11\\AppData\\Local\\Programs\\Python\\Python314\\python.exe\" -m uvicorn python-service.main:app --host 127.0.0.1 --port 8000"
   },
   "dependencies": {
+    "@types/qrcode": "^1.5.6",
+    "jsqr": "^1.4.0",
+    "lottie-web": "^5.13.0",
+    "lucide-react": "^1.41.0",
+    "mssql": "^12.7.0",
     "next": "16.3.4",
+    "puppeteer-core": "^25.11.0",
+    "qrcode": "^1.5.4",
     "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react-dom": "19.2.8",
+    "sharp": "^0.35.4",
+    "tesseract.js": "^7.0.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/mssql": "^12.3.0",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
