@@ -17,11 +17,11 @@
 +------------------------------------------------------------------------------+
 |  IIS Web Server (ทำหน้าที่เป็น Reverse Proxy)                                |
 |  - ควบคุมผ่านโมดูล: URL Rewrite 2.1 + Application Request Routing (ARR 3.0)   |
-|  - รับคำขอจากภายนอก แล้ว Forward ต่อไปยัง Next.js ที่ http://localhost:3000   |
+|  - รับคำขอจากภายนอก แล้ว Forward ต่อไปยัง Next.js ที่ http://localhost:3001   |
 |  - รองรับ WebSocket และจำกัดขนาดการอัปโหลดไฟล์สลิปสูงสุด 10MB                 |
 +------------------------------------------------------------------------------+
          |
-         v (Forward ภายในเครื่อง http://localhost:3000)
+         v (Forward ภายในเครื่อง http://localhost:3001)
 +------------------------------------------------------------------------------+
 |  Next.js Standalone Server (รันบน Node.js ผ่าน PM2)                           |
 |  - จัดการหน้าเว็บทั้งหมด, ระบบแคตตาล็อก, สั่งจอง, ตะกร้าสินค้า, ใบสั่งซื้อ PO   |
@@ -145,7 +145,7 @@ NEXT_PUBLIC_BRANCH_ID=001
 JWT_SECRET=ubr_beverage_preorder_secret_key_2026
 
 # พอร์ตของระบบ (แก้ไขตรงนี้จุดเดียวได้เลย)
-PORT=3000
+PORT=3001
 SLIP_SERVICE_PORT=8000
 HOSTNAME=0.0.0.0
 NODE_ENV=production

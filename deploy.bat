@@ -65,7 +65,7 @@ echo =========================================================
 echo    Deploy สำเร็จ!
 echo =========================================================
 echo.
-echo    Next.js Server : http://localhost:3000
+echo    Next.js Server : http://localhost:3001
 echo    Slip Service   : http://127.0.0.1:8000
 echo    IIS Proxy      : http://localhost (or your domain)
 echo.

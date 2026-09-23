@@ -7,7 +7,7 @@
 ## สรุปภาพรวมการทำงาน (Architecture Overview)
 
 - **IIS (Port 80 / 443)** ทำหน้าที่เป็น Reverse Proxy รับ request จากผู้ใช้งานภายนอก แล้วส่งต่อไปยัง Next.js ผ่านโมดูล URL Rewrite + ARR
-- **Next.js Standalone (Port 3000)** รันบน Node.js จัดการหน้าเว็บ, สั่งจอง, ตะกร้าสินค้า, และพิมพ์เอกสาร PO
+- **Next.js Standalone (Port 3001)** รันบน Node.js จัดการหน้าเว็บ, สั่งจอง, ตะกร้าสินค้า, และพิมพ์เอกสาร PO
 - **Python Slip Microservice (Port 8000)** รันบน FastAPI ทำหน้าที่ถอดรหัส QR Code สลิปธนาคารและอ่านยอดเงินด้วย OCR ความเร็วสูง (< 0.5 วินาที)
 - **PM2** ทำหน้าที่เป็น Process Manager ควบคุมให้ทั้งสอง Service ทำงานตลอด 24 ชั่วโมง และรีสตาร์ตอัตโนมัติหากเกิดข้อผิดพลาด
 
@@ -193,7 +193,7 @@ pm2-service-install -n PM2
 
 ```env
 # Production Server & Service Ports
-PORT=3000              # พอร์ตของ Next.js Web Server
+PORT=3001              # พอร์ตของ Next.js Web Server
 SLIP_SERVICE_PORT=8000 # พอร์ตของ Python Slip Microservice
 ```
 
