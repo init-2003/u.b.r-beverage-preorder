@@ -91,6 +91,14 @@ function HomeAppPageContent() {
     router.push(newUrl);
   };
 
+  // รีเซ็ตทั้ง search + category ในการ push เดียว
+  // (ห้ามเรียก handleSearchChange('') แล้วตามด้วย handleSelectCategory('all')
+  //  เพราะทั้งคู่สร้าง URL จาก searchParams snapshot เดียวกัน → push หลังทับ push แรก
+  //   ทำให้ search ยังอยู่ใน URL → หน้า Empty ไม่ยอมเปลี่ยน)
+  const handleResetFilters = () => {
+    router.push('/');
+  };
+
   return (
     <div className="max-w-[1600px] mx-auto w-full px-4 sm:px-6 lg:px-8 pt-3 pb-12 flex-1 flex flex-col space-y-4">
       <ProductCatalog
@@ -100,6 +108,7 @@ function HomeAppPageContent() {
         onSelectCategory={handleSelectCategory}
         searchQuery={urlSearch}
         onSearchChange={handleSearchChange}
+        onResetFilters={handleResetFilters}
       />
     </div>
   );

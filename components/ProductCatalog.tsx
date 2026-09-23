@@ -17,6 +17,8 @@ interface ProductCatalogProps {
   onSelectCategory?: (cat: string) => void;
   searchQuery?: string;
   onSearchChange?: (query: string) => void;
+  /** รีเซ็ต search + category ใน router.push เดียว (ห้ามยิง 2 push จาก searchParams snapshot เดียวกัน — push หลังทับ push แรก ทำให้ search ไม่ถูกลบ) */
+  onResetFilters?: () => void;
 }
 
 export default function ProductCatalog({
@@ -26,6 +28,7 @@ export default function ProductCatalog({
   onSelectCategory,
   searchQuery: propSearchQuery,
   onSearchChange,
+  onResetFilters,
 }: ProductCatalogProps) {
   const [internalCategory, setInternalCategory] = useState<string>('all');
   const [internalSearch, setInternalSearch] = useState<string>('');
@@ -178,6 +181,10 @@ export default function ProductCatalog({
               <button
                 type="button"
                 onClick={() => {
+                  if (onResetFilters) {
+                    onResetFilters();
+                    return;
+                  }
                   handleSearchInputChange('');
                   if (onSelectCategory) onSelectCategory('all');
                   setInternalCategory('all');
