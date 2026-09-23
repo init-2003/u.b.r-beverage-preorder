@@ -78,7 +78,9 @@ Copy-Item -Path (Join-Path $projectDir "ecosystem.config.js") -Destination (Join
 
 # Scripts & Guides
 Copy-Item -Path (Join-Path $projectDir "setup_target_server.ps1") -Destination $distDir -Force
+Copy-Item -Path (Join-Path $projectDir "setup_target_server.bat") -Destination $distDir -Force
 Copy-Item -Path (Join-Path $projectDir "setup_iis_site.ps1") -Destination $distDir -Force
+Copy-Item -Path (Join-Path $projectDir "setup_iis_site.bat") -Destination $distDir -Force
 Copy-Item -Path (Join-Path $projectDir "start_server.bat") -Destination $distDir -Force
 Copy-Item -Path (Join-Path $projectDir "stop_server.bat") -Destination $distDir -Force
 Copy-Item -Path (Join-Path $projectDir "restart_server.bat") -Destination $distDir -Force
