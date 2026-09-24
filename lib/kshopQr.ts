@@ -10,7 +10,7 @@ export const TEST_PROMPTPAY_PHONE = '0811128199';
  * true = ใช้เบอร์ 0811128199 สำหรับทดสอบ
  * false = ใช้ K-Shop Biller ID (หจก. อุบลรุ่งเรืองเบฟเวอเรจ)
  */
-export const USE_TEST_PROMPTPAY = true;
+export const USE_TEST_PROMPTPAY = false;
 
 /**
  * Calculates CRC16-CCITT for PromptPay / EMVCo QR code string
