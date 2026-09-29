@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useEffect, useState, useMemo, Suspense } from 'react';
+import React, { useEffect, useState, useMemo, Suspense, useRef } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import AccountLayout from '@/components/AccountLayout';
+import PaidStamp from '@/components/orders/PaidStamp';
 import {
   ChevronDown,
   ChevronLeft,
@@ -13,8 +14,8 @@ import {
   X,
   Clock,
   CheckCircle2,
-  ImageIcon,
 } from 'lucide-react';
+import { WineLoading } from '@/components/WineLoading';
 
 interface OrderSummary {
   Fn_Doc_No: string;
@@ -55,22 +56,90 @@ function formatCurrency(amount: number): string {
 function PurchasesContent() {
   const { customer, loading: authLoading } = useAuth();
 
-  const [orders, setOrders] = useState<OrderSummary[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [orders, setOrders] = useState<OrderSummary[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const cached = sessionStorage.getItem('ubr_cached_orders');
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        }
+      } catch { }
+    }
+    return [];
+  });
+  const [loading, setLoading] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const cached = sessionStorage.getItem('ubr_cached_orders');
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed) && parsed.length > 0) return false;
+        }
+      } catch { }
+    }
+    return true;
+  });
   const [searchQuery, setSearchQuery] = useState('');
   const [pageSize, setPageSize] = useState<number>(10);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [slipPreview, setSlipPreview] = useState<string | null>(null);
+  const [slipModalVisible, setSlipModalVisible] = useState(false);
+  const slipTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // เมื่อเปิดหน้าครั้งแรกสุดและยังไม่มีแคช ให้รีเซ็ต scroll ไปบนสุด เพื่อให้ Loading อยู่กึ่งกลางสายตาพอดี
+  useEffect(() => {
+    if (loading && orders.length === 0) {
+      if (typeof window !== 'undefined') {
+        window.scrollTo({ top: 0, behavior: 'instant' });
+      }
+    }
+  }, [loading, orders.length]);
+
+  const openSlipPreview = (url: string) => {
+    if (slipTimerRef.current) clearTimeout(slipTimerRef.current);
+    setSlipPreview(url);
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        setSlipModalVisible(true);
+      });
+    });
+  };
+
+  const closeSlipPreview = () => {
+    if (slipTimerRef.current) clearTimeout(slipTimerRef.current);
+    setSlipModalVisible(false);
+    slipTimerRef.current = setTimeout(() => {
+      setSlipPreview(null);
+      slipTimerRef.current = null;
+    }, 220);
+  };
+
+  useEffect(() => {
+    if (!slipPreview) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        closeSlipPreview();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [slipPreview]);
 
   useEffect(() => {
     async function fetchOrders() {
       if (!customer) return;
-      setLoading(true);
+      if (orders.length === 0) {
+        setLoading(true);
+      }
       try {
         const res = await fetch('/api/orders?limit=100');
         const data = await res.json();
-        if (data.success) {
-          setOrders(data.orders || []);
+        if (data.success && Array.isArray(data.orders)) {
+          setOrders(data.orders);
+          try {
+            sessionStorage.setItem('ubr_cached_orders', JSON.stringify(data.orders));
+          } catch { }
         }
       } catch (e) {
         console.error('Failed to load orders', e);
@@ -128,6 +197,16 @@ function PurchasesContent() {
     return filteredOrders.slice(startIndex, startIndex + pageSize);
   }, [filteredOrders, currentPage, pageSize]);
 
+  if (authLoading || (loading && orders.length === 0)) {
+    return (
+      <AccountLayout activeItemOverride="payment">
+        <div className="w-full min-h-[calc(100vh-250px)] flex items-center justify-center">
+          <WineLoading size="md" />
+        </div>
+      </AccountLayout>
+    );
+  }
+
   return (
     <AccountLayout activeItemOverride="payment">
       <div className="space-y-4">
@@ -164,20 +243,8 @@ function PurchasesContent() {
 
         {/* Content Area */}
         {loading ? (
-          <div className="space-y-3">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="bg-white rounded-xs border border-slate-100 p-5 space-y-3 animate-pulse">
-                <div className="flex justify-between items-center">
-                  <div className="h-4 bg-slate-200 rounded w-48" />
-                  <div className="h-6 bg-slate-100 rounded-full w-20" />
-                </div>
-                <div className="flex justify-between items-center pt-2">
-                  <div className="h-4 bg-slate-100 rounded w-60" />
-                  <div className="h-6 bg-slate-200 rounded w-28" />
-                </div>
-                <div className="h-9 bg-slate-50 rounded" />
-              </div>
-            ))}
+          <div className="w-full min-h-[calc(100vh-320px)] flex items-center justify-center">
+            <WineLoading size="md" />
           </div>
         ) : displayedOrders.length === 0 ? (
           <div className="bg-white rounded-xs border border-slate-100/90 shadow-[0_1px_1px_0_rgba(0,0,0,0.03)] py-20 px-4 text-center space-y-4">
@@ -193,7 +260,7 @@ function PurchasesContent() {
             <div className="pt-2">
               <Link
                 href="/"
-                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-[#c81415] text-white font-bold text-xs hover:bg-[#b01011] active:bg-[#960d0e] transition-colors shadow-xs"
+                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-[#800020] text-white font-bold text-xs hover:bg-[#6b001b] active:bg-[#570016] transition-colors shadow-xs"
               >
                 <span>ไปเลือกซื้อสินค้า</span>
               </Link>
@@ -223,7 +290,7 @@ function PurchasesContent() {
                         </span>
                         <Link
                           href={`/orders/${encodeURIComponent(order.Fn_Doc_No)}`}
-                          className="text-xs sm:text-sm font-bold text-slate-900 hover:text-[#c81415] tracking-tight font-mono transition-colors"
+                          className="text-xs sm:text-sm font-bold text-slate-900 hover:text-[#800020] tracking-tight font-mono transition-colors"
                         >
                           {order.Fn_Doc_No}
                         </Link>
@@ -235,7 +302,7 @@ function PurchasesContent() {
                     </div>
                     {/* Right: Amount */}
                     <div className="text-right shrink-0">
-                      <span className="text-base sm:text-lg font-bold text-[#c81415]">
+                      <span className="text-base sm:text-lg font-bold text-[#FF6B00]">
                         {formatCurrency(payableAmount)}
                       </span>
                     </div>
@@ -243,24 +310,35 @@ function PurchasesContent() {
 
                   {/* Row 2: Status + Actions */}
                   <div className="px-4 sm:px-6 py-2.5 border-t border-slate-100/80 bg-slate-50/40 flex items-center justify-between gap-3">
-                    {/* Left: Status Badge */}
+                    {/* Left: Status Stamp */}
                     {isPending ? (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-orange-50 border border-orange-200 text-orange-700 text-[11px] sm:text-xs font-semibold">
-                        <Clock className="w-3 h-3" />
-                        รอชำระ
-                      </span>
+                      <PaidStamp
+                        shape="badge"
+                        label="รอชำระ"
+                        subLabel="PENDING"
+                        color="red"
+                      />
+                    ) : order.money_sts === 'M' ? (
+                      <PaidStamp
+                        shape="badge"
+                        label="ชำระเงินปลายทาง"
+                        subLabel="C.O.D"
+                        color="blue"
+                      />
                     ) : (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-[11px] sm:text-xs font-semibold">
-                        <CheckCircle2 className="w-3 h-3" />
-                        ชำระแล้ว
-                      </span>
+                      <PaidStamp
+                        shape="badge"
+                        label="ชำระแล้ว"
+                        subLabel="PAID"
+                        color="green"
+                      />
                     )}
                     {/* Right: Action Buttons */}
                     <div className="flex items-center gap-2">
                       {isPending && (
                         <Link
                           href={`/orders/${encodeURIComponent(order.Fn_Doc_No)}/payment`}
-                          className="px-4 py-1.5 rounded-full bg-[#c81415] hover:bg-[#b01011] active:bg-[#960d0e] text-white text-xs font-medium transition-colors shadow-xs inline-flex items-center justify-center"
+                          className="px-4 py-1.5 rounded-full bg-red-600 hover:bg-red-700 active:bg-red-800 text-white text-xs font-medium transition-colors shadow-xs inline-flex items-center justify-center"
                         >
                           ชำระเงิน
                         </Link>
@@ -275,7 +353,7 @@ function PurchasesContent() {
                               : filePic.includes('/')
                                 ? `/uploads/slips/${filePic}`
                                 : `/uploads/slips/${order.Fn_Doc_No}/${filePic}`;
-                            setSlipPreview(url);
+                            openSlipPreview(url);
                           }}
                           className="px-4 py-1.5 rounded-full bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white text-xs font-medium transition-colors shadow-xs inline-flex items-center justify-center cursor-pointer"
                         >
@@ -314,7 +392,7 @@ function PurchasesContent() {
                       setPageSize(Number(e.target.value));
                       setCurrentPage(1);
                     }}
-                    className="appearance-none bg-white border border-slate-200 rounded-xs pl-3 pr-7 py-1 text-xs sm:text-sm text-slate-800 cursor-pointer focus:outline-none focus:border-[#c81415] shadow-2xs"
+                    className="appearance-none bg-white border border-slate-200 rounded-xs pl-3 pr-7 py-1 text-xs sm:text-sm text-slate-800 cursor-pointer focus:outline-none focus:border-[#800020] shadow-2xs"
                   >
                     <option value={5}>5</option>
                     <option value={10}>10</option>
@@ -360,25 +438,28 @@ function PurchasesContent() {
 
       </div>
 
-      {/* Slip Lightbox Modal */}
+      {/* Slip Lightbox Modal with smooth open/close animation */}
       {slipPreview && (
         <div
-          className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4 animate-in fade-in duration-150"
-          onClick={() => setSlipPreview(null)}
+          className={`fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4 backdrop-blur-xs transition-opacity duration-200 ease-out ${
+            slipModalVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'
+          }`}
+          onClick={closeSlipPreview}
         >
           <div
-            className="relative bg-white rounded-sm shadow-2xl max-w-md w-full max-h-[85vh] overflow-hidden"
+            className={`relative bg-white rounded-sm shadow-2xl max-w-md w-full max-h-[85vh] overflow-hidden transform transition-all duration-200 ease-out ${
+              slipModalVisible ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 translate-y-2'
+            }`}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 bg-white">
-              <span className="text-sm font-bold text-slate-900 flex items-center gap-2">
-                <ImageIcon className="w-4 h-4 text-[#c81415]" />
+              <span className="text-sm font-bold text-slate-900">
                 สลิปการโอนเงิน
               </span>
               <button
                 type="button"
-                onClick={() => setSlipPreview(null)}
+                onClick={closeSlipPreview}
                 className="p-1.5 rounded-full hover:bg-slate-100 text-slate-500 hover:text-slate-800 transition-colors cursor-pointer"
                 title="ปิด"
               >
@@ -415,7 +496,15 @@ function PurchasesContent() {
 
 export default function PurchasesPage() {
   return (
-    <Suspense fallback={<div className="max-w-[1600px] mx-auto p-8 animate-pulse">กำลังโหลดข้อมูลการชำระเงิน...</div>}>
+    <Suspense
+      fallback={
+        <AccountLayout activeItemOverride="payment">
+          <div className="w-full min-h-[calc(100vh-250px)] flex items-center justify-center">
+            <WineLoading size="md" />
+          </div>
+        </AccountLayout>
+      }
+    >
       <PurchasesContent />
     </Suspense>
   );

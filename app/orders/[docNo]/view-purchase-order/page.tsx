@@ -8,6 +8,7 @@ import { useAuth } from '@/context/AuthContext';
 import PurchaseOrderDocument, {
   PurchaseOrderData,
 } from '@/components/orders/PurchaseOrderDocument';
+import { WineLoading } from '@/components/WineLoading';
 
 export default function ViewPurchaseOrderPage() {
   const params = useParams();
@@ -113,8 +114,8 @@ export default function ViewPurchaseOrderPage() {
 
   if (authLoading || !customer || loading) {
     return (
-      <div className="min-h-screen bg-slate-100 flex flex-col items-center justify-center p-6 text-slate-600">
-        <Loader2 className="w-8 h-8 animate-spin text-[#c81415] mb-3" />
+      <div className="min-h-screen bg-slate-100 flex items-center justify-center p-6">
+        <WineLoading size="md" />
       </div>
     );
   }
@@ -139,13 +140,14 @@ export default function ViewPurchaseOrderPage() {
     );
   }
 
-  // ใบสั่งซื้อ (PO) ออกให้เฉพาะคำสั่งซื้อที่มีสถานะเป็น '3' (ออกใบเสร็จแล้ว)
-  const isReceiptIssued = (order.Doc_Sts || '').trim() === '3';
-  if (!isReceiptIssued) {
+  // ใบสั่งซื้อ (PO) ออกให้เฉพาะคำสั่งซื้อที่มีสถานะเป็น '0' (กำลังดำเนินการ) หรือ '3' (ออกใบเสร็จแล้ว)
+  const docSts = (order.Doc_Sts || '').trim();
+  const canViewPo = docSts === '0' || docSts === '3';
+  if (!canViewPo) {
     const currentStatusText =
-      (order.Doc_Sts || '').trim() === '4'
+      docSts === '4'
         ? 'ยกเลิก Order'
-        : order.Doc_Sts_Name || 'กำลังดำเนินการ';
+        : order.Doc_Sts_Name || 'รอชำระ';
 
     return (
       <div className="min-h-screen bg-slate-100 flex flex-col items-center justify-center p-6">
@@ -156,7 +158,8 @@ export default function ViewPurchaseOrderPage() {
           <h2 className="text-lg font-bold text-slate-800">ยังไม่สามารถเปิดใบสั่งซื้อได้</h2>
           <p className="text-xs text-slate-600 leading-relaxed">
             เอกสารใบสั่งซื้อจะสามารถพิมพ์หรือดาวน์โหลดได้ เมื่อสถานะคำสั่งซื้อเป็น{' '}
-            <strong className="text-emerald-700 font-bold">"ออกใบเสร็จแล้ว"</strong> เรียบร้อยแล้วเท่านั้น
+            <strong className="text-blue-700 font-bold">&quot;กำลังดำเนินการ&quot;</strong> หรือ{' '}
+            <strong className="text-emerald-700 font-bold">&quot;ออกใบเสร็จแล้ว&quot;</strong> เรียบร้อยแล้วเท่านั้น
           </p>
           <div className="text-xs bg-slate-50 border border-slate-200 rounded p-2.5 text-slate-500">
             สถานะคำสั่งซื้อปัจจุบัน:{' '}

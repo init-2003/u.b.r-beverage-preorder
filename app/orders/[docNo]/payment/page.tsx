@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { WineLoading } from '@/components/WineLoading';
 
 export default function OrderPaymentRedirectPage() {
   const params = useParams();
@@ -22,9 +23,8 @@ export default function OrderPaymentRedirectPage() {
   }, [docNo, router]);
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-center space-y-3">
-      <div className="w-10 h-10 border-3 border-amber-500 border-t-transparent rounded-full animate-spin" />
-      <p className="text-sm text-slate-500 font-medium">กำลังไปยังหน้าระบบชำระเงิน...</p>
+    <div className="flex-1 min-h-[calc(100vh-200px)] flex items-center justify-center px-4">
+      <WineLoading size="md" />
     </div>
   );
 }

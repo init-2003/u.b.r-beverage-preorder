@@ -35,7 +35,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [onLoginSuccess, setOnLoginSuccess] = useState<(() => void) | null>(null);
 
   const customerRef = useRef<Customer | null>(customer);
-  const loginTimestampRef = useRef<number>(Date.now());
+  const loginTimestampRef = useRef<number>(0);
   const isLoggingOutRef = useRef<boolean>(false);
 
   useEffect(() => {
@@ -52,6 +52,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       localStorage.removeItem('ubr_cart_selected_trade_ids');
       sessionStorage.removeItem('ubr_cart_selected_ids');
       sessionStorage.removeItem('ubr_direct_checkout');
+      sessionStorage.removeItem('ubr_cached_orders');
     } catch {}
     if (typeof window !== 'undefined') {
       if (window.location.pathname !== '/' || window.location.search) {
@@ -196,6 +197,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         localStorage.removeItem('ubr_cart_selected_trade_ids');
         sessionStorage.removeItem('ubr_cart_selected_ids');
         sessionStorage.removeItem('ubr_direct_checkout');
+        sessionStorage.removeItem('ubr_cached_orders');
         if (typeof BroadcastChannel !== 'undefined') {
           const bc = new BroadcastChannel(AUTH_SYNC_CHANNEL);
           bc.postMessage({ type: 'LOGOUT', timestamp });

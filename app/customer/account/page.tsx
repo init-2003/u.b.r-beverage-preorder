@@ -6,6 +6,7 @@ import { useAuth } from '@/context/AuthContext';
 import { CustomerProfileData } from '@/components/EditProfileModal';
 import AccountLayout from '@/components/AccountLayout';
 import { AlertCircle, User } from 'lucide-react';
+import { WineLoading } from '@/components/WineLoading';
 
 function AccountContent() {
   const router = useRouter();
@@ -47,13 +48,8 @@ function AccountContent() {
   if (authLoading || (loading && !profile)) {
     return (
       <AccountLayout>
-        <div className="space-y-6 animate-pulse">
-          <div className="h-10 bg-slate-200 rounded-sm w-48" />
-          <div className="h-64 bg-slate-200 rounded-sm" />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="h-48 bg-slate-200 rounded-sm" />
-            <div className="h-48 bg-slate-200 rounded-sm" />
-          </div>
+        <div className="w-full min-h-[calc(100vh-250px)] flex items-center justify-center">
+          <WineLoading size="md" />
         </div>
       </AccountLayout>
     );
@@ -83,7 +79,7 @@ function AccountContent() {
           <div className="p-6 sm:p-7">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-2">
               <div className="flex items-start gap-4">
-                <div className="w-14 h-14 rounded-full bg-white border border-slate-200 flex items-center justify-center shadow-2xs shrink-0">
+                <div className="w-14 h-14 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center shadow-2xs shrink-0">
                   <User className="w-7 h-7 text-slate-500 stroke-[1.8]" />
                 </div>
                 <div className="space-y-1.5">
@@ -94,8 +90,8 @@ function AccountContent() {
                   </div>
 
                   <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500">
-                    <span className="bg-slate-100 px-2 py-0.5 rounded-sm text-slate-700 font-bold border border-slate-200">
-                      รหัสลูกค้า: {profile?.customerId || '-'}
+                    <span className="text-slate-600 font-medium">
+                      รหัสลูกค้า: <strong className="text-slate-800 font-bold">{profile?.customerId || '-'}</strong>
                     </span>
                   </div>
                 </div>
@@ -181,7 +177,15 @@ function AccountContent() {
 
 export default function CustomerAccountPage() {
   return (
-    <Suspense fallback={<div className="max-w-[1600px] mx-auto p-8 animate-pulse">กำลังโหลดข้อมูล...</div>}>
+    <Suspense
+      fallback={
+        <AccountLayout>
+          <div className="w-full min-h-[calc(100vh-250px)] flex items-center justify-center">
+            <WineLoading size="md" />
+          </div>
+        </AccountLayout>
+      }
+    >
       <AccountContent />
     </Suspense>
   );

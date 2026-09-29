@@ -236,6 +236,16 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         updated = [...prev, { ...item, qty }];
       }
 
+      // เมื่อเพิ่มสินค้าเข้าตะกร้า: ติ๊กเลือกสินค้าทั้งหมดทันทีตามเงื่อนไขผู้ใช้
+      if (typeof window !== 'undefined') {
+        try {
+          const allIds = updated.map((i) => i.tradeId);
+          localStorage.setItem('ubr_cart_selected_trade_ids', JSON.stringify(allIds));
+          sessionStorage.setItem('ubr_cart_selected_ids', JSON.stringify(allIds));
+          localStorage.setItem('ubr_cart_just_added', 'true');
+        } catch {}
+      }
+
       if (customer?.customerId) {
         syncToDbServer(updated);
       }
@@ -272,9 +282,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const updateQty = (tradeId: string, qty: number) => {
     const nextQty = Math.max(0, qty);
     setItems((prev) => {
-      const next = nextQty === 0
-        ? prev.filter((i) => i.tradeId !== tradeId)
-        : prev.map((i) => (i.tradeId === tradeId ? { ...i, qty: nextQty } : i));
+      const next = prev.map((i) => (i.tradeId === tradeId ? { ...i, qty: nextQty } : i));
       if (customer?.customerId) {
         syncToDbServer(next);
       }
@@ -284,6 +292,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const clearCart = () => {
     setItems([]);
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.removeItem('ubr_cart_selected_trade_ids');
+        localStorage.removeItem('ubr_cart_just_added');
+        sessionStorage.removeItem('ubr_cart_selected_ids');
+      } catch {}
+    }
     if (customer?.customerId) {
       syncToDbServer([]);
     }

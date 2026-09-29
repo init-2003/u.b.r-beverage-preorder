@@ -49,7 +49,7 @@ export default function CookieConsentBanner() {
       aria-label="Cookie consent notification"
     >
       {/* Top accent line */}
-      <div className="h-[2px] bg-gradient-to-r from-[#c81415] via-amber-500 to-[#c81415]" />
+      <div className="h-[2px] bg-gradient-to-r from-[#800020] via-amber-500 to-[#800020]" />
 
       <div className="bg-white border-t border-slate-200 shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
@@ -61,14 +61,14 @@ export default function CookieConsentBanner() {
                 และมอบประสบการณ์ที่ดีในการใช้งานเว็บไซต์ โปรดศึกษาและทำความเข้าใจ{' '}
                 <Link
                   href="/cookie-policy"
-                  className="text-[#c81415] hover:text-[#960d0e] underline underline-offset-2 transition-colors font-medium"
+                  className="text-[#800020] hover:text-[#570016] underline underline-offset-2 transition-colors font-medium"
                 >
                   นโยบายคุกกี้
                 </Link>
                 {' '}และ{' '}
                 <Link
                   href="/privacy-policy"
-                  className="text-[#c81415] hover:text-[#960d0e] underline underline-offset-2 transition-colors font-medium"
+                  className="text-[#800020] hover:text-[#570016] underline underline-offset-2 transition-colors font-medium"
                 >
                   นโยบายความเป็นส่วนตัว
                 </Link>
@@ -81,7 +81,7 @@ export default function CookieConsentBanner() {
               <button
                 id="cookie-accept-btn"
                 onClick={handleAccept}
-                className="inline-flex items-center px-5 sm:px-7 py-2 sm:py-2.5 bg-[#c81415] hover:bg-[#b01011] active:bg-[#960d0e] text-white font-bold text-[11px] sm:text-[12.5px] rounded-full transition-all duration-200 shadow-lg shadow-red-500/20 hover:shadow-red-500/30 cursor-pointer whitespace-nowrap"
+                className="inline-flex items-center px-5 sm:px-7 py-2 sm:py-2.5 bg-[#800020] hover:bg-[#6b001b] active:bg-[#570016] text-white font-bold text-[11px] sm:text-[12.5px] rounded-full transition-all duration-200 shadow-lg shadow-[#800020]/20 hover:shadow-[#800020]/30 cursor-pointer whitespace-nowrap"
               >
                 ยอมรับ
               </button>

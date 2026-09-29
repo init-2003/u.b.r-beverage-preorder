@@ -4,7 +4,7 @@ import { signToken, CustomerSession } from '@/lib/auth';
 
 export async function POST(req: NextRequest) {
   try {
-    const { username, password, rememberMe = true } = await req.json();
+    const { username, password, rememberMe = false } = await req.json();
 
     if (!username) {
       return NextResponse.json(
@@ -87,6 +87,10 @@ export async function POST(req: NextRequest) {
       customer: sessionData,
     });
 
+    // ตรวจสอบว่าเป็นการเชื่อมต่อผ่าน HTTPS จริงหรือไม่ (รองรับทั้ง HTTPS ตรง และผ่าน Reverse Proxy)
+    const forwardedProto = req.headers.get('x-forwarded-proto');
+    const isHttps = forwardedProto ? forwardedProto.includes('https') : req.nextUrl.protocol === 'https:';
+
     const cookieOptions: {
       httpOnly: boolean;
       secure: boolean;
@@ -95,7 +99,7 @@ export async function POST(req: NextRequest) {
       maxAge?: number;
     } = {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: isHttps,
       sameSite: 'lax',
       path: '/',
     };

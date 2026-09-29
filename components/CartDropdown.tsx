@@ -143,7 +143,7 @@ export default function CartDropdown() {
         {isMounted && totalQty > 0 && (
           <span
             key={totalQty}
-            className={`absolute -top-1 -right-1.5 min-w-[20px] h-[20px] px-1 bg-white text-[#c81415] text-[11px] font-black rounded-full flex items-center justify-center border border-[#c81415]/20 shadow-xs tabular-nums leading-none ${
+            className={`absolute -top-1 -right-1.5 min-w-[20px] h-[20px] px-1 bg-white text-[#800020] text-[11px] font-black rounded-full flex items-center justify-center border border-[#800020]/20 shadow-xs tabular-nums leading-none ${
               isBumping ? 'animate-badge-bump' : ''
             }`}
           >
@@ -220,14 +220,14 @@ export default function CartDropdown() {
 
                     {/* Product Name (Single line truncate) */}
                     <span
-                      className="text-xs sm:text-[13px] text-slate-800 font-normal truncate flex-1 min-w-0 group-hover:text-red-600 transition-colors"
+                      className="text-xs sm:text-[13px] text-slate-800 font-normal truncate flex-1 min-w-0 group-hover:text-[#800020] transition-colors"
                       title={item.tradeName}
                     >
                       {item.tradeName}
                     </span>
 
-                    {/* Price in Red */}
-                    <span className="text-xs sm:text-[13px] font-bold text-[#c81415] shrink-0 tabular-nums ml-2">
+                    {/* Price in Orange */}
+                    <span className="text-xs sm:text-[13px] font-bold text-[#FF6B00] shrink-0 tabular-nums ml-2">
                       ฿{(item.salePrice || 0).toLocaleString()}
                     </span>
                   </Link>
@@ -243,7 +243,7 @@ export default function CartDropdown() {
                 <button
                   type="button"
                   onClick={handleGoToCart}
-                  className="py-2 px-5 rounded-full bg-[#c81415] hover:bg-[#b01011] active:bg-[#960d0e] text-white font-bold text-xs shadow-xs transition-all cursor-pointer active:scale-95 shrink-0"
+                  className="py-2 px-5 rounded-full bg-[#800020] hover:bg-[#6b001b] active:bg-[#570016] text-white font-bold text-xs shadow-xs transition-all cursor-pointer active:scale-95 shrink-0"
                 >
                   ไปที่ตะกร้า
                 </button>

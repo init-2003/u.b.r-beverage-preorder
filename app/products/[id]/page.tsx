@@ -186,192 +186,191 @@ export default function ProductDetailPage({
   return (
     <div className="flex-1 flex flex-col bg-[#f5f5f5] py-8 sm:py-12 min-h-[calc(100vh+80px)] pb-48 sm:pb-64">
       <div className="max-w-[1600px] mx-auto w-full px-4 sm:px-6 lg:px-8 space-y-4">
-        
+
         {/* Main Product Showcase Card (Shopee Style Clean Card) */}
         <div className="bg-white rounded-sm border border-slate-100/80 shadow-[0_1px_1px_0_rgba(0,0,0,0.05)] p-6 sm:p-8 lg:p-10">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
-          
-          {/* Left Column: Product Image Showcase (No Card / Clean Float) */}
-          <div className="lg:col-span-6 flex flex-col items-center justify-center relative min-h-[380px] lg:min-h-[480px]">
-            
-            {/* Top Badges (Deposit % Tag if available) */}
-            {product.depositPercent > 0 && (
-              <div className="w-full flex items-center justify-end mb-3">
-                <span className="px-2.5 py-1 text-xs font-black rounded-md bg-red-600 text-white shadow-xs">
-                  มัดจำ {product.depositPercent}%
-                </span>
-              </div>
-            )}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
 
-            {/* Product Main Image (Interactive Magnifier Loupe Zoom) */}
-            <div className="w-full flex-1 flex items-center justify-center p-2 sm:p-4">
-              <ProductImageMagnifier
-                src={
-                  product.imageUrl
-                    ? product.imageUrl.startsWith('/')
-                      ? product.imageUrl
-                      : `/${product.imageUrl}`
-                    : '/images/ubr_beverage_logo.png'
-                }
-                alt={product.name}
-                zoomLevel={2.5}
-                lensSize={210}
-              />
-            </div>
-          </div>
+            {/* Left Column: Product Image Showcase (No Card / Clean Float) */}
+            <div className="lg:col-span-6 flex flex-col items-center justify-center relative min-h-[380px] lg:min-h-[480px]">
 
-          {/* Right Column: Modern Buy Box Details (6 Cols) */}
-          <div className="lg:col-span-6 flex flex-col space-y-5">
-            
-            {/* 1. SKU Header matching reference "SKU AI052-VA-A" */}
-            <div className="space-y-1">
-              <div className="text-xs font-semibold text-slate-400 tracking-wider">
-                SKU <span className="text-slate-600 font-bold">{product.id}</span>
-              </div>
-
-              {/* 2. Product Title */}
-              <h1 className="text-2xl sm:text-3xl font-black text-slate-900 leading-tight tracking-tight">
-                {product.name}
-              </h1>
-              {product.nameEN && (
-                <p className="text-sm font-medium text-slate-400 italic">
-                  {product.nameEN}
-                </p>
-              )}
-            </div>
-
-            {/* 3. Status Badge */}
-            <div className="flex items-center text-xs pt-1 pb-1">
-              <div className="flex items-center gap-1.5 font-bold text-emerald-700">
-                <div className="w-4 h-4 rounded-full bg-emerald-600 flex items-center justify-center text-white">
-                  <Check className="w-2.5 h-2.5 stroke-[3]" />
+              {/* Top Badges (Deposit % Tag if available) */}
+              {product.depositPercent > 0 && (
+                <div className="w-full flex items-center justify-end mb-3">
+                  <span className="px-2.5 py-1 text-xs font-black rounded-md bg-red-600 text-white shadow-xs">
+                    มัดจำ {product.depositPercent}%
+                  </span>
                 </div>
-                <span>สินค้าพร้อม Pre Order</span>
+              )}
+
+              {/* Product Main Image (Interactive Magnifier Loupe Zoom) */}
+              <div className="w-full flex-1 flex items-center justify-center p-2 sm:p-4">
+                <ProductImageMagnifier
+                  src={
+                    product.imageUrl
+                      ? product.imageUrl.startsWith('/')
+                        ? product.imageUrl
+                        : `/${product.imageUrl}`
+                      : '/images/ubr_beverage_logo.png'
+                  }
+                  alt={product.name}
+                  zoomLevel={2.5}
+                  lensSize={210}
+                />
               </div>
             </div>
 
-            {/* 4. Pricing Block matching reference bold red/crimson display */}
-            <div className="space-y-2">
-              <div className="flex items-baseline gap-3 flex-wrap">
-                <span className="text-3xl sm:text-4xl font-black text-[#d62828] tracking-tight">
-                  ฿{product.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                </span>
-                {originalPrice > 0 && (
-                  <span className="text-base sm:text-lg text-slate-400 line-through font-normal">
-                    ฿{originalPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                  </span>
+            {/* Right Column: Modern Buy Box Details (6 Cols) */}
+            <div className="lg:col-span-6 flex flex-col space-y-5">
+
+              {/* 1. SKU Header matching reference "SKU AI052-VA-A" */}
+              <div className="space-y-1">
+                <div className="text-xs font-semibold text-slate-400 tracking-wider">
+                  SKU <span className="text-slate-600 font-bold">{product.id}</span>
+                </div>
+
+                {/* 2. Product Title */}
+                <h1 className="text-2xl sm:text-3xl font-black text-slate-900 leading-tight tracking-tight">
+                  {product.name}
+                </h1>
+                {product.nameEN && (
+                  <p className="text-sm font-medium text-slate-400 italic">
+                    {product.nameEN}
+                  </p>
                 )}
-                {product.unitName ? (
-                  <span className="text-xs text-slate-500 font-medium self-center">
-                    / {product.unitName}
-                  </span>
-                ) : null}
               </div>
 
-              {/* Pre-order Deposit Callout Pill */}
-              {unitDeposit > 0 && (
-                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-amber-50 border border-amber-200/80 text-xs">
-                  <span className="text-amber-900 font-bold">
-                    ชำระมัดจำสั่งจอง:
+              {/* 3. Status Badge */}
+              <div className="flex items-center text-xs pt-1 pb-1">
+                <div className="flex items-center gap-1.5 font-bold text-emerald-700">
+                  <div className="w-4 h-4 rounded-full bg-emerald-600 flex items-center justify-center text-white">
+                    <Check className="w-2.5 h-2.5 stroke-[3]" />
+                  </div>
+                  <span>สินค้าพร้อม Pre Order</span>
+                </div>
+              </div>
+
+              {/* 4. Pricing Block */}
+              <div className="space-y-2">
+                <div className="flex items-baseline gap-3 flex-wrap">
+                  <span className="text-3xl sm:text-4xl font-black text-[#FF6B00] tracking-tight">
+                    ฿{product.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
-                  <span className="text-red-900 font-black text-sm">
-                    ฿{unitDeposit.toLocaleString()}
+                  {originalPrice > 0 && (
+                    <span className="text-base sm:text-lg text-slate-400 line-through font-normal">
+                      ฿{originalPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </span>
+                  )}
+                  {product.unitName ? (
+                    <span className="text-xs text-slate-500 font-medium self-center">
+                      / {product.unitName}
+                    </span>
+                  ) : null}
+                </div>
+
+                {/* Pre-order Deposit Callout (No background box) */}
+                <div className="flex items-center gap-1.5 text-xs flex-wrap pt-0.5">
+                  <span className="text-slate-700 font-bold">
+                    มัดจำ:
                   </span>
+                  <span className="text-[#FF6B00] font-black text-sm">
+                    ฿{(unitDeposit || 0).toLocaleString()}
+                  </span>
+                  {product.unitName ? (
+                    <span className="text-xs text-slate-500 font-medium">
+                      / {product.unitName}
+                    </span>
+                  ) : null}
                   {product.depositPercent > 0 && (
-                    <span className="text-amber-800 font-bold text-[11px] bg-amber-200/70 px-1.5 py-0.5 rounded">
+                    <span className="text-amber-800 font-bold text-[11px] bg-amber-100 px-1.5 py-0.5 rounded">
                       {product.depositPercent}%
                     </span>
                   )}
-                  <span className="text-slate-500 text-[11px]">
-                    (คงเหลือชำระเมื่อสินค้ามาถึง ฿{(product.price - unitDeposit).toLocaleString()})
+                </div>
+              </div>
+
+              {/* 5. Quantity Stepper matching reference layout */}
+              <div className="space-y-1.5 pt-1">
+                <label className="block text-xs font-bold text-slate-700">
+                  จำนวน
+                </label>
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center border border-slate-300 rounded-none bg-white overflow-hidden shadow-2xs">
+                    <button
+                      type="button"
+                      onClick={() => setQty(Math.max(1, qty - 1))}
+                      disabled={qty <= 1}
+                      className="w-9 h-9 flex items-center justify-center text-slate-600 hover:bg-slate-100 disabled:opacity-30 disabled:hover:bg-white text-base font-bold transition-colors cursor-pointer"
+                      aria-label="ลดจำนวน"
+                    >
+                      -
+                    </button>
+                    <div className="w-12 h-9 flex items-center justify-center font-black text-base text-slate-900 border-x border-slate-200 select-none">
+                      {qty}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setQty(qty + 1)}
+                      className="w-9 h-9 flex items-center justify-center text-slate-600 hover:bg-slate-100 text-base font-bold transition-colors cursor-pointer"
+                      aria-label="เพิ่มจำนวน"
+                    >
+                      +
+                    </button>
+                  </div>
+                  <span className="text-xs text-slate-500 font-medium">
+                    {product.unitName || ''}
+                    {qty > 1 && (
+                      <span className="ml-2 font-bold text-slate-700">
+                        (รวม ฿{lineTotal.toLocaleString()})
+                      </span>
+                    )}
                   </span>
                 </div>
-              )}
-            </div>
-
-            {/* 5. Quantity Stepper matching reference layout */}
-            <div className="space-y-1.5 pt-1">
-              <label className="block text-xs font-bold text-slate-700">
-                จำนวน
-              </label>
-              <div className="flex items-center gap-3">
-                <div className="flex items-center border border-slate-300 rounded-none bg-white overflow-hidden shadow-2xs">
-                  <button
-                    type="button"
-                    onClick={() => setQty(Math.max(1, qty - 1))}
-                    disabled={qty <= 1}
-                    className="w-9 h-9 flex items-center justify-center text-slate-600 hover:bg-slate-100 disabled:opacity-30 disabled:hover:bg-white text-base font-bold transition-colors cursor-pointer"
-                    aria-label="ลดจำนวน"
-                  >
-                    -
-                  </button>
-                  <div className="w-12 h-9 flex items-center justify-center font-bold text-sm text-slate-900 border-x border-slate-200 select-none">
-                    {qty}
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setQty(qty + 1)}
-                    className="w-9 h-9 flex items-center justify-center text-slate-600 hover:bg-slate-100 text-base font-bold transition-colors cursor-pointer"
-                    aria-label="เพิ่มจำนวน"
-                  >
-                    +
-                  </button>
-                </div>
-                <span className="text-xs text-slate-500 font-medium">
-                  {product.unitName || ''}
-                  {qty > 1 && (
-                    <span className="ml-2 font-bold text-slate-700">
-                      (รวม ฿{lineTotal.toLocaleString()})
-                    </span>
-                  )}
-                </span>
               </div>
+
+              {/* 6. Dual Action Buttons (Side by Side matching reference) */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                {/* Button 1: เพิ่มลงในตะกร้า (Clean White Bordered Button) */}
+                <button
+                  type="button"
+                  onClick={handleAddToCart}
+                  disabled={addedSuccess}
+                  className={`py-3.5 px-5 rounded-full border font-bold text-sm flex items-center justify-center gap-2 shadow-2xs transition-all cursor-pointer ${addedSuccess
+                      ? 'bg-emerald-600 text-white border-emerald-600'
+                      : 'bg-white hover:bg-slate-50 text-slate-900 border-slate-300 hover:border-slate-800'
+                    }`}
+                >
+                  {addedSuccess ? (
+                    <>
+                      <Check className="w-4 h-4 text-white stroke-[2.5]" />
+                      <span>เพิ่มแล้ว</span>
+                    </>
+                  ) : (
+                    <>
+                      <ShoppingCart className="w-4 h-4 text-slate-700" />
+                      <span>เพิ่มลงในตะกร้า</span>
+                    </>
+                  )}
+                </button>
+
+                {/* Button 2: สั่งจองทันที / ซื้อเลย (Primary Brand Red Button) */}
+                <button
+                  type="button"
+                  onClick={handleBuyNow}
+                  className="py-3.5 px-5 rounded-full bg-[#800020] hover:bg-[#6b001b] active:bg-[#570016] text-white font-bold text-sm flex items-center justify-center gap-2 shadow-xs hover:shadow transition-all text-center cursor-pointer active:scale-[0.99]"
+                >
+                  <ShoppingBag className="w-4 h-4 shrink-0 text-white" />
+                  <span>สั่งซื้อสินค้า</span>
+                </button>
+              </div>
+
+
             </div>
-
-            {/* 6. Dual Action Buttons (Side by Side matching reference) */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-              {/* Button 1: เพิ่มลงในตะกร้า (Clean White Bordered Button) */}
-              <button
-                type="button"
-                onClick={handleAddToCart}
-                disabled={addedSuccess}
-                className={`py-3.5 px-5 rounded-full border font-bold text-sm flex items-center justify-center gap-2 shadow-2xs transition-all cursor-pointer ${
-                  addedSuccess
-                    ? 'bg-emerald-600 text-white border-emerald-600'
-                    : 'bg-white hover:bg-slate-50 text-slate-900 border-slate-300 hover:border-slate-800'
-                }`}
-              >
-                {addedSuccess ? (
-                  <>
-                    <Check className="w-4 h-4 text-white stroke-[2.5]" />
-                    <span>เพิ่มแล้ว</span>
-                  </>
-                ) : (
-                  <>
-                    <ShoppingCart className="w-4 h-4 text-slate-700" />
-                    <span>เพิ่มลงในตะกร้า</span>
-                  </>
-                )}
-              </button>
-
-              {/* Button 2: สั่งจองทันที / ซื้อเลย (Primary Brand Red Button) */}
-              <button
-                type="button"
-                onClick={handleBuyNow}
-                className="py-3.5 px-5 rounded-full bg-[#c81415] hover:bg-[#b01011] active:bg-[#960d0e] text-white font-bold text-sm flex items-center justify-center gap-2 shadow-xs hover:shadow transition-all text-center cursor-pointer active:scale-[0.99]"
-              >
-                <ShoppingBag className="w-4 h-4 shrink-0 text-white" />
-                <span>สั่งซื้อสินค้า</span>
-              </button>
-            </div>
-
 
           </div>
 
         </div>
-
       </div>
     </div>
-  </div>
   );
 }

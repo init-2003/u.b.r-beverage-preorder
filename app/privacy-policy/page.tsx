@@ -10,7 +10,7 @@ export default function PrivacyPolicyPage() {
         {/* Main Document Container */}
         <div className="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
           {/* Top Brand Accent Stripe */}
-          <div className="h-1 bg-[#c81415] w-full" />
+          <div className="h-1 bg-[#800020] w-full" />
 
           {/* Header Section */}
           <div className="p-6 sm:p-8 md:p-10 border-b border-slate-100 bg-gradient-to-b from-slate-50/60 to-white">
@@ -41,7 +41,7 @@ export default function PrivacyPolicyPage() {
 
             {/* Section 1 */}
             <section className="space-y-3">
-              <div className="border-l-4 border-[#c81415] pl-3 py-0.5">
+              <div className="border-l-4 border-[#800020] pl-3 py-0.5">
                 <h2 className="text-base sm:text-lg font-bold text-slate-900 font-[Prompt]">
                   1. ข้อมูลส่วนบุคคลที่เราเก็บรวบรวม
                 </h2>
@@ -86,7 +86,7 @@ export default function PrivacyPolicyPage() {
 
             {/* Section 2 */}
             <section className="space-y-3">
-              <div className="border-l-4 border-[#c81415] pl-3 py-0.5">
+              <div className="border-l-4 border-[#800020] pl-3 py-0.5">
                 <h2 className="text-base sm:text-lg font-bold text-slate-900 font-[Prompt]">
                   2. วัตถุประสงค์และฐานทางกฎหมายในการประมวลผลข้อมูล
                 </h2>
@@ -132,7 +132,7 @@ export default function PrivacyPolicyPage() {
 
             {/* Section 3 */}
             <section className="space-y-3">
-              <div className="border-l-4 border-[#c81415] pl-3 py-0.5">
+              <div className="border-l-4 border-[#800020] pl-3 py-0.5">
                 <h2 className="text-base sm:text-lg font-bold text-slate-900 font-[Prompt]">
                   3. การรักษาความมั่นคงปลอดภัยของข้อมูล
                 </h2>
@@ -150,7 +150,7 @@ export default function PrivacyPolicyPage() {
 
             {/* Section 4 */}
             <section className="space-y-3">
-              <div className="border-l-4 border-[#c81415] pl-3 py-0.5">
+              <div className="border-l-4 border-[#800020] pl-3 py-0.5">
                 <h2 className="text-base sm:text-lg font-bold text-slate-900 font-[Prompt]">
                   4. การเปิดเผยข้อมูลแก่บุคคลภายนอก
                 </h2>
@@ -170,7 +170,7 @@ export default function PrivacyPolicyPage() {
 
             {/* Section 5 */}
             <section className="space-y-3">
-              <div className="border-l-4 border-[#c81415] pl-3 py-0.5">
+              <div className="border-l-4 border-[#800020] pl-3 py-0.5">
                 <h2 className="text-base sm:text-lg font-bold text-slate-900 font-[Prompt]">
                   5. ระยะเวลาในการเก็บรักษาข้อมูล
                 </h2>
@@ -190,7 +190,7 @@ export default function PrivacyPolicyPage() {
 
             {/* Section 6 */}
             <section className="space-y-3">
-              <div className="border-l-4 border-[#c81415] pl-3 py-0.5">
+              <div className="border-l-4 border-[#800020] pl-3 py-0.5">
                 <h2 className="text-base sm:text-lg font-bold text-slate-900 font-[Prompt]">
                   6. สิทธิของเจ้าของข้อมูลส่วนบุคคล
                 </h2>
@@ -210,7 +210,7 @@ export default function PrivacyPolicyPage() {
 
             {/* Section 7 */}
             <section className="space-y-3">
-              <div className="border-l-4 border-[#c81415] pl-3 py-0.5">
+              <div className="border-l-4 border-[#800020] pl-3 py-0.5">
                 <h2 className="text-base sm:text-lg font-bold text-slate-900 font-[Prompt]">
                   7. การเชื่อมโยงกับนโยบายคุกกี้
                 </h2>
@@ -219,7 +219,7 @@ export default function PrivacyPolicyPage() {
                 สำหรับการใช้งานคุกกี้และเทคโนโลยีติดตามบนเว็บไซต์นี้ ท่านสามารถศึกษารายละเอียดเพิ่มเติมได้ที่{' '}
                 <Link
                   href="/cookie-policy"
-                  className="text-[#c81415] hover:text-[#960d0e] font-semibold underline underline-offset-2 transition-colors"
+                  className="text-[#800020] hover:text-[#570016] font-semibold underline underline-offset-2 transition-colors"
                 >
                   นโยบายการใช้งานคุกกี้ (Cookie Policy)
                 </Link>

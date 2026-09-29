@@ -6,6 +6,7 @@ import { useAuth } from '@/context/AuthContext';
 import EditProfileModal, { CustomerProfileData } from '@/components/EditProfileModal';
 import AccountLayout from '@/components/AccountLayout';
 import { ExternalLink, AlertCircle } from 'lucide-react';
+import { WineLoading } from '@/components/WineLoading';
 
 function AddressContent() {
   const router = useRouter();
@@ -54,9 +55,8 @@ function AddressContent() {
   if (authLoading || (loading && !profile)) {
     return (
       <AccountLayout activeItemOverride="address">
-        <div className="space-y-6 animate-pulse">
-          <div className="h-10 bg-slate-200 rounded-sm w-64" />
-          <div className="h-64 bg-slate-200 rounded-sm" />
+        <div className="w-full min-h-[calc(100vh-250px)] flex items-center justify-center">
+          <WineLoading size="md" />
         </div>
       </AccountLayout>
     );
@@ -110,7 +110,7 @@ function AddressContent() {
                   <button
                     type="button"
                     onClick={() => openEdit('address')}
-                    className="text-xs font-semibold text-red-700 hover:text-red-800 hover:underline cursor-pointer"
+                    className="text-xs font-semibold text-blue-600 hover:text-blue-700 hover:underline cursor-pointer transition-colors"
                   >
                     แก้ไขที่อยู่จัดส่งสินค้า
                   </button>
@@ -145,7 +145,15 @@ function AddressContent() {
 
 export default function CustomerAddressPage() {
   return (
-    <Suspense fallback={<div className="max-w-[1600px] mx-auto p-8 animate-pulse">กำลังโหลดข้อมูล...</div>}>
+    <Suspense
+      fallback={
+        <AccountLayout activeItemOverride="address">
+          <div className="w-full min-h-[calc(100vh-250px)] flex items-center justify-center">
+            <WineLoading size="md" />
+          </div>
+        </AccountLayout>
+      }
+    >
       <AddressContent />
     </Suspense>
   );

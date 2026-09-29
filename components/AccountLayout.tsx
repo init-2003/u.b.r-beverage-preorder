@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname, useSearchParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { LogOut, User, Menu, X } from 'lucide-react';
+import { WineLoading } from '@/components/WineLoading';
 
 interface AccountLayoutProps {
   children: React.ReactNode;
@@ -199,7 +200,27 @@ export default function AccountLayout({
     }
   }, [authLoading, customer, router]);
 
-  if (authLoading || !customer) {
+  if (authLoading) {
+    return (
+      <div className="flex-1 flex flex-col bg-[#f5f5f5] py-8">
+        <div className="max-w-[1600px] mx-auto w-full px-4 sm:px-6 lg:px-8">
+          <div className="w-full flex flex-col lg:flex-row gap-8 lg:gap-12 items-start">
+            <Suspense fallback={<AccountSidebarFallback />}>
+              <AccountSidebar activeItemOverride={activeItemOverride} />
+            </Suspense>
+
+            <main className="flex-1 w-full min-w-0">
+              <div className="w-full min-h-[calc(100vh-250px)] flex items-center justify-center">
+                <WineLoading size="md" />
+              </div>
+            </main>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!customer) {
     return null;
   }
 

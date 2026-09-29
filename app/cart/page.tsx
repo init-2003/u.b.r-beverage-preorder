@@ -9,6 +9,7 @@ import {
   ShoppingCart, ArrowLeft, X
 } from 'lucide-react';
 import { EmptyCartIllustration } from '@/components/EmptyCartIllustration';
+import { CartIllustration } from '@/components/CartIllustration';
 
 const CART_SELECTION_STORAGE_KEY = 'ubr_cart_selected_trade_ids';
 
@@ -35,16 +36,31 @@ export default function CartPage() {
       if (items.length === 0) return; // Wait until items are hydrated from CartContext
 
       try {
-        const saved = localStorage.getItem(CART_SELECTION_STORAGE_KEY);
-        if (saved !== null) {
-          const parsed: string[] = JSON.parse(saved);
-          const currentTradeIds = new Set(items.map((i) => i.tradeId));
-          // Respect user's saved selection (even if empty []), filtered by currently available items
-          const validSaved = parsed.filter((id) => currentTradeIds.has(id));
-          setSelectedIds(new Set(validSaved));
+        const justAdded = localStorage.getItem('ubr_cart_just_added');
+        if (justAdded === 'true') {
+          // หากเพิ่งมีการเพิ่มสินค้าเข้าตะกร้า: ติ๊กเลือกสินค้าทั้งหมดทันที
+          try {
+            localStorage.removeItem('ubr_cart_just_added');
+          } catch {}
+          const allIds = items.map((i) => i.tradeId);
+          setSelectedIds(new Set(allIds));
+          localStorage.setItem(CART_SELECTION_STORAGE_KEY, JSON.stringify(allIds));
+          sessionStorage.setItem('ubr_cart_selected_ids', JSON.stringify(allIds));
         } else {
-          // First time opening cart without any prior saved choice: select all items
-          setSelectedIds(new Set(items.map((i) => i.tradeId)));
+          const saved = localStorage.getItem(CART_SELECTION_STORAGE_KEY);
+          if (saved !== null) {
+            const parsed: string[] = JSON.parse(saved);
+            const currentTradeIds = new Set(items.map((i) => i.tradeId));
+            // ถ้าผู้ใช้เคยมาติ๊กออกทีหลัง ให้จดจำตามที่ผู้ใช้เลือกไว้
+            const validSaved = parsed.filter((id) => currentTradeIds.has(id));
+            setSelectedIds(new Set(validSaved));
+          } else {
+            // ครั้งแรกที่เปิดตะกร้า: ติ๊กเลือกสินค้าทั้งหมด
+            const allIds = items.map((i) => i.tradeId);
+            setSelectedIds(new Set(allIds));
+            localStorage.setItem(CART_SELECTION_STORAGE_KEY, JSON.stringify(allIds));
+            sessionStorage.setItem('ubr_cart_selected_ids', JSON.stringify(allIds));
+          }
         }
       } catch {
         setSelectedIds(new Set(items.map((i) => i.tradeId)));
@@ -55,27 +71,34 @@ export default function CartPage() {
       return;
     }
 
-    // 2. Subsequent updates when items list changes (items added or deleted)
+    // 2. Subsequent updates when items list changes while cart page is loaded
     const prevIds = new Set(prevItemsRef.current.map((i) => i.tradeId));
     const currentIds = new Set(items.map((i) => i.tradeId));
     const newlyAddedIds = items.filter((i) => !prevIds.has(i.tradeId)).map((i) => i.tradeId);
 
     // Only update selection if items were actually added or removed
     if (prevItemsRef.current.length !== items.length || newlyAddedIds.length > 0) {
-      setSelectedIds((prev) => {
-        const next = new Set<string>();
-        // Keep existing selections that still exist in cart
-        prev.forEach((id) => {
-          if (currentIds.has(id)) {
-            next.add(id);
-          }
+      if (newlyAddedIds.length > 0) {
+        // เมื่อมีการเพิ่มสินค้าใหม่เข้าตะกร้า: ติ๊กทั้งหมดไว้เลยตามความต้องการของผู้ใช้
+        const allIds = items.map((i) => i.tradeId);
+        setSelectedIds(new Set(allIds));
+        try {
+          localStorage.setItem(CART_SELECTION_STORAGE_KEY, JSON.stringify(allIds));
+          sessionStorage.setItem('ubr_cart_selected_ids', JSON.stringify(allIds));
+          localStorage.removeItem('ubr_cart_just_added');
+        } catch {}
+      } else {
+        // กรณีลบสินค้าออกจากตะกร้า: จำค่าที่ผู้ใช้เคยติ๊กเลือกไว้ตามเดิม
+        setSelectedIds((prev) => {
+          const next = new Set<string>();
+          prev.forEach((id) => {
+            if (currentIds.has(id)) {
+              next.add(id);
+            }
+          });
+          return next;
         });
-        // Auto-select brand-new items added to cart
-        newlyAddedIds.forEach((id) => {
-          next.add(id);
-        });
-        return next;
-      });
+      }
     }
 
     prevItemsRef.current = items;
@@ -189,7 +212,7 @@ export default function CartPage() {
             <div className="pt-2">
               <Link
                 href="/"
-                className="inline-flex items-center justify-center px-8 py-2.5 rounded-full bg-[#c81415] hover:bg-[#b01011] active:bg-[#960d0e] text-white text-sm font-bold shadow-sm transition-all hover:scale-[1.02] active:scale-[0.98]"
+                className="inline-flex items-center justify-center px-8 py-2.5 rounded-full bg-[#800020] hover:bg-[#6b001b] active:bg-[#570016] text-white text-sm font-bold shadow-sm transition-all hover:scale-[1.02] active:scale-[0.98]"
               >
                 <span>ไปเลือกซื้อสินค้า</span>
               </Link>
@@ -206,9 +229,12 @@ export default function CartPage() {
         
         {/* Page Title Header */}
         <div className="pb-3 border-b border-slate-200/80">
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-            ตะกร้าสินค้า
-          </h1>
+          <div className="flex items-center gap-3 sm:gap-3.5">
+            <CartIllustration className="w-12 h-12 sm:w-14 sm:h-14 shrink-0 drop-shadow-xs" />
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+              ตะกร้าสินค้า
+            </h1>
+          </div>
         </div>
 
         {/* 1. Top Table Header Card (Desktop only, matching Shopee screenshot) */}
@@ -220,16 +246,17 @@ export default function CartPage() {
               id="header-select-all"
               checked={isAllSelected}
               onChange={handleToggleSelectAll}
-              className="w-4 h-4 rounded border-slate-300 text-[#c81415] focus:ring-[#c81415] accent-[#c81415] cursor-pointer"
+              className="w-4 h-4 rounded border-slate-300 text-black focus:ring-black accent-black cursor-pointer"
             />
             <label htmlFor="header-select-all" className="text-sm font-semibold text-slate-800 cursor-pointer select-none">
-              สินค้า
+              รายการสินค้า
             </label>
           </div>
 
-          {/* Right Columns: จำนวน | ราคาต่อหน่วย | ราคารวม | ยอดมัดจำ | แอคชั่น */}
-          <div className="grid grid-cols-5 gap-2 text-xs font-semibold text-slate-500 text-center select-none w-[58%]">
+          {/* Right Columns: จำนวน | หน่วย | ราคาต่อหน่วย | ราคารวม | ยอดมัดจำ | แอคชั่น */}
+          <div className="grid grid-cols-6 gap-2 text-xs text-slate-400 font-normal text-center select-none w-[58%]">
             <span className="text-center">จำนวน</span>
+            <span className="text-center">หน่วย</span>
             <span className="text-center">ราคาต่อหน่วย</span>
             <span className="text-center">ราคารวม</span>
             <span className="text-center">ยอดมัดจำ</span>
@@ -260,12 +287,12 @@ export default function CartPage() {
                   }`}
                 >
                   {/* Left Column: Checkbox + Image + Details */}
-                  <div className="flex items-start gap-4 flex-1 pr-6 min-w-0">
+                  <div className="flex items-center gap-4 flex-1 pr-6 min-w-0">
                     <input
                       type="checkbox"
                       checked={isSelected}
                       onChange={() => handleToggleItem(item.tradeId)}
-                      className="w-4 h-4 rounded border-slate-300 text-[#c81415] focus:ring-[#c81415] accent-[#c81415] cursor-pointer mt-1 shrink-0"
+                      className="w-4 h-4 rounded border-slate-300 text-black focus:ring-black accent-black cursor-pointer shrink-0"
                     />
 
                     {/* Product Image */}
@@ -293,7 +320,7 @@ export default function CartPage() {
                     <div className="min-w-0 flex-1 space-y-1">
                       <Link
                         href={`/products/${encodeURIComponent(item.tradeId)}`}
-                        className="text-sm font-bold text-slate-900 leading-snug line-clamp-2 hover:text-[#c81415] transition-colors"
+                        className="text-sm font-bold text-slate-900 leading-snug line-clamp-2"
                       >
                         {item.tradeName}
                       </Link>
@@ -302,19 +329,14 @@ export default function CartPage() {
                           {item.tradeNameEN}
                         </p>
                       )}
-
-                      {unitDeposit > 0 && (
-                        <div className="pt-0.5">
-                          <span className="text-[10px] text-red-800 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded-[2px] font-medium">
-                            มัดจำ ฿{unitDeposit.toLocaleString()}/{item.unitName || 'หน่วย'}
-                          </span>
-                        </div>
-                      )}
+                      <div className="flex items-center gap-2 flex-wrap text-[11px] text-slate-500">
+                        <span>SKU: <span className="text-slate-600">{item.tradeId}</span></span>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Right Columns: จำนวน, ราคาต่อหน่วย, ราคารวม, ยอดมัดจำ, แอคชั่น */}
-                  <div className="grid grid-cols-5 gap-2 items-center w-[58%] text-center shrink-0">
+                  {/* Right Columns: จำนวน, หน่วย, ราคาต่อหน่วย, ราคารวม, ยอดมัดจำ, แอคชั่น */}
+                  <div className="grid grid-cols-6 gap-2 items-center w-[58%] text-center shrink-0">
                     {/* 1. จำนวน */}
                     <div className="flex justify-center">
                       <div className="relative inline-flex flex-col items-center">
@@ -334,7 +356,7 @@ export default function CartPage() {
                               const val = parseInt(e.target.value.replace(/[^0-9]/g, '') || '0', 10);
                               updateQty(item.tradeId, val);
                             }}
-                            className="w-10 sm:w-11 h-full text-center text-xs font-semibold text-slate-900 border-x border-slate-200 outline-none focus:bg-slate-50 rounded-none"
+                            className="w-10 sm:w-11 h-full text-center text-xs sm:text-sm font-black text-slate-900 border-x border-slate-200 outline-none focus:bg-slate-50 rounded-none"
                           />
                           <button
                             type="button"
@@ -353,27 +375,34 @@ export default function CartPage() {
                       </div>
                     </div>
 
-                    {/* 2. ราคาต่อหน่วย */}
+                    {/* 2. หน่วย */}
+                    <div className="text-center">
+                      <span className="text-sm font-medium text-slate-700">
+                        {item.unitName || 'หน่วย'}
+                      </span>
+                    </div>
+
+                    {/* 3. ราคาต่อหน่วย */}
                     <div className="text-center space-y-0.5">
-                      <span className="text-sm font-medium text-slate-700 tabular-nums block">
+                      <span className="text-xs sm:text-sm font-bold text-slate-900 tabular-nums block">
                         ฿{item.salePrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </span>
                     </div>
 
-                    {/* 3. ราคารวม */}
+                    {/* 4. ราคารวม */}
                     <div className="text-center space-y-0.5">
-                      <span className="text-sm font-semibold text-slate-900 tabular-nums block">
+                      <span className="text-xs sm:text-sm font-bold text-slate-900 tabular-nums block">
                         ฿{lineTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </span>
                     </div>
 
                     {/* 4. ยอดมัดจำ */}
                     <div className="text-center space-y-0.5">
-                      <span className="text-sm font-bold text-[#c81415] tabular-nums block">
+                      <span className="text-sm font-bold text-[#FF6B00] tabular-nums block">
                         ฿{lineDeposit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </span>
                       {unitDeposit > 0 && item.qty > 1 && (
-                        <span className="text-[10px] text-slate-400 font-medium block">
+                        <span className="text-xs sm:text-[13px] text-slate-500 font-medium block">
                           (฿{unitDeposit.toLocaleString()}/{item.unitName || 'หน่วย'})
                         </span>
                       )}
@@ -384,7 +413,7 @@ export default function CartPage() {
                       <button
                         type="button"
                         onClick={() => removeItem(item.tradeId)}
-                        className="text-xs font-medium text-slate-700 hover:text-[#c81415] transition-colors cursor-pointer hover:underline"
+                        className="text-xs font-medium text-slate-700 hover:text-[#800020] transition-colors cursor-pointer hover:underline"
                       >
                         ลบ
                       </button>
@@ -411,12 +440,12 @@ export default function CartPage() {
                     isSelected ? 'bg-white' : 'bg-slate-50/40 opacity-70'
                   }`}
                 >
-                  <div className="flex items-start gap-3">
+                  <div className="flex items-center gap-3">
                     <input
                       type="checkbox"
                       checked={isSelected}
                       onChange={() => handleToggleItem(item.tradeId)}
-                      className="w-4 h-4 rounded border-slate-300 text-[#c81415] focus:ring-[#c81415] accent-[#c81415] cursor-pointer mt-1 shrink-0"
+                      className="w-4 h-4 rounded border-slate-300 text-black focus:ring-black accent-black cursor-pointer shrink-0"
                     />
 
                     <div className="w-16 h-16 bg-white border border-slate-100 rounded-sm shrink-0 flex items-center justify-center p-1 overflow-hidden shadow-2xs">
@@ -445,6 +474,11 @@ export default function CartPage() {
                           {item.tradeNameEN}
                         </p>
                       )}
+                      <div className="flex items-center gap-2 flex-wrap text-[10px] text-slate-500">
+                        <span>หน่วย: <strong className="text-slate-700">{item.unitName || 'หน่วย'}</strong></span>
+                        <span>•</span>
+                        <span>SKU: <span className="text-slate-600">{item.tradeId}</span></span>
+                      </div>
                     </div>
                   </div>
 
@@ -475,7 +509,7 @@ export default function CartPage() {
                                 const val = parseInt(e.target.value.replace(/[^0-9]/g, '') || '0', 10);
                                 updateQty(item.tradeId, val);
                               }}
-                              className="w-8 h-full text-center font-bold text-xs text-slate-900 border-x border-slate-200 outline-none rounded-none"
+                              className="w-8 h-full text-center font-black text-xs sm:text-sm text-slate-900 border-x border-slate-200 outline-none rounded-none"
                             />
                             <button
                               type="button"
@@ -492,6 +526,9 @@ export default function CartPage() {
                             </p>
                           )}
                         </div>
+                        <span className="text-[10px] text-slate-500 font-medium mt-1 select-none">
+                          {item.unitName || 'หน่วย'}
+                        </span>
                       </div>
                     </div>
 
@@ -523,19 +560,19 @@ export default function CartPage() {
                       </div>
                     </div>
 
-                    {/* Col 4: ยอดมัดจำ: */}
+                    {/* Col 4: รวมมัดจำ: */}
                     <div className="flex flex-col items-center justify-start">
                       <div className="h-5 flex items-center justify-center">
                         <span className="text-[11px] font-bold text-slate-800 leading-none">
-                          ยอดมัดจำ:
+                          รวมมัดจำ:
                         </span>
                       </div>
                       <div className="h-7 flex flex-col items-center justify-center mt-1">
-                        <span className="block text-xs font-bold text-[#c81415] tabular-nums leading-tight">
+                        <span className="block text-xs font-bold text-[#FF6B00] tabular-nums leading-tight">
                           ฿{lineDeposit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </span>
                         {unitDeposit > 0 && item.qty > 1 && (
-                          <span className="text-[9px] text-slate-400 font-medium leading-none mt-0.5">
+                          <span className="text-[11px] sm:text-xs text-slate-500 font-medium leading-none mt-0.5">
                             (฿{unitDeposit.toLocaleString()}/{item.unitName || 'หน่วย'})
                           </span>
                         )}
@@ -574,7 +611,7 @@ export default function CartPage() {
                   type="checkbox"
                   checked={isAllSelected}
                   onChange={handleToggleSelectAll}
-                  className="w-4 h-4 rounded border-slate-300 text-[#c81415] focus:ring-[#c81415] accent-[#c81415] cursor-pointer"
+                  className="w-4 h-4 rounded border-slate-300 text-black focus:ring-black accent-black cursor-pointer"
                 />
                 <span>เลือกทั้งหมด ({items.length})</span>
               </label>
@@ -613,10 +650,10 @@ export default function CartPage() {
 
                 {/* 2. ยอดมัดจำที่ต้องชำระ (Deposit) */}
                 <div className="flex items-baseline gap-3 justify-end">
-                  <span className="text-xs sm:text-sm font-bold text-[#c81415]">
+                  <span className="text-xs sm:text-sm font-bold text-[#FF6B00]">
                     ยอดมัดจำที่ต้องชำระ (Deposit)
                   </span>
-                  <span className="text-xl sm:text-2xl font-black text-[#c81415] tabular-nums">
+                  <span className="text-xl sm:text-2xl font-black text-[#FF6B00] tabular-nums">
                     ฿{selectedTotalDeposit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
                 </div>
@@ -643,7 +680,7 @@ export default function CartPage() {
                 <button
                   type="button"
                   onClick={handleCheckout}
-                  className="px-10 sm:px-14 py-3.5 rounded-full bg-[#c81415] hover:bg-[#b01011] active:bg-[#960d0e] text-white font-bold text-sm sm:text-base shadow-xs hover:shadow transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99] whitespace-nowrap"
+                  className="px-10 sm:px-14 py-3.5 rounded-full bg-[#800020] hover:bg-[#6b001b] active:bg-[#570016] text-white font-bold text-sm sm:text-base shadow-xs hover:shadow transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99] whitespace-nowrap"
                 >
                   <span>สั่งสินค้า</span>
                 </button>

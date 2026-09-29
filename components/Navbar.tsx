@@ -71,7 +71,7 @@ function NavbarSearch() {
       </div>
       <button
         type="submit"
-        className="h-full px-5 sm:px-6 bg-[#c81415] hover:bg-[#b01011] active:bg-[#960d0e] text-white rounded-full transition-colors flex items-center justify-center cursor-pointer shrink-0 shadow-2xs"
+        className="h-full px-5 sm:px-6 bg-[#800020] hover:bg-[#6b001b] active:bg-[#570016] text-white rounded-full transition-colors flex items-center justify-center cursor-pointer shrink-0 shadow-2xs"
         title="ค้นหา"
       >
         <Search className="w-4 h-4 text-white stroke-[2.5]" />
@@ -156,7 +156,7 @@ function MobileSearchOverlay({
           </div>
           <button
             type="submit"
-            className="h-full px-4 bg-[#c81415] hover:bg-[#b01011] active:bg-[#960d0e] text-white rounded-full flex items-center justify-center cursor-pointer shrink-0"
+            className="h-full px-4 bg-[#800020] hover:bg-[#6b001b] active:bg-[#570016] text-white rounded-full flex items-center justify-center cursor-pointer shrink-0"
             title="ค้นหา"
           >
             <Search className="w-4 h-4 text-white stroke-[2.5]" />
@@ -353,7 +353,7 @@ export default function Navbar({ onRefreshData }: NavbarProps = {}) {
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-40 w-full bg-[#c81415] border-b border-[#a80f10] shadow-md print:hidden">
+    <header className="sticky top-0 z-40 w-full bg-[#800020] border-b border-[#68001a] shadow-md print:hidden">
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
         {/* Mobile Search Overlay Bar (Active when search icon clicked on mobile) */}
         <Suspense fallback={null}>

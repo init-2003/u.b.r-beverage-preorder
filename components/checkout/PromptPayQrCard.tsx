@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { Download, Share2, Check } from 'lucide-react';
 import { generateKShopQrDataUrl, USE_TEST_PROMPTPAY, TEST_PROMPTPAY_PHONE } from '@/lib/kshopQr';
+import { WineLoading } from '@/components/WineLoading';
 
 export interface PromptPayQrCardProps {
   amount: number;
@@ -112,9 +113,8 @@ export default function PromptPayQrCard({
         {/* QR Code Container with subtle frame matching reference */}
         <div className="p-3 bg-white border border-slate-200 rounded-sm shadow-xs">
           {qrLoading ? (
-            <div className="w-56 h-56 flex flex-col items-center justify-center gap-2 text-slate-400">
-              <div className="w-8 h-8 border-3 border-amber-500 border-t-transparent rounded-full animate-spin" />
-              <span className="text-xs">กำลังสร้าง QR Code...</span>
+            <div className="w-56 h-56 flex items-center justify-center">
+              <WineLoading size="sm" />
             </div>
           ) : qrDataUrl ? (
             <img
@@ -151,7 +151,7 @@ export default function PromptPayQrCard({
         {/* Amount Row matching reference */}
         <div className="text-center pt-0.5">
           <span className="text-base sm:text-lg font-bold text-slate-900">ยอดชำระ </span>
-          <span className="text-2xl sm:text-3xl font-extrabold text-[#c81415] tabular-nums mx-1 font-sans">
+          <span className="text-2xl sm:text-3xl font-extrabold text-[#FF6B00] tabular-nums mx-1 font-sans">
             {formattedAmount}
           </span>
           <span className="text-base sm:text-lg font-bold text-slate-900"> บาท</span>

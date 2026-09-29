@@ -9,6 +9,7 @@ import { EmptySearchIllustration } from './EmptySearchIllustration';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 import DraggableCartButton from './DraggableCartButton';
+import { BannerCarousel } from './BannerCarousel';
 
 interface ProductCatalogProps {
   products: Product[];
@@ -114,26 +115,10 @@ export default function ProductCatalog({
   return (
     <div className="space-y-8">
 
-      {/* Top Banner (Burgundy Luxury Theme) */}
-      <div className="bg-gradient-to-r from-[#2d040a] via-[#42070f] to-[#2d040a] text-slate-100 rounded-sm p-6 sm:p-8 shadow-[0_1px_1px_0_rgba(0,0,0,0.05)] border border-red-900/60 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-80 h-80 bg-red-600/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
-
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="space-y-3 max-w-2xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-red-950/80 text-amber-300 text-[11px] font-bold uppercase tracking-wider rounded-sm border border-amber-500/30">
-              <span>พรีออเดอร์เครื่องดื่มพรีเมียมนำเข้า • อุบลรุ่งเรือง เบฟเวอเรจ</span>
-            </div>
-            <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-white italic">
-              Ubon Rung Rueang Beverage
-            </h1>
-            <p className="text-red-200/90 text-xs sm:text-sm leading-relaxed">
-              เรานำเข้าเครื่องดื่มชั้นเลิศจากต่างประเทศโดยตรง ชำระค่ามัดจำขั้นต้น (30-50%) และรอส่งตรงถึงคลังสินค้า
-              เมื่อสินค้าผ่านด่านศุลกากรมาถึงคลังไทยแล้ว ค่อยชำระส่วนที่เหลือเพื่อส่งด่วนถึงบ้านท่าน!
-            </p>
-          </div>
-        </div>
-      </div>
+      {/* Top Banner Carousel (Burgundy Luxury Theme) - ซ่อนเมื่อกำลังค้นหาสินค้า */}
+      {!activeSearch.trim() && (
+        <BannerCarousel />
+      )}
 
       {/* Active Search Results Feedback */}
       {activeSearch && (
@@ -145,14 +130,14 @@ export default function ProductCatalog({
               onClick={() => {
                 handleSearchInputChange('');
               }}
-              className="text-xs text-red-700 hover:text-red-900 font-semibold underline cursor-pointer ml-1"
+              className="text-xs text-red-600 hover:text-red-700 font-bold underline decoration-red-600 decoration-1 underline-offset-2 cursor-pointer ml-1.5 transition-colors"
             >
               ล้างการค้นหา
             </button>
           </div>
           <div className="text-xs text-slate-500 flex items-center gap-1.5 font-medium ml-auto">
             <span>พบสินค้า</span>
-            <strong className="text-red-900 font-bold">{filteredProducts.length}</strong>
+            <strong className="text-red-600 font-bold text-sm">{filteredProducts.length}</strong>
             <span>รายการ</span>
           </div>
         </div>
@@ -189,7 +174,7 @@ export default function ProductCatalog({
                   if (onSelectCategory) onSelectCategory('all');
                   setInternalCategory('all');
                 }}
-                className="inline-flex items-center justify-center px-6 py-2.5 rounded-full bg-[#c81415] hover:bg-[#b01011] active:bg-[#960d0e] text-white text-xs sm:text-sm font-bold shadow-xs transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+                className="inline-flex items-center justify-center px-6 py-2.5 rounded-full bg-[#800020] hover:bg-[#6b001b] active:bg-[#570016] text-white text-xs sm:text-sm font-bold shadow-xs transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
               >
                 <span>ดูสินค้าทั้งหมด</span>
               </button>
@@ -206,7 +191,8 @@ export default function ProductCatalog({
             return (
               <div
                 key={product.id}
-                className="rounded-sm bg-white border border-slate-100/80 shadow-[0_1px_1px_0_rgba(0,0,0,0.05)] hover:shadow-md hover:border-slate-200 p-3 sm:p-3.5 flex flex-col justify-between group transition-all duration-200 relative"
+                onClick={() => router.push(`/products/${product.id}`)}
+                className="rounded-sm bg-white border border-slate-100/80 shadow-[0_1px_1px_0_rgba(0,0,0,0.05)] hover:shadow-xl hover:shadow-slate-300/50 hover:border-slate-300 hover:scale-[1.04] hover:-translate-y-1 hover:z-20 p-3 sm:p-3.5 flex flex-col justify-between group transition-all duration-300 ease-out relative cursor-pointer"
               >
                 <div>
                   {/* Product Image Box (Centered, Object Contain, Advice Style) */}
@@ -238,7 +224,7 @@ export default function ProductCatalog({
                   {/* Product Name (Clean 2-line title) */}
                   <div className="space-y-1 mb-2">
                     <Link href={`/products/${product.id}`} className="block group/title">
-                      <h3 className="text-sm font-normal text-slate-800 line-clamp-2 min-h-[38px] leading-snug group-hover/title:text-red-600 transition-colors" title={product.name}>
+                      <h3 className="text-sm font-normal text-slate-800 line-clamp-2 min-h-[38px] leading-snug" title={product.name}>
                         {product.name}
                       </h3>
                     </Link>
@@ -246,20 +232,18 @@ export default function ProductCatalog({
                 </div>
 
                 {/* Bottom Section: Price, Deposit & Action Buttons */}
-                <div className="pt-2 border-t border-slate-100 space-y-2">
-                  {/* Price Tag (Red font as shown in example image) */}
+                <div className="pt-1 space-y-2">
+                  {/* Price Tag */}
                   <div>
                     <div className="flex items-baseline gap-1">
-                      <span className="text-base sm:text-lg font-bold text-[#e02020]">
+                      <span className="text-base sm:text-lg font-bold text-[#FF6B00]">
                         ฿{(product.price || 0).toLocaleString()}
                       </span>
                     </div>
 
-                    {depositAmt > 0 && (
-                      <p className="text-[11px] sm:text-xs text-slate-500 font-medium mt-0.5">
-                        มัดจำล่วงหน้า ฿{depositAmt.toLocaleString()}
-                      </p>
-                    )}
+                    <p className="text-[11px] sm:text-xs text-slate-500 font-medium mt-0.5">
+                      มัดจำล่วงหน้า ฿{depositAmt.toLocaleString()}
+                    </p>
                   </div>
 
                   {/* Action Buttons: Add to Cart (Icon only) + กดสั่ง */}
@@ -289,7 +273,7 @@ export default function ProductCatalog({
                     <button
                       type="button"
                       onClick={(e) => handleDirectOrder(e, product)}
-                      className="flex-1 h-9 py-2 px-2.5 rounded-full font-bold text-xs flex items-center justify-center gap-1.5 transition-all duration-150 bg-[#c81415] hover:bg-[#b01011] active:bg-[#960d0e] text-white shadow-2xs hover:shadow-xs cursor-pointer active:scale-95 select-none"
+                      className="flex-1 h-9 py-2 px-2.5 rounded-full font-bold text-xs flex items-center justify-center gap-1.5 transition-all duration-150 bg-[#800020] hover:bg-[#6b001b] active:bg-[#570016] text-white shadow-2xs hover:shadow-xs cursor-pointer active:scale-95 select-none"
                       title="Pre Order"
                     >
                       <span>Pre Order</span>

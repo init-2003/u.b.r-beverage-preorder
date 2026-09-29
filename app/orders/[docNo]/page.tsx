@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useBreadcrumb } from '@/context/BreadcrumbContext';
@@ -31,6 +31,14 @@ import {
 } from 'lucide-react';
 import PaymentErrorModal from '@/components/payment/PaymentErrorModal';
 import { useAuth } from '@/context/AuthContext';
+import PaidStamp from '@/components/orders/PaidStamp';
+import { CodIllustration } from '@/components/orders/CodIllustration';
+import { PaymentQrIllustration } from '@/components/orders/PaymentQrIllustration';
+import { SlipVerifiedIllustration } from '@/components/orders/SlipVerifiedIllustration';
+import { StepPaymentIllustration } from '@/components/orders/StepPaymentIllustration';
+import { StepProcessingIllustration } from '@/components/orders/StepProcessingIllustration';
+import { StepReceiptIllustration } from '@/components/orders/StepReceiptIllustration';
+import { WineLoading } from '@/components/WineLoading';
 
 interface OrderDetail {
   Branch_Id: string;
@@ -110,18 +118,62 @@ export default function OrderDetailPage() {
   const [uploadSuccessMsg, setUploadSuccessMsg] = useState('');
   const [uploadErrorMsg, setUploadErrorMsg] = useState('');
   const [showSlipModal, setShowSlipModal] = useState(false);
+  const [slipModalVisible, setSlipModalVisible] = useState(false);
+  const slipModalTimerRef = useRef<NodeJS.Timeout | null>(null);
   const [showErrorModal, setShowErrorModal] = useState(false);
 
-  // Lock body scroll when slip modal is open
-  useEffect(() => {
-    if (showSlipModal) {
-      const prevOverflow = document.body.style.overflow;
-      document.body.style.overflow = 'hidden';
-      return () => {
-        document.body.style.overflow = prevOverflow;
-      };
+  const openSlipModal = () => {
+    if (slipModalTimerRef.current) {
+      clearTimeout(slipModalTimerRef.current);
+      slipModalTimerRef.current = null;
     }
+    setShowSlipModal(true);
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        setSlipModalVisible(true);
+      });
+    });
+  };
+
+  const closeSlipModal = () => {
+    if (slipModalTimerRef.current) {
+      clearTimeout(slipModalTimerRef.current);
+    }
+    setSlipModalVisible(false);
+    slipModalTimerRef.current = setTimeout(() => {
+      setShowSlipModal(false);
+      slipModalTimerRef.current = null;
+    }, 220);
+  };
+
+  // Lock body scroll and listen for Escape key when slip modal is open
+  useEffect(() => {
+    if (!showSlipModal) return;
+
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        closeSlipModal();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      window.removeEventListener('keydown', handleKeyDown);
+    };
   }, [showSlipModal]);
+
+  // Clean up timer on unmount
+  useEffect(() => {
+    return () => {
+      if (slipModalTimerRef.current) {
+        clearTimeout(slipModalTimerRef.current);
+      }
+    };
+  }, []);
 
   const handleSlipChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -150,7 +202,7 @@ export default function OrderDetailPage() {
       const formData = new FormData();
       formData.append('file', slipFile);
       formData.append('docNo', docNo);
-      formData.append('expectedAmount', String(deposit > 0 ? deposit : totalAmount));
+      formData.append('expectedAmount', String(deposit));
 
       const uploadRes = await fetch('/api/upload', {
         method: 'POST',
@@ -160,7 +212,7 @@ export default function OrderDetailPage() {
       if (!uploadRes.ok || !uploadData.success) {
         throw new Error(
           uploadData.message ||
-            'สลิปไม่ถูกต้อง! กรุณาอัปโหลดสลิปที่ถูกต้อง'
+          'สลิปไม่ถูกต้อง! กรุณาอัปโหลดสลิปที่ถูกต้อง'
         );
       }
 
@@ -170,16 +222,16 @@ export default function OrderDetailPage() {
       setOrder((prev) =>
         prev
           ? {
-              ...prev,
-              FILE_NAME_PIC: filename,
-              Doc_Sts: '0',
-              Doc_Sts_Name: 'กำลังดำเนินการ',
-            }
+            ...prev,
+            FILE_NAME_PIC: filename,
+            Doc_Sts: '0',
+            Doc_Sts_Name: 'กำลังดำเนินการ',
+          }
           : prev
       );
       setUploadSuccessMsg(
         uploadData.message ||
-          '✓ ตรวจสอบ QR Code และยอดเงินในสลิปถูกต้องเรียบร้อยแล้ว สถานะเปลี่ยนเป็นกำลังดำเนินการ'
+        '✓ ตรวจสอบ QR Code และยอดเงินในสลิปถูกต้องเรียบร้อยแล้ว สถานะเปลี่ยนเป็นกำลังดำเนินการ'
       );
       setSlipFile(null);
       setSlipPreview(null);
@@ -269,8 +321,8 @@ export default function OrderDetailPage() {
 
   if (authLoading || !customer || loading) {
     return (
-      <div className="flex-1 bg-[#f5f5f5] py-16 px-4 flex flex-col items-center justify-center">
-        <div className="w-12 h-12 border-4 border-[#c81415] border-t-transparent rounded-full animate-spin mb-4" />
+      <div className="flex-1 min-h-[calc(100vh-200px)] bg-[#f5f5f5] px-4 flex items-center justify-center">
+        <WineLoading size="md" />
       </div>
     );
   }
@@ -323,6 +375,16 @@ export default function OrderDetailPage() {
   // เก็บเงินปลายทาง (COD) สถานะคือ กำลังดำเนินการ ('0') ทันที ไม่ใช้ รอชำระ ('1')
   const docStsCode = (isCod && rawDocSts === '1') ? '0' : rawDocSts;
 
+  // ตรวจสอบว่าออเดอร์นี้ชำระเงินแล้วหรือไม่ (ออกใบเสร็จแล้ว, มีสลิปที่แนบ, หรือมีวันที่ชำระเงิน)
+  // เก็บเงินปลายทาง (COD) ไม่ต้องขึ้นตราปั๊มชำระเงินแล้ว
+  const isPaid =
+    !isCod && (
+      docStsCode === '3' ||
+      Boolean(order.FILE_NAME_PIC) ||
+      Boolean(order.Due_Date_Pay) ||
+      (order.money_sts === 'T' && docStsCode === '0')
+    );
+
   return (
     <div className="flex-1 flex flex-col w-full bg-[#f5f5f5] py-5 sm:py-8">
       <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 space-y-4">
@@ -334,9 +396,31 @@ export default function OrderDetailPage() {
             <div>
               <div className="flex items-center gap-2.5 flex-wrap">
                 <span className="text-xs text-slate-500 font-medium">หมายเลขคำสั่งซื้อ:</span>
-                <span className="text-sm sm:text-base font-bold text-slate-900 tracking-tight">
+                <span className="text-sm sm:text-base font-bold text-slate-900 tracking-tight font-mono">
                   {order.Fn_Doc_No}
                 </span>
+                {isCod ? (
+                  <PaidStamp
+                    shape="badge"
+                    label="ชำระเงินปลายทาง"
+                    subLabel="C.O.D"
+                    color="blue"
+                  />
+                ) : isPaid ? (
+                  <PaidStamp
+                    shape="badge"
+                    label="ชำระเงินแล้ว"
+                    subLabel="PAID"
+                    color="green"
+                  />
+                ) : docStsCode !== '4' ? (
+                  <PaidStamp
+                    shape="badge"
+                    label="รอชำระ"
+                    subLabel="PENDING"
+                    color="red"
+                  />
+                ) : null}
               </div>
               <p className="text-xs text-slate-400 mt-1 flex items-center gap-1.5">
                 <Clock className="w-3.5 h-3.5" />
@@ -345,36 +429,31 @@ export default function OrderDetailPage() {
             </div>
 
             {/* Action buttons on top right */}
-            {docStsCode === '3' && (
+            {(docStsCode === '3' || docStsCode === '0') && (
               <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
                 <button
                   type="button"
                   onClick={handleDownloadPdf}
                   disabled={downloadingPdf}
-                  className={`w-full sm:w-auto inline-flex items-center justify-center gap-1.5 sm:gap-2 px-4 sm:px-5 py-2 rounded-full bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold text-xs shadow-2xs hover:shadow transition-all cursor-pointer ${
-                    downloadingPdf ? 'opacity-70 cursor-not-allowed' : ''
-                  }`}
+                  className={`w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-5 py-2 rounded-full bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold text-xs shadow-2xs hover:shadow transition-all cursor-pointer ${downloadingPdf ? 'opacity-70 cursor-not-allowed' : ''
+                    }`}
                   title="ดาวน์โหลดไฟล์ใบสั่งซื้อ PDF"
                 >
                   {downloadingPdf ? (
-                    <>
+                    <span className="inline-flex items-center gap-1.5">
                       <Loader2 className="w-3.5 h-3.5 animate-spin" />
                       <span>กำลังดาวน์โหลด...</span>
-                    </>
+                    </span>
                   ) : (
-                    <>
-                      <Download className="w-3.5 h-3.5" />
-                      <span>ดาวน์โหลดใบสั่งซื้อ</span>
-                    </>
+                    <span>ดาวน์โหลดใบสั่งซื้อ</span>
                   )}
                 </button>
 
                 <Link
                   href={`/orders/${encodeURIComponent(order.Fn_Doc_No)}/view-purchase-order`}
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 sm:px-5 py-2 rounded-full bg-[#1d4ed8] hover:bg-[#1e40af] active:bg-[#1e3a8a] text-white font-bold text-xs shadow-2xs hover:shadow transition-all"
+                  className="w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-5 py-2 rounded-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold text-xs shadow-2xs hover:shadow transition-all"
                   title="เปิดดูและพิมพ์ใบสั่งซื้อ A4"
                 >
-                  <Eye className="w-3.5 h-3.5" />
                   <span>ดูใบสั่งซื้อ</span>
                 </Link>
               </div>
@@ -405,20 +484,19 @@ export default function OrderDetailPage() {
             <div className="p-5 sm:px-8 sm:py-7">
               <div className="max-w-2xl mx-auto relative">
                 {/* Stepper Progress Line */}
-                <div className="absolute top-4.5 left-[16.666%] right-[16.666%] h-0.5 bg-slate-200 -z-0">
+                <div className="absolute top-6 sm:top-7 left-[16.666%] right-[16.666%] h-1 bg-slate-200 -z-0 rounded-full overflow-hidden">
                   <div
-                    className={`h-full transition-all duration-500 ${
-                      docStsCode === '3'
-                        ? 'w-full bg-emerald-600'
+                    className={`h-full transition-all duration-500 ${docStsCode === '3'
+                        ? 'w-full bg-gradient-to-r from-blue-600 via-amber-500 to-emerald-600'
                         : (docStsCode === '0' || isCod)
-                        ? 'w-1/2 bg-[#c81415]'
-                        : 'w-0 bg-[#c81415]'
-                    }`}
+                          ? 'w-1/2 bg-gradient-to-r from-blue-600 to-amber-500'
+                          : 'w-0'
+                      }`}
                   />
                 </div>
 
                 <div className="grid grid-cols-3 relative z-10">
-                  {/* Step 1: สั่งซื้อสำเร็จ (สำหรับ COD) หรือ รอชำระ (สำหรับโอนเงิน) */}
+                  {/* Step 1: สั่งซื้อสำเร็จ (สำหรับ COD) หรือ รอชำระ (สำหรับโอนเงิน) - โทนสีน้ำเงิน */}
                   {(() => {
                     const isStep1Complete =
                       docStsCode === '0' ||
@@ -427,68 +505,46 @@ export default function OrderDetailPage() {
                       Boolean(order.FILE_NAME_PIC);
 
                     return (
-                      <div className="flex flex-col items-center text-center space-y-1.5">
-                        <div
-                          className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold transition-all shadow-2xs ${
-                            isStep1Complete
-                              ? 'bg-emerald-600 text-white ring-4 ring-emerald-100'
-                              : 'bg-[#c81415] text-white ring-4 ring-red-100'
-                          }`}
-                        >
-                          {isStep1Complete ? (
-                            <CheckCircle2 className="w-4 h-4" />
-                          ) : (
-                            <Clock className="w-4 h-4" />
-                          )}
-                        </div>
+                      <div className="flex flex-col items-center text-center space-y-1.5 group">
+                        <StepPaymentIllustration
+                          status={isStep1Complete ? 'completed' : 'pending'}
+                          className="w-12 h-12 sm:w-14 sm:h-14 transition-transform duration-200 group-hover:scale-105"
+                        />
                         <span
-                          className={`text-xs sm:text-sm font-bold ${
-                            isStep1Complete ? 'text-emerald-700' : 'text-slate-900'
-                          }`}
+                          className={`text-xs sm:text-sm font-bold ${isStep1Complete ? 'text-blue-700' : 'text-[#800020]'
+                            }`}
                         >
-                          {isCod ? 'สั่งซื้อสำเร็จ' : 'รอชำระ'}
+                          {isCod ? 'สั่งซื้อสำเร็จ' : isStep1Complete ? 'ชำระเงินแล้ว' : 'รอชำระ'}
                         </span>
                         <span className="text-[11px] text-slate-400">
                           {isCod
                             ? 'เก็บเงินปลายทาง'
                             : isStep1Complete
-                            ? 'ชำระเงินแล้ว'
-                            : 'รอชำระเงินมัดจำ'}
+                              ? 'ชำระเงินแล้ว'
+                              : 'รอชำระเงินมัดจำ'}
                         </span>
                       </div>
                     );
                   })()}
 
-                  {/* Step 2: กำลังดำเนินการ */}
+                  {/* Step 2: กำลังดำเนินการ - โทนสีส้ม/อำพัน */}
                   {(() => {
                     const isStep2Complete = docStsCode === '3';
                     const isStep2Active = docStsCode === '0' || (isCod && docStsCode !== '3' && docStsCode !== '4');
 
                     return (
-                      <div className="flex flex-col items-center text-center space-y-1.5">
-                        <div
-                          className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold transition-all shadow-2xs ${
-                            isStep2Complete
-                              ? 'bg-emerald-600 text-white ring-4 ring-emerald-100'
-                              : isStep2Active
-                              ? 'bg-[#c81415] text-white ring-4 ring-red-100'
-                              : 'bg-white border-2 border-slate-300 text-slate-400'
-                          }`}
-                        >
-                          {isStep2Complete ? (
-                            <CheckCircle2 className="w-4 h-4" />
-                          ) : (
-                            <Clock className="w-4 h-4" />
-                          )}
-                        </div>
+                      <div className="flex flex-col items-center text-center space-y-1.5 group">
+                        <StepProcessingIllustration
+                          status={isStep2Complete ? 'completed' : isStep2Active ? 'active' : 'inactive'}
+                          className="w-12 h-12 sm:w-14 sm:h-14 transition-transform duration-200 group-hover:scale-105"
+                        />
                         <span
-                          className={`text-xs sm:text-sm font-bold ${
-                            isStep2Complete
-                              ? 'text-emerald-700'
+                          className={`text-xs sm:text-sm font-bold ${isStep2Complete
+                              ? 'text-amber-700'
                               : isStep2Active
-                              ? 'text-slate-900'
-                              : 'text-slate-400'
-                          }`}
+                                ? 'text-amber-600'
+                                : 'text-slate-400'
+                            }`}
                         >
                           กำลังดำเนินการ
                         </span>
@@ -496,28 +552,22 @@ export default function OrderDetailPage() {
                           {isStep2Complete
                             ? 'ดำเนินการเสร็จสิ้น'
                             : isStep2Active
-                            ? 'คำสั่งซื้ออยู่ระหว่างดำเนินการ'
-                            : 'รอการตรวจสอบ'}
+                              ? 'คำสั่งซื้ออยู่ระหว่างดำเนินการ'
+                              : 'รอการตรวจสอบ'}
                         </span>
                       </div>
                     );
                   })()}
 
-                  {/* Step 3: ออกใบเสร็จแล้ว */}
-                  <div className="flex flex-col items-center text-center space-y-1.5">
-                    <div
-                      className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold transition-all shadow-2xs ${
-                        docStsCode === '3'
-                          ? 'bg-emerald-600 text-white ring-4 ring-emerald-100'
-                          : 'bg-white border-2 border-slate-300 text-slate-400'
-                      }`}
-                    >
-                      <CheckCircle2 className="w-4 h-4" />
-                    </div>
+                  {/* Step 3: ออกใบเสร็จแล้ว - โทนสีเขียวมรกต */}
+                  <div className="flex flex-col items-center text-center space-y-1.5 group">
+                    <StepReceiptIllustration
+                      status={docStsCode === '3' ? 'completed' : 'inactive'}
+                      className="w-12 h-12 sm:w-14 sm:h-14 transition-transform duration-200 group-hover:scale-105"
+                    />
                     <span
-                      className={`text-xs sm:text-sm font-bold ${
-                        docStsCode === '3' ? 'text-emerald-700 font-bold' : 'text-slate-400'
-                      }`}
+                      className={`text-xs sm:text-sm font-bold ${docStsCode === '3' ? 'text-emerald-700' : 'text-slate-400'
+                        }`}
                     >
                       ออกใบเสร็จแล้ว
                     </span>
@@ -537,7 +587,7 @@ export default function OrderDetailPage() {
           <div className="h-[3px] w-full bg-[repeating-linear-gradient(45deg,#6fa6d6,#6fa6d6_33px,transparent_0,transparent_41px,#f18d9b_0,#f18d9b_74px,transparent_0,transparent_82px)]" />
 
           <div className="p-4 sm:p-6 space-y-2">
-            <div className="flex items-center gap-2 text-[#c81415] font-bold text-sm sm:text-base">
+            <div className="flex items-center gap-2 text-black font-bold text-sm sm:text-base">
               <MapPin className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
               <span>ที่อยู่ในการจัดส่ง</span>
             </div>
@@ -563,8 +613,9 @@ export default function OrderDetailPage() {
               </h2>
             </div>
 
-            <div className="hidden sm:grid grid-cols-4 gap-3 text-xs text-slate-400 font-normal w-[58%] select-none">
+            <div className="hidden sm:grid grid-cols-5 gap-2 sm:gap-3 text-xs text-slate-400 font-normal w-[58%] select-none">
               <span className="text-center">จำนวน</span>
+              <span className="text-center">หน่วย</span>
               <span className="text-center">ราคาต่อหน่วย</span>
               <span className="text-center">ราคารวม</span>
               <span className="text-right pr-2">ยอดมัดจำ</span>
@@ -590,7 +641,7 @@ export default function OrderDetailPage() {
                   return (
                     <div key={item.Trade_Id || idx} className="p-4 space-y-3">
                       {/* Product Info Row: Image + Name */}
-                      <div className="flex items-start gap-3.5">
+                      <div className="flex items-center gap-3.5">
                         <div className="w-14 h-14 bg-white border border-slate-100 rounded shrink-0 flex items-center justify-center p-1 overflow-hidden shadow-2xs">
                           <img
                             src={imageSrc}
@@ -614,13 +665,8 @@ export default function OrderDetailPage() {
                           <div className="flex items-center gap-2 flex-wrap text-[10px] text-slate-500">
                             <span>หน่วย: <strong className="text-slate-700">{item.Unit_Name || 'หน่วย'}</strong></span>
                             <span>•</span>
-                            <span>รหัส: <span className="text-slate-600">{item.Trade_Id}</span></span>
+                            <span>SKU: <span className="text-slate-600">{item.Trade_Id}</span></span>
                           </div>
-                          {unitDeposit > 0 && (
-                            <p className="text-[10px] text-red-800 font-bold bg-amber-50 border border-amber-200/80 px-1.5 py-0.5 rounded w-fit">
-                              มัดจำ ฿{unitDeposit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}/{item.Unit_Name || 'หน่วย'}
-                            </p>
-                          )}
                         </div>
                       </div>
 
@@ -676,11 +722,11 @@ export default function OrderDetailPage() {
                             </span>
                           </div>
                           <div className="h-7 flex flex-col items-center justify-center mt-1">
-                            <span className="block text-xs font-bold text-[#c81415] tabular-nums leading-tight">
+                            <span className="block text-xs font-bold text-[#FF6B00] tabular-nums leading-tight">
                               ฿{lineDeposit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </span>
                             {unitDeposit > 0 && item.Qty > 1 && (
-                              <span className="text-[9px] text-slate-400 font-medium leading-none mt-0.5">
+                              <span className="text-[11px] sm:text-xs text-slate-500 font-medium leading-none mt-0.5">
                                 (฿{unitDeposit.toLocaleString()}/{item.Unit_Name || 'หน่วย'})
                               </span>
                             )}
@@ -741,46 +787,46 @@ export default function OrderDetailPage() {
                                 </p>
                               )}
                               <div className="flex items-center gap-2 flex-wrap text-[11px] text-slate-500">
-                                <span>หน่วย: <strong className="text-slate-700">{item.Unit_Name || 'หน่วย'}</strong></span>
-                                <span>•</span>
-                                <span>รหัส: <span className="text-slate-600">{item.Trade_Id}</span></span>
+                                <span>SKU: <span className="text-slate-600">{item.Trade_Id}</span></span>
                               </div>
-                              {unitDeposit > 0 && (
-                                <p className="text-[10px] text-red-800 font-bold bg-amber-50 border border-amber-200/80 px-1.5 py-0.5 rounded w-fit">
-                                  มัดจำ ฿{unitDeposit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}/{item.Unit_Name || 'หน่วย'}
-                                </p>
-                              )}
                             </div>
                           </div>
 
-                          {/* Right 4 Columns matching header: จำนวน | ราคาต่อหน่วย | ราคารวม | ยอดมัดจำ */}
-                          <div className="w-[58%] grid grid-cols-4 gap-3 items-center shrink-0">
+                          {/* Right 5 Columns matching header: จำนวน | หน่วย | ราคาต่อหน่วย | ราคารวม | ยอดมัดจำ */}
+                          <div className="w-[58%] grid grid-cols-5 gap-2 sm:gap-3 items-center shrink-0">
                             {/* 1. จำนวน */}
                             <div className="text-center font-bold text-xs sm:text-sm text-slate-900 tabular-nums">
                               {item.Qty.toLocaleString()}
                             </div>
 
-                            {/* 2. ราคาต่อหน่วย */}
+                            {/* 2. หน่วย */}
+                            <div className="text-center">
+                              <span className="text-xs sm:text-sm font-medium text-slate-700">
+                                {item.Unit_Name || 'หน่วย'}
+                              </span>
+                            </div>
+
+                            {/* 3. ราคาต่อหน่วย */}
                             <div className="text-center">
                               <div className="font-bold text-slate-900 text-xs sm:text-sm tabular-nums">
                                 ฿{unitPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                               </div>
                             </div>
 
-                            {/* 3. ราคารวม */}
+                            {/* 4. ราคารวม */}
                             <div className="text-center">
                               <div className="font-bold text-slate-900 text-xs sm:text-sm tabular-nums">
                                 ฿{lineTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                               </div>
                             </div>
 
-                            {/* 4. ยอดมัดจำ */}
+                            {/* 5. ยอดมัดจำ */}
                             <div className="text-right pr-2">
-                              <div className="font-bold text-[#c81415] text-xs sm:text-base tabular-nums">
+                              <div className="font-bold text-[#FF6B00] text-xs sm:text-base tabular-nums">
                                 ฿{lineDeposit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                               </div>
                               {unitDeposit > 0 && item.Qty > 1 && (
-                                <div className="text-[10px] text-slate-400 font-medium">
+                                <div className="text-xs sm:text-[13px] text-slate-500 font-medium">
                                   (฿{unitDeposit.toLocaleString()}/{item.Unit_Name || 'หน่วย'})
                                 </div>
                               )}
@@ -801,8 +847,7 @@ export default function OrderDetailPage() {
 
           {/* Remark section inside item card */}
           {(order.shipping?.Customer_Remark || order.Fn_Remark) && (
-            <div className="p-4 sm:px-6 bg-amber-50/40 border-t border-slate-100 flex items-start gap-2.5 text-xs text-slate-700">
-              <FileText className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
+            <div className="p-4 sm:px-6 bg-amber-50/40 border-t border-slate-100 flex items-start text-xs text-slate-700">
               <div>
                 <strong className="font-bold text-slate-900">หมายเหตุคำสั่งซื้อ: </strong>
                 <span>{order.shipping?.Customer_Remark || order.Fn_Remark}</span>
@@ -818,29 +863,26 @@ export default function OrderDetailPage() {
               <CreditCard className="w-4 h-4 sm:w-5 sm:h-5 text-slate-700" />
               <span>ข้อมูลและการชำระเงิน</span>
             </div>
-
-            <span className="text-xs font-bold text-slate-700">
-              วิธีชำระ: <span className="text-[#c81415]">{order.money_sts === 'T' ? 'โอนเงินผ่านบัญชีธนาคาร' : 'เก็บเงินปลายทาง'}</span>
-            </span>
           </div>
 
           {/* If PromptPay */}
           {order.money_sts === 'T' ? (
             <div className="space-y-4">
-              {/* Slip already uploaded */}
+              {/* Slip already uploaded (Clean unboxed row matching COD style) */}
               {order.FILE_NAME_PIC ? (
-                <div className="bg-emerald-50/70 border border-emerald-200 rounded-sm p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
-                      <CheckCircle2 className="w-5 h-5" />
-                    </div>
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3.5 py-1">
+                  <div className="flex items-center gap-3.5">
+                    <SlipVerifiedIllustration className="w-10 h-10 sm:w-12 sm:h-12 shrink-0" />
                     <div>
-                      <div className="text-xs sm:text-sm font-bold text-emerald-900">
-                        แนบหลักฐานสลิปการโอนเงินแล้ว
+                      <div className="text-xs sm:text-sm font-bold text-slate-900">
+                        <span>ชำระเงินแล้ว</span>
                       </div>
                       {order.Due_Date_Pay && (
-                        <p className="text-[11px] text-emerald-800 font-medium mt-0.5">
-                          ชำระเงินเมื่อ: {formatOrderDate(order.Due_Date_Pay)}
+                        <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5">
+                          ชำระเงินเมื่อ:{' '}
+                          <strong className="text-emerald-700 font-semibold">
+                            {formatOrderDate(order.Due_Date_Pay)}
+                          </strong>
                         </p>
                       )}
                     </div>
@@ -849,142 +891,47 @@ export default function OrderDetailPage() {
                   <div className="flex items-center gap-2 w-full sm:w-auto">
                     <button
                       type="button"
-                      onClick={() => setShowSlipModal(true)}
-                      className="px-4 py-2 rounded-sm bg-white border border-emerald-300 text-emerald-800 hover:bg-emerald-50 font-bold text-xs shadow-2xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer w-full sm:w-auto"
+                      onClick={openSlipModal}
+                      className="w-full sm:w-auto px-5 py-2 rounded-full bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold text-xs shadow-2xs hover:shadow-xs transition-all flex items-center justify-center cursor-pointer shrink-0 select-none active:scale-95"
                     >
-                      <Eye className="w-3.5 h-3.5" />
-                      <span>ดูรูปสลิปที่แนบ</span>
+                      <span>ดูสลิป</span>
                     </button>
                   </div>
                 </div>
               ) : (
-                /* No slip yet: Show prompt to upload */
-                <div className="bg-white border border-slate-200 rounded-sm p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-2xs">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-slate-100 text-slate-700 flex items-center justify-center shrink-0">
-                      <QrCode className="w-5 h-5" />
-                    </div>
+                /* No slip yet: Show prompt to upload with Vector Illustration (Clean unboxed row) */
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3.5 py-1">
+                  <div className="flex items-center gap-3.5">
+                    <PaymentQrIllustration className="w-10 h-10 sm:w-12 sm:h-12 shrink-0" />
                     <div>
                       <div className="text-xs sm:text-sm font-bold text-slate-900">
-                        รอชำระ
+                        <span>ชำระผ่าน QR PromptPay</span>
                       </div>
-                      <p className="text-[11px] text-slate-500 mt-0.5">
-                        ยอดมัดจำ: <strong className="text-slate-900 font-bold">฿{deposit.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} บาท</strong> • สามารถสแกน QR Code หรือแนบสลิปด้านล่าง
+                      <p className="text-[11px] sm:text-xs text-slate-600 mt-0.5">
+                        ยอดมัดจำ: <strong className="text-[#FF6B00] font-bold">฿{deposit.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} บาท</strong> กรุณาสแกน QR Code เพื่อชำระเงิน
                       </p>
                     </div>
                   </div>
 
                   <Link
                     href={`/orders/${encodeURIComponent(order.Fn_Doc_No)}/payment`}
-                    className="w-full sm:w-auto px-5 py-2.5 rounded-sm bg-[#c81415] hover:bg-[#b01011] active:bg-[#960d0e] text-white font-bold text-xs shadow-2xs transition-all flex items-center justify-center gap-1.5 shrink-0"
+                    className="w-full sm:w-auto px-5 py-2.5 rounded-sm bg-[#800020] hover:bg-[#6b001b] active:bg-[#570016] text-white font-bold text-xs shadow-2xs hover:shadow transition-all flex items-center justify-center gap-1.5 shrink-0"
                   >
                     <QrCode className="w-4 h-4 text-white" />
                     <span>สแกน QR Code ชำระเงิน</span>
                   </Link>
                 </div>
               )}
-
-              {/* Inline Slip Upload Box */}
-              <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-3.5">
-                <div className="flex items-center justify-between border-b border-slate-200/80 pb-2.5">
-                  <span className="text-xs sm:text-sm font-bold text-slate-900 flex items-center gap-1.5">
-                    <Upload className="w-4 h-4 text-[#c81415]" />
-                    <span>{order.FILE_NAME_PIC ? 'อัปโหลดสลิปใบใหม่ (หากต้องการเปลี่ยน)' : 'แนบสลิปเพื่อยืนยันการชำระเงิน'}</span>
-                  </span>
-                  <span className="text-[10px] text-slate-400 font-medium">ตรวจ QR อัตโนมัติ</span>
-                </div>
-
-                {!slipPreview ? (
-                  <label className="group relative border-2 border-dashed border-slate-300 hover:border-[#c81415] hover:bg-red-50/20 rounded-lg p-5 transition-all flex flex-col items-center justify-center text-center cursor-pointer bg-white">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleSlipChange}
-                      className="hidden"
-                    />
-                    <div className="w-10 h-10 rounded-full bg-slate-100 group-hover:bg-red-100 flex items-center justify-center text-slate-600 group-hover:text-[#c81415] transition-colors mb-2">
-                      <UploadCloud className="w-5 h-5" />
-                    </div>
-                    <span className="text-xs sm:text-sm font-bold text-slate-800 group-hover:text-[#c81415] transition-colors">
-                      คลิกเพื่ออัปโหลดสลิป
-                    </span>
-                  </label>
-                ) : (
-                  <div className="space-y-3">
-                    <div className="rounded-lg border border-slate-200 bg-white p-3">
-                      {/* Slip Header Info */}
-                      <div className="flex items-center justify-between pb-2 mb-2 border-b border-slate-100">
-                        <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5 min-w-0">
-                          <FileImage className="w-3.5 h-3.5 text-[#c81415] shrink-0" />
-                          <span className="truncate text-[11px] text-slate-600 font-medium">
-                            {slipFile?.name || 'สลิปหลักฐานการโอน'}
-                          </span>
-                        </span>
-                        <button
-                          type="button"
-                          onClick={handleClearSlip}
-                          disabled={uploadingSlip}
-                          className="text-xs font-semibold text-rose-600 hover:text-rose-700 flex items-center gap-1 hover:underline cursor-pointer disabled:opacity-50 shrink-0 ml-2"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                          <span>เปลี่ยนรูป</span>
-                        </button>
-                      </div>
-
-                      {/* Slip Image View */}
-                      <div className="flex justify-center items-center max-h-[220px] overflow-hidden rounded bg-slate-50 border border-slate-100 p-1">
-                        <img
-                          src={slipPreview}
-                          alt="Slip preview"
-                          className="max-h-[210px] w-auto max-w-full object-contain rounded"
-                        />
-                      </div>
-
-                      {/* Expected Amount */}
-                      <div className="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
-                        <span className="text-slate-500">ยอดที่ต้องตรงกับสลิป:</span>
-                        <span className="font-bold text-[#c81415] text-sm">
-                          ฿{(deposit > 0 ? deposit : totalAmount).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} บาท
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Submit Button */}
-                    <button
-                      type="button"
-                      onClick={handleUploadSlip}
-                      disabled={uploadingSlip}
-                      className="w-full py-2.5 px-4 rounded-md bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold text-xs sm:text-sm transition-all shadow-sm hover:shadow-md disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
-                    >
-                      {uploadingSlip ? (
-                        <>
-                          <RefreshCw className="w-4 h-4 animate-spin" />
-                          <span>กำลังตรวจสอบ QR Code และยอดเงินในสลิป...</span>
-                        </>
-                      ) : (
-                        <>
-                          <CheckCircle2 className="w-4 h-4" />
-                          <span>ตรวจสอบและส่งสลิป</span>
-                        </>
-                      )}
-                    </button>
-                  </div>
-                )}
-
-                {uploadSuccessMsg && (
-                  <div className="p-3 rounded-md bg-emerald-50 border border-emerald-200 flex items-center gap-2 text-xs text-emerald-800 font-bold">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                    <span>{uploadSuccessMsg}</span>
-                  </div>
-                )}
-              </div>
             </div>
           ) : (
-            /* If COD */
-            <div className="bg-blue-50/70 border border-blue-200 rounded-sm p-4 flex items-center gap-3 text-blue-900">
-              <Truck className="w-6 h-6 text-blue-700 shrink-0" />
-              <div className="text-xs sm:text-sm font-bold">
-                ชำระเงินปลายทาง (Cash on Delivery)
+            /* If COD with Vector Illustration (Clean unboxed row) */
+            <div className="flex items-center gap-3 sm:gap-3.5 py-1 text-slate-800">
+              <CodIllustration className="w-10 h-10 sm:w-12 sm:h-12 shrink-0" />
+              <div className="text-xs sm:text-sm font-bold text-slate-900 flex items-center gap-2">
+                <span>ชำระเงินปลายทาง (Cash on Delivery)</span>
+                <span className="text-[10px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-blue-600 text-white tracking-wider">
+                  COD
+                </span>
               </div>
             </div>
           )}
@@ -992,35 +939,36 @@ export default function OrderDetailPage() {
 
         {/* ================= 5. FINANCIAL SUMMARY CARD (SHOPEE STYLE) ================= */}
         <div className="bg-white rounded-sm shadow-[0_1px_1px_0_rgba(0,0,0,0.05)] border border-slate-100/80 p-5 sm:p-6 space-y-3">
-          <h3 className="font-bold text-sm text-slate-900 border-b border-slate-100 pb-2.5">
-            สรุปยอดคำสั่งซื้อ
-          </h3>
+          <div className="border-b border-slate-100 pb-2.5">
+            <h3 className="font-bold text-sm text-slate-900">
+              สรุปยอดคำสั่งซื้อ
+            </h3>
+          </div>
 
-          <div className="space-y-2 text-xs sm:text-sm text-slate-600">
+          <div className="space-y-2.5 text-xs sm:text-sm text-slate-600">
+            {/* ยอดรวมทั้งสิ้น */}
             <div className="flex justify-between items-center">
               <span className="font-bold text-slate-900">ยอดรวมทั้งสิ้น (Grand Total)</span>
-              <span className="text-base sm:text-lg font-black text-slate-900">
+              <span className="text-base sm:text-lg font-black text-slate-900 tabular-nums">
                 ฿{totalAmount.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </span>
             </div>
 
-            {deposit > 0 && (
-              <>
-                <div className="flex justify-between items-center pt-2 border-t border-dashed border-slate-200">
-                  <span className="font-bold text-[#c81415]">ยอดมัดจำที่ต้องชำระ (Deposit)</span>
-                  <span className="text-base sm:text-xl font-black text-[#c81415]">
-                    ฿{deposit.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                  </span>
-                </div>
+            {/* ข้อมูลมัดจำ / คงเหลือ */}
+            <div className="flex justify-between items-center pt-2 border-t border-dashed border-slate-200">
+              <span className="font-bold text-[#FF6B00]">ยอดมัดจำที่ต้องชำระ (Deposit)</span>
+              <span className="text-base sm:text-xl font-black text-[#FF6B00] tabular-nums">
+                ฿{deposit.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </span>
+            </div>
 
-                <div className="flex justify-between items-center text-slate-500">
-                  <span>คงเหลือชำระเมื่อสินค้ามาถึง (Remaining)</span>
-                  <span className="font-bold text-slate-800">
-                    ฿{remaining.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                  </span>
-                </div>
-              </>
-            )}
+            <div className="flex justify-between items-center text-slate-500">
+              <span>ยอดคงเหลือชำระเมื่อรับมอบ / Remaining</span>
+              <span className="font-bold text-slate-800 tabular-nums">
+                ฿{remaining.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </span>
+            </div>
+
           </div>
         </div>
 
@@ -1028,7 +976,7 @@ export default function OrderDetailPage() {
         <div className="bg-white rounded-sm shadow-[0_1px_1px_0_rgba(0,0,0,0.05)] border border-slate-100/80 p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-3">
           <Link
             href="/orders/history"
-            className="text-xs font-bold text-slate-600 hover:text-slate-900 transition-colors"
+            className="text-xs font-bold text-[#800020] hover:text-[#6b001b] transition-colors"
           >
             <span>รายการสั่งซื้อทั้งหมด</span>
           </Link>
@@ -1045,22 +993,32 @@ export default function OrderDetailPage() {
 
       </div>
 
-      {/* Modal for viewing uploaded slip */}
+      {/* Modal for viewing uploaded slip with smooth open/close animations */}
       {showSlipModal && order.FILE_NAME_PIC && (
         <div
-          className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4 backdrop-blur-xs overflow-hidden touch-none"
-          onClick={() => setShowSlipModal(false)}
+          className={`fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4 backdrop-blur-xs overflow-hidden touch-none transition-opacity duration-200 ease-out ${
+            slipModalVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'
+          }`}
+          onClick={closeSlipModal}
+          role="dialog"
+          aria-modal="true"
         >
           <div
-            className="bg-white rounded-sm max-w-lg w-full overflow-hidden shadow-2xl p-4 space-y-3"
+            className={`bg-white rounded-sm max-w-lg w-full overflow-hidden shadow-2xl p-4 space-y-3 transform transition-all duration-200 ease-out ${
+              slipModalVisible
+                ? 'opacity-100 scale-100 translate-y-0'
+                : 'opacity-0 scale-95 translate-y-2'
+            }`}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between border-b border-slate-100 pb-2">
               <h4 className="font-bold text-sm text-slate-900">หลักฐานสลิปการโอนเงิน</h4>
               <button
                 type="button"
-                onClick={() => setShowSlipModal(false)}
-                className="text-slate-400 hover:text-slate-700 text-lg font-bold cursor-pointer"
+                onClick={closeSlipModal}
+                className="w-7 h-7 flex items-center justify-center rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 text-base font-bold transition-colors cursor-pointer"
+                title="ปิดหน้าต่าง"
+                aria-label="ปิดหน้าต่าง"
               >
                 ✕
               </button>
@@ -1083,15 +1041,6 @@ export default function OrderDetailPage() {
                   }
                 }}
               />
-            </div>
-            <div className="text-right pt-1">
-              <button
-                type="button"
-                onClick={() => setShowSlipModal(false)}
-                className="px-4 py-2 rounded-sm bg-slate-800 text-white text-xs font-bold hover:bg-slate-900 transition-colors cursor-pointer"
-              >
-                ปิดหน้าต่าง
-              </button>
             </div>
           </div>
         </div>

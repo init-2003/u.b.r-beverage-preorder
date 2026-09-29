@@ -19,6 +19,8 @@ import {
   Lock,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import { UploadSlipIllustration } from '@/components/orders/UploadSlipIllustration';
+import { WineLoading } from '@/components/WineLoading';
 
 interface OrderInfo {
   Fn_Doc_No: string;
@@ -133,12 +135,8 @@ function OrderPaymentContent() {
     loadOrder();
   }, [docNo, mounted, router, customer, authLoading]);
 
-  // Calculate amount to pay
-  const payableAmount = order
-    ? order.fn_deposit_H && order.fn_deposit_H > 0
-      ? order.fn_deposit_H
-      : order.Fn_Total || 0
-    : 0;
+  // Calculate amount to pay (ยอดมัดจำ ไม่มีการจ่ายเต็ม)
+  const payableAmount = Number(order?.fn_deposit_H) || 0;
 
   // Handle Slip selection
   const handleSlipChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -197,8 +195,8 @@ function OrderPaymentContent() {
 
   if (authLoading || !customer || loading) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center space-y-3 py-16">
-        <div className="w-10 h-10 border-3 border-[#c81415] border-t-transparent rounded-full animate-spin" />
+      <div className="flex-1 min-h-[calc(100vh-200px)] flex items-center justify-center px-4">
+        <WineLoading size="md" />
       </div>
     );
   }
@@ -237,28 +235,27 @@ function OrderPaymentContent() {
 
       {/* Inline Slip Upload & Auto-verification Section */}
       <div className="w-full max-w-[400px] mt-6 bg-white border border-slate-200 rounded-lg p-4 sm:p-5 shadow-sm space-y-3.5">
-        <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
-          <span className="text-xs sm:text-sm font-bold text-slate-900 flex items-center gap-1.5">
-            <Upload className="w-4 h-4 text-[#c81415]" />
-            <span>แนบสลิปเพื่อยืนยันการชำระเงิน</span>
+        <div className="border-b border-slate-100 pb-2.5">
+          <span className="text-xs sm:text-sm font-bold text-slate-900">
+            แนบสลิปเพื่อยืนยันการชำระเงิน
           </span>
-          <span className="text-[10px] text-slate-400 font-medium">ตรวจ QR อัตโนมัติ</span>
         </div>
 
         {!slipPreview ? (
           /* Dropzone / Upload Trigger */
-          <label className="group relative border-2 border-dashed border-slate-200 hover:border-[#c81415] hover:bg-red-50/20 rounded-lg p-5 transition-all flex flex-col items-center justify-center text-center cursor-pointer">
+          <label className="group relative border-2 border-dashed border-slate-200 hover:border-black hover:bg-slate-50/70 rounded-lg p-5 transition-all flex flex-col items-center justify-center text-center cursor-pointer">
             <input
               type="file"
               accept="image/*"
               onChange={handleSlipChange}
               className="hidden"
             />
-            <div className="w-11 h-11 rounded-full bg-slate-100 group-hover:bg-red-100 flex items-center justify-center text-slate-600 group-hover:text-[#c81415] transition-colors mb-2">
-              <UploadCloud className="w-5 h-5" />
-            </div>
-            <span className="text-xs sm:text-sm font-bold text-slate-800 group-hover:text-[#c81415] transition-colors">
+            <UploadSlipIllustration className="w-12 h-12 mb-2 transition-transform duration-200 group-hover:scale-105" />
+            <span className="text-xs sm:text-sm font-bold text-slate-800 group-hover:text-black transition-colors">
               คลิกเพื่ออัปโหลดสลิป
+            </span>
+            <span className="text-[11px] text-slate-400 mt-0.5">
+              รองรับไฟล์ภาพ JPG, PNG
             </span>
           </label>
         ) : (
@@ -267,20 +264,16 @@ function OrderPaymentContent() {
             <div className="rounded-lg border border-slate-200 bg-slate-50/70 p-3">
               {/* Slip Header Info */}
               <div className="flex items-center justify-between pb-2 mb-2 border-b border-slate-200/70">
-                <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5 min-w-0">
-                  <FileImage className="w-3.5 h-3.5 text-[#c81415] shrink-0" />
-                  <span className="truncate text-[11px] text-slate-600 font-medium">
-                    {slipFile?.name || 'สลิปหลักฐานการโอน'}
-                  </span>
+                <span className="text-xs font-bold text-slate-700 truncate min-w-0">
+                  {slipFile?.name || 'สลิปหลักฐานการโอน'}
                 </span>
                 <button
                   type="button"
                   onClick={handleClearSlip}
                   disabled={uploadingSlip}
-                  className="text-xs font-semibold text-rose-600 hover:text-rose-700 flex items-center gap-1 hover:underline cursor-pointer disabled:opacity-50 shrink-0 ml-2"
+                  className="text-xs font-semibold text-rose-600 hover:text-rose-700 hover:underline cursor-pointer disabled:opacity-50 shrink-0 ml-2"
                 >
-                  <Trash2 className="w-3.5 h-3.5" />
-                  <span>เปลี่ยนรูป</span>
+                  <span>ลบ</span>
                 </button>
               </div>
 
@@ -296,7 +289,7 @@ function OrderPaymentContent() {
               {/* Expected Payable Amount */}
               <div className="mt-2.5 pt-2 border-t border-slate-200/70 flex items-center justify-between text-xs">
                 <span className="text-slate-500">ยอดที่ต้องตรงกับสลิป:</span>
-                <span className="font-bold text-[#c81415] text-sm">
+                <span className="font-bold text-[#FF6B00] text-sm">
                   ฿{payableAmount.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} บาท
                 </span>
               </div>
@@ -312,12 +305,12 @@ function OrderPaymentContent() {
               {uploadingSlip ? (
                 <>
                   <RefreshCw className="w-4 h-4 animate-spin" />
-                  <span>กำลังตรวจสอบ QR Code และยอดเงิน...</span>
+                  <span>กำลังอัปโหลดสลิป</span>
                 </>
               ) : (
                 <>
                   <CheckCircle2 className="w-4 h-4" />
-                  <span>ตรวจสอบและส่งสลิป</span>
+                  <span>ยืนยัน</span>
                 </>
               )}
             </button>
@@ -357,9 +350,8 @@ export default function OrderPaymentPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex-1 flex flex-col items-center justify-center space-y-3">
-          <div className="w-10 h-10 border-3 border-amber-500 border-t-transparent rounded-full animate-spin" />
-          <p className="text-sm text-slate-500 font-medium">กำลังโหลดข้อมูลการชำระเงิน...</p>
+        <div className="flex-1 min-h-[calc(100vh-200px)] flex items-center justify-center px-4">
+          <WineLoading size="md" />
         </div>
       }
     >

@@ -59,7 +59,7 @@ export default function PaymentErrorModal({ message, onClose }: PaymentErrorModa
         <button
           type="button"
           onClick={onClose}
-          className="w-full mt-5 py-2.5 px-6 rounded-full bg-[#c81415] hover:bg-[#b01011] active:bg-[#960d0e] text-white font-bold text-sm shadow-md hover:shadow-lg transition-all flex items-center justify-center cursor-pointer"
+          className="w-full mt-5 py-2.5 px-6 rounded-full bg-[#800020] hover:bg-[#6b001b] active:bg-[#570016] text-white font-bold text-sm shadow-md hover:shadow-lg transition-all flex items-center justify-center cursor-pointer"
         >
           ตกลง
         </button>

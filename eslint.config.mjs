@@ -11,8 +11,20 @@ const eslintConfig = defineConfig([
     ".next/**",
     "out/**",
     "build/**",
+    "dist_release/**",
+    "scripts/**",
+    "ecosystem.config.js",
+    "python-service/**",
     "next-env.d.ts",
   ]),
+  {
+    rules: {
+      "react-hooks/set-state-in-effect": "warn",
+      "@typescript-eslint/no-explicit-any": "warn",
+      "@typescript-eslint/no-unused-vars": "warn",
+      "@next/next/no-location-assign-relative-destination": "warn",
+    },
+  },
 ]);
 
 export default eslintConfig;

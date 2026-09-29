@@ -86,7 +86,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
             } ${rightIcon ? 'pr-10' : 'pr-3.5'} py-2.5 ${
               error
                 ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20'
-                : 'border-slate-300 focus:border-slate-800 focus:ring-slate-800/10'
+                : 'border-slate-300 focus:border-amber-500 focus:ring-1 focus:ring-amber-500'
             } ${className}`}
             {...props}
           />

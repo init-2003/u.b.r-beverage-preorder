@@ -10,7 +10,7 @@ export default function CookiePolicyPage() {
         {/* Main Document Container */}
         <div className="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
           {/* Top Brand Accent Stripe */}
-          <div className="h-1 bg-[#c81415] w-full" />
+          <div className="h-1 bg-[#800020] w-full" />
 
           {/* Header Section */}
           <div className="p-6 sm:p-8 md:p-10 border-b border-slate-100 bg-gradient-to-b from-slate-50/60 to-white">
@@ -42,7 +42,7 @@ export default function CookiePolicyPage() {
 
             {/* Section 1 */}
             <section className="space-y-3">
-              <div className="border-l-4 border-[#c81415] pl-3 py-0.5">
+              <div className="border-l-4 border-[#800020] pl-3 py-0.5">
                 <h2 className="text-base sm:text-lg font-bold text-slate-900 font-[Prompt]">
                   1. คุกกี้ (Cookies) คืออะไร?
                 </h2>
@@ -56,7 +56,7 @@ export default function CookiePolicyPage() {
 
             {/* Section 2 */}
             <section className="space-y-4">
-              <div className="border-l-4 border-[#c81415] pl-3 py-0.5">
+              <div className="border-l-4 border-[#800020] pl-3 py-0.5">
                 <h2 className="text-base sm:text-lg font-bold text-slate-900 font-[Prompt]">
                   2. ประเภทของคุกกี้ที่เราใช้งาน
                 </h2>
@@ -72,7 +72,7 @@ export default function CookiePolicyPage() {
                     <h3 className="font-bold text-slate-900 text-sm sm:text-[15px] font-[Prompt]">
                       2.1 คุกกี้ที่จำเป็นอย่างยิ่ง (Strictly Necessary Cookies)
                     </h3>
-                    <span className="text-xs font-semibold text-[#c81415]">
+                    <span className="text-xs font-semibold text-[#800020]">
                       จำเป็นต่อระบบ
                     </span>
                   </div>
@@ -86,7 +86,7 @@ export default function CookiePolicyPage() {
                       <span className="text-slate-500">
                         ลักษณะ: จัดการเซสชันการยืนยันตัวตนและความปลอดภัยของระบบ
                       </span>
-                      <span className="text-[#c81415] font-semibold">
+                      <span className="text-[#800020] font-semibold">
                         ไม่สามารถปิดการใช้งานได้
                       </span>
                     </div>
@@ -151,7 +151,7 @@ export default function CookiePolicyPage() {
 
             {/* Section 3 */}
             <section className="space-y-3">
-              <div className="border-l-4 border-[#c81415] pl-3 py-0.5">
+              <div className="border-l-4 border-[#800020] pl-3 py-0.5">
                 <h2 className="text-base sm:text-lg font-bold text-slate-900 font-[Prompt]">
                   3. การจัดการและการปิดการใช้งานคุกกี้
                 </h2>
@@ -181,7 +181,7 @@ export default function CookiePolicyPage() {
 
             {/* Section 4 */}
             <section className="space-y-3">
-              <div className="border-l-4 border-[#c81415] pl-3 py-0.5">
+              <div className="border-l-4 border-[#800020] pl-3 py-0.5">
                 <h2 className="text-base sm:text-lg font-bold text-slate-900 font-[Prompt]">
                   4. การเชื่อมโยงกับนโยบายความเป็นส่วนตัว
                 </h2>
@@ -191,7 +191,7 @@ export default function CookiePolicyPage() {
                 อยู่ภายใต้ข้อกำหนดของ{' '}
                 <Link
                   href="/privacy-policy"
-                  className="text-[#c81415] hover:text-[#960d0e] font-semibold underline underline-offset-2 transition-colors"
+                  className="text-[#800020] hover:text-[#570016] font-semibold underline underline-offset-2 transition-colors"
                 >
                   นโยบายความเป็นส่วนตัว (Privacy Policy)
                 </Link>

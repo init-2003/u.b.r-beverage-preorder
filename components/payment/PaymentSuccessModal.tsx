@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import lottie, { AnimationItem } from 'lottie-web';
 import successAnimationData from '@/public/animations/success-check.json';
@@ -13,7 +13,6 @@ export default function PaymentSuccessModal({ docNo }: PaymentSuccessModalProps)
   const router = useRouter();
   const animationContainer = useRef<HTMLDivElement>(null);
   const redirectedRef = useRef(false);
-  const [animationFinished, setAnimationFinished] = useState(false);
 
   const handleRedirect = () => {
     if (redirectedRef.current) return;
@@ -36,15 +35,15 @@ export default function PaymentSuccessModal({ docNo }: PaymentSuccessModalProps)
         animationData: successAnimationData,
       });
 
-      // เมื่ออนิเมชันเล่นจบ
+      // เมื่ออนิเมชันเล่นจบ รอ 300ms แล้วเด้งไปหน้าออเดอร์อัตโนมัติ
       animItem.addEventListener('complete', () => {
-        setAnimationFinished(true);
+        setTimeout(handleRedirect, 300);
       });
     }
 
-    // Safety fallback: หากไม่ได้รับ event ให้เปิดปุ่มพร้อมกดได้ทันทีใน 1.5 วินาที
+    // Safety fallback: เด้งไปหน้าออเดอร์อัตโนมัติภายใน 1.5 วินาที
     const timer = setTimeout(() => {
-      setAnimationFinished(true);
+      handleRedirect();
     }, 1500);
 
     return () => {
@@ -54,11 +53,17 @@ export default function PaymentSuccessModal({ docNo }: PaymentSuccessModalProps)
         animItem.destroy();
       }
     };
-  }, []);
+  }, [docNo]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200 overflow-hidden touch-none">
-      <div className="bg-white rounded-sm p-6 sm:p-8 max-w-sm w-full text-center shadow-2xl border border-slate-100 flex flex-col items-center animate-in zoom-in-95 duration-200">
+    <div
+      onClick={handleRedirect}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200 overflow-hidden touch-none cursor-pointer"
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="bg-white rounded-sm p-6 sm:p-8 max-w-sm w-full text-center shadow-2xl border border-slate-100 flex flex-col items-center animate-in zoom-in-95 duration-200"
+      >
         {/* Lottie Animation Container */}
         <div
           ref={animationContainer}
@@ -74,14 +79,11 @@ export default function PaymentSuccessModal({ docNo }: PaymentSuccessModalProps)
           <span className="font-semibold text-slate-700">{docNo}</span>
         </p>
 
-        {/* ปุ่ม ยืนยัน สำหรับไปหน้ารายละเอียดคำสั่งซื้อ (Capsule Style) */}
-        <button
-          type="button"
-          onClick={handleRedirect}
-          className="w-full mt-6 py-2.5 px-6 rounded-full bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold text-sm shadow-md hover:shadow-lg transition-all flex items-center justify-center cursor-pointer"
-        >
-          ยืนยัน
-        </button>
+        {/* Auto Redirect Indicator */}
+        <div className="flex items-center justify-center gap-2 mt-4 text-xs font-medium text-slate-400">
+          <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+          <span>กำลังนำท่านไปยังหน้ารายละเอียดคำสั่งซื้อ...</span>
+        </div>
       </div>
     </div>
   );

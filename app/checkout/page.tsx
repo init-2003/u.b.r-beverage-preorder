@@ -14,6 +14,8 @@ import {
   ShoppingCart, X, QrCode, FileText
 } from 'lucide-react';
 import { EmptyCheckoutIllustration } from '@/components/EmptyCheckoutIllustration';
+import { CheckoutIllustration } from '@/components/CheckoutIllustration';
+import { WineLoading } from '@/components/WineLoading';
 
 interface PreOrderItem {
   tradeId: string;
@@ -251,15 +253,246 @@ function PreOrderContent() {
   const [recipientZip, setRecipientZip] = useState('');
   const [remark, setRemark] = useState('');
 
-  const [paymentMethod, setPaymentMethod] = useState<'M' | 'T'>('T');
+  // Helper: check if current load is a browser reload/refresh (F5)
+  const checkIsReload = (): boolean => {
+    if (typeof window === 'undefined' || !window.performance) return false;
+    try {
+      const navEntries = performance.getEntriesByType('navigation') as PerformanceNavigationTiming[];
+      if (navEntries.length > 0) {
+        return navEntries[0].type === 'reload';
+      }
+      return (window.performance as any)?.navigation?.type === 1;
+    } catch {
+      return false;
+    }
+  };
 
-  // Address edit state (Shopee style)
-  const [isEditingAddress, setIsEditingAddress] = useState(false);
-  const [tempName, setTempName] = useState('');
-  const [tempTel, setTempTel] = useState('');
-  const [tempAddress, setTempAddress] = useState('');
-  const [tempZip, setTempZip] = useState('');
-  const [saveToProfile, setSaveToProfile] = useState(true);
+  // Helper: clear all draft checkout states from session storage
+  const clearCheckoutDraftStorage = () => {
+    if (typeof window === 'undefined') return;
+    try {
+      sessionStorage.removeItem('ubr_checkout_is_editing_address');
+      sessionStorage.removeItem('ubr_checkout_temp_address');
+      sessionStorage.removeItem('ubr_checkout_payment_method');
+      localStorage.removeItem('ubr_checkout_payment_method');
+    } catch { }
+  };
+
+  const [paymentMethod, setPaymentMethod] = useState<'M' | 'T' | null>(() => {
+    if (typeof window !== 'undefined' && checkIsReload()) {
+      try {
+        const saved = sessionStorage.getItem('ubr_checkout_payment_method');
+        if (saved === 'M' || saved === 'T') return saved;
+      } catch { }
+    }
+    return null;
+  });
+
+  // Address edit state (Shopee style) - restored ONLY on browser reload (F5)
+  const [isEditingAddress, setIsEditingAddress] = useState<boolean>(() => {
+    if (typeof window !== 'undefined' && checkIsReload()) {
+      try {
+        return sessionStorage.getItem('ubr_checkout_is_editing_address') === 'true';
+      } catch { }
+    }
+    return false;
+  });
+
+  const [tempName, setTempName] = useState<string>(() => {
+    if (typeof window !== 'undefined' && checkIsReload()) {
+      try {
+        const saved = sessionStorage.getItem('ubr_checkout_temp_address');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed && typeof parsed.tempName === 'string') return parsed.tempName;
+        }
+      } catch { }
+    }
+    return '';
+  });
+
+  const [tempTel, setTempTel] = useState<string>(() => {
+    if (typeof window !== 'undefined' && checkIsReload()) {
+      try {
+        const saved = sessionStorage.getItem('ubr_checkout_temp_address');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed && typeof parsed.tempTel === 'string') return parsed.tempTel;
+        }
+      } catch { }
+    }
+    return '';
+  });
+
+  const [tempAddress, setTempAddress] = useState<string>(() => {
+    if (typeof window !== 'undefined' && checkIsReload()) {
+      try {
+        const saved = sessionStorage.getItem('ubr_checkout_temp_address');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed && typeof parsed.tempAddress === 'string') return parsed.tempAddress;
+        }
+      } catch { }
+    }
+    return '';
+  });
+
+  const [tempZip, setTempZip] = useState<string>(() => {
+    if (typeof window !== 'undefined' && checkIsReload()) {
+      try {
+        const saved = sessionStorage.getItem('ubr_checkout_temp_address');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed && typeof parsed.tempZip === 'string') return parsed.tempZip;
+        }
+      } catch { }
+    }
+    return '';
+  });
+
+  const [saveToProfile, setSaveToProfile] = useState<boolean>(() => {
+    if (typeof window !== 'undefined' && checkIsReload()) {
+      try {
+        const saved = sessionStorage.getItem('ubr_checkout_temp_address');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed && typeof parsed.saveToProfile === 'boolean') return parsed.saveToProfile;
+        }
+      } catch { }
+    }
+    return true;
+  });
+
+  // Clear drafts if fresh navigation, or listen for in-app exit vs full browser reload
+  useEffect(() => {
+    try {
+      localStorage.removeItem('ubr_checkout_payment_method');
+
+      if (!checkIsReload()) {
+        clearCheckoutDraftStorage();
+        setPaymentMethod(null);
+        setIsEditingAddress(false);
+      }
+
+      const savedRemark = localStorage.getItem('ubr_checkout_remark');
+      if (savedRemark) {
+        setRemark(savedRemark);
+      }
+    } catch { }
+
+    let isBrowserUnloading = false;
+    const handleBeforeUnload = () => {
+      isBrowserUnloading = true;
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      if (!isBrowserUnloading) {
+        clearCheckoutDraftStorage();
+      }
+    };
+  }, []);
+
+  const handleSelectPaymentMethod = (method: 'M' | 'T') => {
+    setPaymentMethod(method);
+    try {
+      sessionStorage.setItem('ubr_checkout_payment_method', method);
+    } catch {
+      // ignore storage access errors
+    }
+  };
+
+  const handleRemarkChange = (val: string) => {
+    setRemark(val);
+    try {
+      localStorage.setItem('ubr_checkout_remark', val);
+    } catch {
+      // ignore storage access errors
+    }
+  };
+
+  const syncTempAddressToStorage = (updates: {
+    tempName?: string;
+    tempTel?: string;
+    tempAddress?: string;
+    tempZip?: string;
+    saveToProfile?: boolean;
+    isEditing?: boolean;
+  }) => {
+    if (typeof window === 'undefined') return;
+    try {
+      if (updates.isEditing !== undefined) {
+        if (updates.isEditing) {
+          sessionStorage.setItem('ubr_checkout_is_editing_address', 'true');
+        } else {
+          sessionStorage.removeItem('ubr_checkout_is_editing_address');
+          sessionStorage.removeItem('ubr_checkout_temp_address');
+          return;
+        }
+      }
+      let currentData: any = {};
+      const existing = sessionStorage.getItem('ubr_checkout_temp_address');
+      if (existing) {
+        try {
+          currentData = JSON.parse(existing) || {};
+        } catch { }
+      }
+      const nextData = {
+        tempName: updates.tempName !== undefined ? updates.tempName : tempName,
+        tempTel: updates.tempTel !== undefined ? updates.tempTel : tempTel,
+        tempAddress: updates.tempAddress !== undefined ? updates.tempAddress : tempAddress,
+        tempZip: updates.tempZip !== undefined ? updates.tempZip : tempZip,
+        saveToProfile: updates.saveToProfile !== undefined ? updates.saveToProfile : saveToProfile,
+        ...currentData,
+        ...updates,
+      };
+      sessionStorage.setItem('ubr_checkout_temp_address', JSON.stringify(nextData));
+    } catch { }
+  };
+
+  const handleStartEditAddress = () => {
+    const nextName = tempName || recipientName;
+    const nextTel = tempTel || recipientTel;
+    const nextAddress = tempAddress || recipientAddress;
+    const nextZip = tempZip || recipientZip;
+
+    setTempName(nextName);
+    setTempTel(nextTel);
+    setTempAddress(nextAddress);
+    setTempZip(nextZip);
+    setIsEditingAddress(true);
+
+    if (typeof window !== 'undefined') {
+      try {
+        sessionStorage.setItem('ubr_checkout_is_editing_address', 'true');
+        sessionStorage.setItem(
+          'ubr_checkout_temp_address',
+          JSON.stringify({
+            tempName: nextName,
+            tempTel: nextTel,
+            tempAddress: nextAddress,
+            tempZip: nextZip,
+            saveToProfile,
+          })
+        );
+      } catch { }
+    }
+  };
+
+  const handleCancelEditAddress = () => {
+    setIsEditingAddress(false);
+    setTempName(recipientName);
+    setTempTel(recipientTel);
+    setTempAddress(recipientAddress);
+    setTempZip(recipientZip);
+    if (typeof window !== 'undefined') {
+      try {
+        sessionStorage.removeItem('ubr_checkout_is_editing_address');
+        sessionStorage.removeItem('ubr_checkout_temp_address');
+      } catch { }
+    }
+  };
 
   // Submit states
   const [submitting, setSubmitting] = useState(false);
@@ -272,7 +505,7 @@ function PreOrderContent() {
     }
   }, [authLoading, customer, router]);
 
-  // Auto fill customer data
+  // Auto fill customer data if not in editing mode
   useEffect(() => {
     if (customer) {
       if (!recipientName) setRecipientName(customer.customerName || '');
@@ -280,12 +513,14 @@ function PreOrderContent() {
       if (!recipientAddress) setRecipientAddress(customer.customerAddress || '');
       if (!recipientZip && customer.customerZip) setRecipientZip(customer.customerZip);
 
-      setTempName((prev) => prev || customer.customerName || '');
-      setTempTel((prev) => prev || customer.customerTel || '');
-      setTempAddress((prev) => prev || customer.customerAddress || '');
-      setTempZip((prev) => prev || customer.customerZip || '');
+      if (!isEditingAddress) {
+        setTempName((prev) => prev || customer.customerName || '');
+        setTempTel((prev) => prev || customer.customerTel || '');
+        setTempAddress((prev) => prev || customer.customerAddress || '');
+        setTempZip((prev) => prev || customer.customerZip || '');
+      }
     }
-  }, [customer]);
+  }, [customer, isEditingAddress]);
 
   const handleSaveAddress = async () => {
     if (!tempName.trim() || !tempTel.trim() || !tempAddress.trim()) {
@@ -298,6 +533,13 @@ function PreOrderContent() {
     setRecipientAddress(tempAddress.trim());
     setRecipientZip(tempZip.trim());
     setIsEditingAddress(false);
+
+    if (typeof window !== 'undefined') {
+      try {
+        sessionStorage.removeItem('ubr_checkout_is_editing_address');
+        sessionStorage.removeItem('ubr_checkout_temp_address');
+      } catch { }
+    }
 
     if (saveToProfile && customer) {
       try {
@@ -486,6 +728,11 @@ function PreOrderContent() {
       return;
     }
 
+    if (!paymentMethod) {
+      setErrorMsg('กรุณาเลือกวิธีการชำระเงิน');
+      return;
+    }
+
     setSubmitting(true);
 
     try {
@@ -535,6 +782,11 @@ function PreOrderContent() {
         try {
           sessionStorage.removeItem('ubr_cart_selected_ids');
           sessionStorage.removeItem('ubr_direct_checkout');
+          sessionStorage.removeItem('ubr_checkout_payment_method');
+          sessionStorage.removeItem('ubr_checkout_is_editing_address');
+          sessionStorage.removeItem('ubr_checkout_temp_address');
+          localStorage.removeItem('ubr_checkout_payment_method');
+          localStorage.removeItem('ubr_checkout_remark');
         } catch { }
       }
 
@@ -571,16 +823,18 @@ function PreOrderContent() {
         {/* Page Title Header (แสดงเฉพาะเมื่อมีสินค้า) */}
         {!loadingProduct && orderItems.length > 0 && (
           <div className="pb-3 border-b border-slate-200/80">
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-              ยืนยันการสั่งซื้อ
-            </h1>
+            <div className="flex items-center gap-3 sm:gap-3.5">
+              <CheckoutIllustration className="w-12 h-12 sm:w-14 sm:h-14 shrink-0 drop-shadow-xs" />
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+                ยืนยันการสั่งซื้อ
+              </h1>
+            </div>
           </div>
         )}
 
         {loadingProduct ? (
-          <div className="flex-1 flex flex-col items-center justify-center py-20 text-center space-y-4">
-            <div className="w-12 h-12 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto" />
-            <p className="text-sm font-bold text-slate-700">กำลังเตรียมข้อมูลการสั่งจองสินค้า...</p>
+          <div className="flex-1 min-h-[calc(100vh-250px)] flex items-center justify-center px-4">
+            <WineLoading size="md" />
           </div>
         ) : orderItems.length === 0 ? (
           <div className="bg-white rounded-lg border border-slate-100 shadow-[0_1px_2px_0_rgba(0,0,0,0.04)] py-16 sm:py-24 px-4 text-center flex flex-col items-center justify-center space-y-4">
@@ -598,7 +852,8 @@ function PreOrderContent() {
             <div className="pt-2">
               <Link
                 href="/"
-                className="inline-flex items-center justify-center px-8 py-2.5 rounded-full bg-[#c81415] hover:bg-[#b01011] active:bg-[#960d0e] text-white text-sm font-bold shadow-sm transition-all hover:scale-[1.02] active:scale-[0.98]"
+                onClick={clearCheckoutDraftStorage}
+                className="inline-flex items-center justify-center px-8 py-2.5 rounded-full bg-[#800020] hover:bg-[#6b001b] active:bg-[#570016] text-white text-sm font-bold shadow-sm transition-all hover:scale-[1.02] active:scale-[0.98]"
               >
                 <span>กลับไปหน้าหลัก</span>
               </Link>
@@ -624,10 +879,10 @@ function PreOrderContent() {
                   {/* Header: Pin + ที่อยู่ในการจัดส่ง */}
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <svg className="w-4 h-4 sm:w-5 sm:h-5 text-[#c81415] shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                      <svg className="w-4 h-4 sm:w-5 sm:h-5 text-black shrink-0" viewBox="0 0 24 24" fill="currentColor">
                         <path fillRule="evenodd" clipRule="evenodd" d="M12 2C8.134 2 5 5.134 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.866-3.134-7-7-7zm0 9.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5z" />
                       </svg>
-                      <h2 className="text-sm sm:text-base font-bold text-[#c81415] tracking-tight">
+                      <h2 className="text-sm sm:text-base font-bold text-black tracking-tight">
                         ที่อยู่ในการจัดส่ง
                       </h2>
                     </div>
@@ -635,13 +890,7 @@ function PreOrderContent() {
                     {!isEditingAddress && (
                       <button
                         type="button"
-                        onClick={() => {
-                          setTempName(recipientName);
-                          setTempTel(recipientTel);
-                          setTempAddress(recipientAddress);
-                          setTempZip(recipientZip);
-                          setIsEditingAddress(true);
-                        }}
+                        onClick={handleStartEditAddress}
                         className="text-xs sm:text-sm font-semibold text-blue-600 hover:text-blue-700 hover:underline cursor-pointer transition-colors"
                       >
                         เปลี่ยน
@@ -673,7 +922,7 @@ function PreOrderContent() {
                                   recipientZip && !recipientAddress.includes(recipientZip) ? recipientZip.trim() : '',
                                 ].filter(Boolean).join(', ')}
                               </span>
-                              <span className="text-[10px] text-[#c81415] border border-[#c81415]/70 px-1.5 py-0.5 rounded-[2px] shrink-0 font-medium select-none">
+                              <span className="text-[10px] text-red-600 border border-red-600 px-1.5 py-0.5 rounded-[2px] shrink-0 font-medium select-none">
                                 ค่าเริ่มต้น
                               </span>
                             </>
@@ -696,9 +945,12 @@ function PreOrderContent() {
                           <input
                             type="text"
                             value={tempName}
-                            onChange={(e) => setTempName(e.target.value)}
+                            onChange={(e) => {
+                              setTempName(e.target.value);
+                              syncTempAddressToStorage({ tempName: e.target.value });
+                            }}
                             placeholder="เช่น สมชาย ใจดี หรือ ร้านต้นมะกรูด"
-                            className="w-full px-3.5 py-2 rounded bg-slate-50 border border-slate-300 text-slate-900 text-xs sm:text-sm focus:bg-white focus:outline-none focus:border-slate-800"
+                            className="w-full px-3.5 py-2 rounded-sm bg-slate-50 border border-slate-300 text-slate-900 text-xs sm:text-sm focus:bg-white focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-colors"
                           />
                         </div>
 
@@ -709,9 +961,12 @@ function PreOrderContent() {
                           <input
                             type="tel"
                             value={tempTel}
-                            onChange={(e) => setTempTel(e.target.value)}
+                            onChange={(e) => {
+                              setTempTel(e.target.value);
+                              syncTempAddressToStorage({ tempTel: e.target.value });
+                            }}
                             placeholder="เช่น 081-2345678"
-                            className="w-full px-3.5 py-2 rounded bg-slate-50 border border-slate-300 text-slate-900 text-xs sm:text-sm focus:bg-white focus:outline-none focus:border-slate-800"
+                            className="w-full px-3.5 py-2 rounded-sm bg-slate-50 border border-slate-300 text-slate-900 text-xs sm:text-sm focus:bg-white focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-colors"
                           />
                         </div>
                       </div>
@@ -723,9 +978,12 @@ function PreOrderContent() {
                         <textarea
                           rows={2}
                           value={tempAddress}
-                          onChange={(e) => setTempAddress(e.target.value)}
+                          onChange={(e) => {
+                            setTempAddress(e.target.value);
+                            syncTempAddressToStorage({ tempAddress: e.target.value });
+                          }}
                           placeholder="ระบุบ้านเลขที่, ซอย, ถนน, ตำบล, อำเภอ, จังหวัด"
-                          className="w-full p-3 rounded bg-slate-50 border border-slate-300 text-slate-900 text-xs sm:text-sm focus:bg-white focus:outline-none focus:border-slate-800"
+                          className="w-full p-3 rounded-sm bg-slate-50 border border-slate-300 text-slate-900 text-xs sm:text-sm focus:bg-white focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-colors"
                         />
                       </div>
 
@@ -738,9 +996,12 @@ function PreOrderContent() {
                             type="text"
                             maxLength={5}
                             value={tempZip}
-                            onChange={(e) => setTempZip(e.target.value)}
+                            onChange={(e) => {
+                              setTempZip(e.target.value);
+                              syncTempAddressToStorage({ tempZip: e.target.value });
+                            }}
                             placeholder="รหัสไปรษณีย์ 5 หลัก"
-                            className="w-full px-3.5 py-2 rounded bg-slate-50 border border-slate-300 text-slate-900 text-xs sm:text-sm focus:bg-white focus:outline-none focus:border-slate-800"
+                            className="w-full px-3.5 py-2 rounded-sm bg-slate-50 border border-slate-300 text-slate-900 text-xs sm:text-sm focus:bg-white focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-colors"
                           />
                         </div>
 
@@ -749,8 +1010,11 @@ function PreOrderContent() {
                             <input
                               type="checkbox"
                               checked={saveToProfile}
-                              onChange={(e) => setSaveToProfile(e.target.checked)}
-                              className="w-4 h-4 rounded border-slate-300 text-amber-600 focus:ring-amber-500"
+                              onChange={(e) => {
+                                setSaveToProfile(e.target.checked);
+                                syncTempAddressToStorage({ saveToProfile: e.target.checked });
+                              }}
+                              className="w-4 h-4 rounded border-slate-300 text-black focus:ring-black accent-black cursor-pointer"
                             />
                             <span>บันทึกเป็นที่อยู่เริ่มต้นในบัญชีของฉัน</span>
                           </label>
@@ -760,7 +1024,7 @@ function PreOrderContent() {
                       <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-100">
                         <button
                           type="button"
-                          onClick={() => setIsEditingAddress(false)}
+                          onClick={handleCancelEditAddress}
                           className="px-4 py-2 rounded-full text-xs font-bold text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
                         >
                           ยกเลิก
@@ -778,26 +1042,25 @@ function PreOrderContent() {
                 </div>
               </div>
 
-              {/* 1. Order Items View: Mobile Cards (< 640px) and Desktop Table (>= 640px) */}
+              {/* Items Card (Single Unified Card) */}
               <div className="bg-white rounded-sm shadow-[0_1px_1px_0_rgba(0,0,0,0.05)] border border-slate-100/80 overflow-hidden">
-
-                {/* Seamless Card Header matching Shopee style in user's image */}
-                <div className="px-5 sm:px-6 pt-4 pb-2 flex items-center justify-between">
+                {/* Table Header Row */}
+                <div className="px-5 sm:px-6 py-3.5 flex items-center justify-between border-b border-slate-100">
                   <div className="flex items-center gap-3">
                     <h2 className="text-sm sm:text-base font-bold text-slate-900 tracking-tight">
                       รายการสินค้า
                     </h2>
                   </div>
 
-                  <div className="hidden sm:grid grid-cols-4 gap-3 text-xs text-slate-400 font-normal w-[58%] select-none">
+                  <div className="hidden sm:grid grid-cols-5 gap-2 sm:gap-3 text-xs text-slate-400 font-normal w-[58%] select-none">
                     <span className="text-center">จำนวน</span>
+                    <span className="text-center">หน่วย</span>
                     <span className="text-center">ราคาต่อหน่วย</span>
                     <span className="text-center">ราคารวม</span>
                     <span className="text-right pr-2">ยอดมัดจำ</span>
                   </div>
                 </div>
-
-                {/* MOBILE VIEW (< 640px) */}
+                  {/* MOBILE VIEW (< 640px) */}
                 <div className="block sm:hidden">
                   {/* Mobile Items List */}
                   <div className="divide-y divide-slate-100">
@@ -809,7 +1072,7 @@ function PreOrderContent() {
                       return (
                         <div key={item.tradeId} className="p-4 space-y-3">
                           {/* Product Info Row: Image + Name */}
-                          <div className="flex items-start gap-3.5">
+                          <div className="flex items-center gap-3.5">
                             <div className="w-14 h-14 bg-white border border-slate-100 rounded shrink-0 flex items-center justify-center p-1 overflow-hidden shadow-2xs">
                               <img
                                 src={
@@ -836,11 +1099,11 @@ function PreOrderContent() {
                                   {item.tradeNameEN}
                                 </p>
                               )}
-                              {unitDeposit > 0 && (
-                                <p className="text-[10px] text-red-800 font-bold bg-amber-50 border border-amber-200/80 px-1.5 py-0.5 rounded w-fit">
-                                  มัดจำ ฿{unitDeposit.toLocaleString()}/{item.unitName}
-                                </p>
-                              )}
+                              <div className="flex items-center gap-2 flex-wrap text-[10px] text-slate-500">
+                                <span>หน่วย: <strong className="text-slate-700">{item.unitName || 'หน่วย'}</strong></span>
+                                <span>•</span>
+                                <span>SKU: <span className="text-slate-600">{item.tradeId}</span></span>
+                              </div>
                             </div>
                           </div>
 
@@ -864,7 +1127,7 @@ function PreOrderContent() {
                                     >
                                       -
                                     </button>
-                                    <span className="w-8 text-center font-bold text-xs text-slate-900 border-x border-slate-200 select-none">
+                                    <span className="w-8 text-center font-black text-xs text-slate-900 border-x border-slate-200 select-none">
                                       {item.qty}
                                     </span>
                                     <button
@@ -882,6 +1145,9 @@ function PreOrderContent() {
                                     </p>
                                   )}
                                 </div>
+                                <span className="text-[10px] text-slate-500 font-medium mt-1 select-none">
+                                  {item.unitName || 'หน่วย'}
+                                </span>
                               </div>
                             </div>
 
@@ -921,11 +1187,11 @@ function PreOrderContent() {
                                 </span>
                               </div>
                               <div className="h-7 flex flex-col items-center justify-center mt-1">
-                                <span className="block text-xs font-bold text-[#c81415] tabular-nums leading-tight">
+                                <span className="block text-xs font-bold text-[#FF6B00] tabular-nums leading-tight">
                                   ฿{lineDeposit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                 </span>
                                 {unitDeposit > 0 && item.qty > 1 && (
-                                  <span className="text-[9px] text-slate-400 font-medium leading-none mt-0.5">
+                                  <span className="text-[11px] sm:text-xs text-slate-500 font-medium leading-none mt-0.5">
                                     (฿{unitDeposit.toLocaleString()}/{item.unitName || 'หน่วย'})
                                   </span>
                                 )}
@@ -981,16 +1247,14 @@ function PreOrderContent() {
                                       {item.tradeNameEN}
                                     </p>
                                   )}
-                                  {unitDeposit > 0 && (
-                                    <p className="text-[10px] text-red-800 font-bold bg-amber-50 border border-amber-200/80 px-1.5 py-0.5 rounded w-fit">
-                                      มัดจำ ฿{unitDeposit.toLocaleString()}/{item.unitName}
-                                    </p>
-                                  )}
+                                  <div className="flex items-center gap-2 flex-wrap text-[11px] text-slate-500">
+                                    <span>SKU: <span className="text-slate-600">{item.tradeId}</span></span>
+                                  </div>
                                 </div>
                               </div>
 
-                              {/* Right 4 Columns matching header: จำนวน | ราคาต่อหน่วย | ราคารวม | ยอดมัดจำ */}
-                              <div className="w-[58%] grid grid-cols-4 gap-3 items-center shrink-0">
+                              {/* Right 5 Columns matching header: จำนวน | หน่วย | ราคาต่อหน่วย | ราคารวม | ยอดมัดจำ */}
+                              <div className="w-[58%] grid grid-cols-5 gap-2 sm:gap-3 items-center shrink-0">
                                 {/* 1. จำนวน */}
                                 <div className="flex flex-col items-center justify-center">
                                   <div className="relative inline-flex flex-col items-center">
@@ -1003,7 +1267,7 @@ function PreOrderContent() {
                                       >
                                         -
                                       </button>
-                                      <span className="w-8 sm:w-10 text-center font-bold text-xs sm:text-sm text-slate-900 border-x border-slate-200 select-none">
+                                      <span className="w-8 sm:w-10 text-center font-black text-xs sm:text-sm text-slate-900 border-x border-slate-200 select-none">
                                         {item.qty}
                                       </span>
                                       <button
@@ -1023,27 +1287,34 @@ function PreOrderContent() {
                                   </div>
                                 </div>
 
-                                {/* 2. ราคาต่อหน่วย */}
+                                {/* 2. หน่วย */}
+                                <div className="text-center">
+                                  <span className="text-xs sm:text-sm font-medium text-slate-700">
+                                    {item.unitName || 'หน่วย'}
+                                  </span>
+                                </div>
+
+                                {/* 3. ราคาต่อหน่วย */}
                                 <div className="text-center">
                                   <div className="font-bold text-slate-900 text-xs sm:text-sm tabular-nums">
                                     ฿{item.salePrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                   </div>
                                 </div>
 
-                                {/* 3. ราคารวม */}
+                                {/* 4. ราคารวม */}
                                 <div className="text-center">
                                   <div className="font-bold text-slate-900 text-xs sm:text-sm tabular-nums">
                                     ฿{itemLineTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                   </div>
                                 </div>
 
-                                {/* 4. ยอดมัดจำ */}
+                                {/* 5. รวมมัดจำ */}
                                 <div className="text-right pr-2">
-                                  <div className="font-bold text-[#c81415] text-xs sm:text-base tabular-nums">
+                                  <div className="font-bold text-[#FF6B00] text-xs sm:text-base tabular-nums">
                                     ฿{lineDeposit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                   </div>
                                   {unitDeposit > 0 && item.qty > 1 && (
-                                    <div className="text-[10px] text-slate-400 font-medium">
+                                    <div className="text-xs sm:text-[13px] text-slate-500 font-medium">
                                       (฿{unitDeposit.toLocaleString()}/{item.unitName || 'หน่วย'})
                                     </div>
                                   )}
@@ -1062,15 +1333,14 @@ function PreOrderContent() {
                 {/* Card Bottom Bar: Order Remark (Shopee Style) & Order Total */}
                 <div className="border-t border-dashed border-slate-200 px-5 sm:px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white">
                   <div className="flex-1 flex items-center gap-2.5 max-w-xl">
-                    <span className="text-xs sm:text-sm font-bold text-slate-700 whitespace-nowrap flex items-center gap-1.5">
-                      <FileText className="w-4 h-4 text-[#c81415]" />
+                    <span className="text-xs sm:text-sm font-bold text-slate-700 whitespace-nowrap">
                       หมายเหตุคำสั่งซื้อ:
                     </span>
                     <input
                       type="text"
                       placeholder="ฝากข้อความถึงร้านค้า หรือระบุหมายเหตุคำสั่งซื้อ (ไม่บังคับ)"
                       value={remark}
-                      onChange={(e) => setRemark(e.target.value)}
+                      onChange={(e) => handleRemarkChange(e.target.value)}
                       maxLength={200}
                       className="flex-1 px-3 py-1.5 rounded-sm bg-slate-50 hover:bg-white focus:bg-white border border-slate-200 text-slate-900 text-xs sm:text-sm focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-colors placeholder:text-slate-400"
                     />
@@ -1080,7 +1350,7 @@ function PreOrderContent() {
                     <span className="text-xs sm:text-sm text-slate-600">
                       คำสั่งซื้อทั้งหมด ({totalItemsCount} ชิ้น):
                     </span>
-                    <span className="text-lg sm:text-xl font-bold text-[#c81415] tabular-nums">
+                    <span className="text-lg sm:text-xl font-bold text-[#FF6B00] tabular-nums">
                       ฿{totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </span>
                   </div>
@@ -1091,6 +1361,7 @@ function PreOrderContent() {
               <div className="flex items-center justify-between gap-4 pt-1">
                 <Link
                   href={backHref}
+                  onClick={clearCheckoutDraftStorage}
                   className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-sm border border-slate-200 bg-white hover:bg-slate-50 text-xs font-semibold text-slate-700 shadow-[0_1px_1px_0_rgba(0,0,0,0.03)] transition-colors"
                 >
                   <span>&lt; เลือกดูสินค้าต่อ</span>
@@ -1116,16 +1387,16 @@ function PreOrderContent() {
                       {/* Option 1: QR พร้อมเพย์ (T) */}
                       <button
                         type="button"
-                        onClick={() => setPaymentMethod('T')}
+                        onClick={() => handleSelectPaymentMethod('T')}
                         className={`relative px-4 py-2 text-xs sm:text-sm font-medium rounded-sm border transition-all cursor-pointer select-none overflow-hidden ${paymentMethod === 'T'
-                          ? 'border-[#c81415] text-[#c81415] bg-white shadow-2xs'
+                          ? 'border-emerald-600 text-emerald-700 bg-white shadow-2xs font-semibold'
                           : 'border-slate-200 text-slate-700 bg-white hover:border-slate-300'
                           }`}
                       >
                         <span>QR พร้อมเพย์</span>
                         {paymentMethod === 'T' && (
                           <span className="absolute bottom-0 right-0 w-[18px] h-[18px] overflow-hidden pointer-events-none">
-                            <span className="absolute bottom-0 right-0 w-0 h-0 border-b-[18px] border-b-[#c81415] border-l-[18px] border-l-transparent" />
+                            <span className="absolute bottom-0 right-0 w-0 h-0 border-b-[18px] border-b-emerald-600 border-l-[18px] border-l-transparent" />
                             <svg className="w-2.5 h-2.5 text-white absolute bottom-[1.5px] right-[1.5px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5">
                               <polyline points="20 6 9 17 4 12" />
                             </svg>
@@ -1136,22 +1407,28 @@ function PreOrderContent() {
                       {/* Option 2: เก็บเงินปลายทาง (M) */}
                       <button
                         type="button"
-                        onClick={() => setPaymentMethod('M')}
+                        onClick={() => handleSelectPaymentMethod('M')}
                         className={`relative px-4 py-2 text-xs sm:text-sm font-medium rounded-sm border transition-all cursor-pointer select-none overflow-hidden ${paymentMethod === 'M'
-                          ? 'border-[#c81415] text-[#c81415] bg-white shadow-2xs'
+                          ? 'border-emerald-600 text-emerald-700 bg-white shadow-2xs font-semibold'
                           : 'border-slate-200 text-slate-700 bg-white hover:border-slate-300'
                           }`}
                       >
                         <span>เก็บเงินปลายทาง</span>
                         {paymentMethod === 'M' && (
                           <span className="absolute bottom-0 right-0 w-[18px] h-[18px] overflow-hidden pointer-events-none">
-                            <span className="absolute bottom-0 right-0 w-0 h-0 border-b-[18px] border-b-[#c81415] border-l-[18px] border-l-transparent" />
+                            <span className="absolute bottom-0 right-0 w-0 h-0 border-b-[18px] border-b-emerald-600 border-l-[18px] border-l-transparent" />
                             <svg className="w-2.5 h-2.5 text-white absolute bottom-[1.5px] right-[1.5px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5">
                               <polyline points="20 6 9 17 4 12" />
                             </svg>
                           </span>
                         )}
                       </button>
+
+                      {!paymentMethod && (
+                        <span className="text-xs text-rose-500 font-medium whitespace-nowrap sm:ml-1">
+                          * กรุณาเลือก
+                        </span>
+                      )}
                     </div>
                   </div>
 
@@ -1180,15 +1457,15 @@ function PreOrderContent() {
 
                     {/* 2. ยอดมัดจำที่ต้องชำระ (Deposit) */}
                     <div className="flex justify-between items-center">
-                      <span className="font-bold text-[#c81415]">ยอดมัดจำที่ต้องชำระ (Deposit)</span>
-                      <span className="text-xl sm:text-2xl font-bold text-[#c81415] tabular-nums">
+                      <span className="font-bold text-[#FF6B00]">ยอดมัดจำที่ต้องชำระ (Deposit)</span>
+                      <span className="text-xl sm:text-2xl font-bold text-[#FF6B00] tabular-nums">
                         ฿{totalDepositAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </span>
                     </div>
 
-                    {/* 3. คงเหลือชำระเมื่อสินค้ามาถึง (Remaining) */}
+                    {/* 3. ยอดคงเหลือชำระเมื่อรับมอบ / Remaining */}
                     <div className="flex justify-between items-center text-slate-400">
-                      <span>คงเหลือชำระเมื่อสินค้ามาถึง (Remaining)</span>
+                      <span>ยอดคงเหลือชำระเมื่อรับมอบ / Remaining</span>
                       <span className="text-slate-500 font-medium tabular-nums">
                         ฿{totalRemainingAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </span>
@@ -1204,7 +1481,7 @@ function PreOrderContent() {
                   <button
                     type="submit"
                     disabled={submitting || hasZeroQty}
-                    className="w-full sm:w-auto px-12 sm:px-14 py-3.5 rounded-full bg-[#c81415] hover:bg-[#b01011] active:bg-[#960d0e] text-white font-bold text-base shadow-xs hover:shadow transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.99] whitespace-nowrap"
+                    className="w-full sm:w-auto px-12 sm:px-14 py-3.5 rounded-full bg-[#800020] hover:bg-[#6b001b] active:bg-[#570016] text-white font-bold text-base shadow-xs hover:shadow transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.99] whitespace-nowrap"
                   >
                     {submitting ? (
                       <span>กำลังบันทึกคำสั่งจอง...</span>

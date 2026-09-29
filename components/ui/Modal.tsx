@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { X } from 'lucide-react';
 
 export interface ModalProps {
@@ -24,9 +24,39 @@ export function Modal({
   className = '',
   padding = 'p-8 sm:p-9',
 }: ModalProps) {
+  const [mounted, setMounted] = useState(isOpen);
+  const [visible, setVisible] = useState(false);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
+      setMounted(true);
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          setVisible(true);
+        });
+      });
+    } else {
+      setVisible(false);
+      timerRef.current = setTimeout(() => {
+        setMounted(false);
+        timerRef.current = null;
+      }, 200);
+    }
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+    };
+  }, [isOpen]);
+
   // Handle Escape key and lock body scroll when modal is open
   useEffect(() => {
-    if (!isOpen) return;
+    if (!mounted) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -42,13 +72,14 @@ export function Modal({
       window.removeEventListener('keydown', handleKeyDown);
       document.body.style.overflow = prevOverflow;
     };
-  }, [isOpen, onClose]);
+  }, [mounted, onClose]);
 
-  if (!isOpen) return null;
+  if (!mounted) return null;
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 overflow-y-auto animate-backdrop"
+      className={`fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 overflow-y-auto transition-opacity duration-200 ease-out ${visible ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        }`}
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -57,7 +88,8 @@ export function Modal({
       aria-labelledby={titleId}
     >
       <div
-        className={`bg-white rounded-sm ${padding} w-full ${maxWidth} shadow-2xl relative border border-slate-100/80 text-slate-800 animate-modal ${className}`.trim()}
+        className={`bg-white rounded-sm ${padding} w-full ${maxWidth} shadow-2xl relative border border-slate-100/80 text-slate-800 transform transition-all duration-200 ease-out ${visible ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 translate-y-2'
+          } ${className}`.trim()}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close Button (✕) */}
@@ -80,3 +112,4 @@ export function Modal({
 }
 
 export default Modal;
+

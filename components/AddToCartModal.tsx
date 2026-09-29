@@ -54,8 +54,8 @@ export default function AddToCartModal() {
       </div>
 
       {/* Added Product Card */}
-      <div className="px-6 pb-6">
-        <div className="flex items-center justify-between gap-3 p-3 rounded-sm bg-slate-50/80 border border-slate-200/80">
+      <div className="px-6 pb-3">
+        <div className="flex items-center justify-between gap-3 p-3 rounded-sm bg-slate-50/80">
           <div className="flex items-center gap-3 min-w-0">
             <div className="w-16 h-16 rounded-sm bg-white border border-slate-200 p-1.5 flex items-center justify-center shrink-0 overflow-hidden shadow-2xs">
               <img
@@ -78,20 +78,18 @@ export default function AddToCartModal() {
           </div>
 
           <div className="shrink-0 text-right pl-2">
-            <p className="text-base font-bold text-[#e02020]">
+            <p className="text-base font-bold text-[#FF6B00]">
               ฿{(item.salePrice * qty).toLocaleString()}
             </p>
-            {item.depositPrice && item.depositPrice > 0 ? (
-              <p className="text-[11px] text-slate-500 mt-0.5">
-                มัดจำ ฿{(item.depositPrice * qty).toLocaleString()}
-              </p>
-            ) : null}
+            <p className="text-[11px] text-slate-500 mt-0.5">
+              มัดจำ ฿{((item.depositPrice || 0) * qty).toLocaleString()}
+            </p>
           </div>
         </div>
       </div>
 
       {/* Footer Actions */}
-      <div className="p-4 sm:p-5 border-t border-slate-100 flex items-center justify-end gap-3 bg-slate-50/40">
+      <div className="px-6 pb-6 pt-1 flex items-center justify-end gap-3">
         <Button variant="outline" size="sm" onClick={closeAddedModal}>
           เลือกดูสินค้าต่อ
         </Button>

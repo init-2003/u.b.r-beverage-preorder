@@ -19,7 +19,6 @@ const sqlConfig: sql.config = {
 };
 
 declare global {
-  // eslint-disable-next-line no-var
   var mssqlPool: sql.ConnectionPool | undefined;
 }
 

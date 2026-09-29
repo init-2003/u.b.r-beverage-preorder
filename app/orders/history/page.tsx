@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useMemo, Suspense } from 'react';
+import React, { useEffect, useState, useMemo, useRef, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
@@ -18,6 +18,8 @@ import {
   CheckCircle2,
 } from 'lucide-react';
 import { EmptyOrdersIllustration } from '@/components/EmptyOrdersIllustration';
+import PaidStamp from '@/components/orders/PaidStamp';
+import { WineLoading } from '@/components/WineLoading';
 
 
 interface OrderItem {
@@ -96,12 +98,43 @@ function OrdersContent() {
   const tabParam = searchParams?.get('tab');
   const isPaymentTab = tabParam === 'payment';
 
-  const [orders, setOrders] = useState<OrderSummary[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [orders, setOrders] = useState<OrderSummary[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const cached = sessionStorage.getItem('ubr_cached_orders');
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        }
+      } catch { }
+    }
+    return [];
+  });
+  const [loading, setLoading] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const cached = sessionStorage.getItem('ubr_cached_orders');
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed) && parsed.length > 0) return false;
+        }
+      } catch { }
+    }
+    return true;
+  });
   const [filterSts, setFilterSts] = useState<string>(isPaymentTab ? 'to_pay' : 'all');
   const [searchQuery, setSearchQuery] = useState('');
   const [pageSize, setPageSize] = useState<number>(10);
   const [currentPage, setCurrentPage] = useState<number>(1);
+
+  // Animated sliding tab indicator
+  const [indicatorStyle, setIndicatorStyle] = useState<{ left: number; width: number; isReady: boolean }>({
+    left: 0,
+    width: 0,
+    isReady: false,
+  });
+  const tabRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
+  const tabsContainerRef = useRef<HTMLDivElement | null>(null);
 
   // ซิงค์แท็บเริ่มต้นตาม Query Param ?tab=... หรือจาก sessionStorage
   useEffect(() => {
@@ -132,6 +165,37 @@ function OrdersContent() {
     }
   }, [tabParam]);
 
+  // เมื่อเปิดหน้าครั้งแรกสุดและยังไม่มีแคช ให้รีเซ็ต scroll ไปบนสุด เพื่อให้ Loading อยู่กึ่งกลางสายตาพอดี
+  useEffect(() => {
+    if (loading && orders.length === 0) {
+      if (typeof window !== 'undefined') {
+        window.scrollTo({ top: 0, behavior: 'instant' });
+      }
+    }
+  }, [loading, orders.length]);
+
+  // คำนวณตำแหน่งเส้นใต้สีแดงเลื่อนตามแท็บ (Sliding Tab Indicator)
+  useEffect(() => {
+    const updateIndicator = () => {
+      const currentTab = tabRefs.current[filterSts];
+      if (currentTab && tabsContainerRef.current) {
+        setIndicatorStyle({
+          left: currentTab.offsetLeft,
+          width: currentTab.offsetWidth,
+          isReady: true,
+        });
+      }
+    };
+
+    updateIndicator();
+    const timer = setTimeout(updateIndicator, 40);
+    window.addEventListener('resize', updateIndicator);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('resize', updateIndicator);
+    };
+  }, [filterSts, isPaymentTab]);
+
   const handleTabChange = (tabKey: string) => {
     setFilterSts(tabKey);
     setCurrentPage(1);
@@ -140,17 +204,30 @@ function OrdersContent() {
       const newUrl = tabKey === 'all' ? '/orders/history' : `/orders/history?tab=${tabKey}`;
       window.history.replaceState(null, '', newUrl);
     } catch { }
+
+    // เลื่อนแท็บให้อยู่ในมุมมองอัตโนมัติเมื่ออยู่บนจอมือถือ
+    const tabEl = tabRefs.current[tabKey];
+    if (tabEl && tabsContainerRef.current) {
+      const container = tabsContainerRef.current;
+      const scrollLeft = tabEl.offsetLeft - (container.offsetWidth / 2) + (tabEl.offsetWidth / 2);
+      container.scrollTo({ left: scrollLeft, behavior: 'smooth' });
+    }
   };
 
   useEffect(() => {
     async function fetchOrders() {
       if (!customer) return;
-      setLoading(true);
+      if (orders.length === 0) {
+        setLoading(true);
+      }
       try {
         const res = await fetch('/api/orders?limit=100');
         const data = await res.json();
-        if (data.success) {
-          setOrders(data.orders || []);
+        if (data.success && Array.isArray(data.orders)) {
+          setOrders(data.orders);
+          try {
+            sessionStorage.setItem('ubr_cached_orders', JSON.stringify(data.orders));
+          } catch { }
         }
       } catch (e) {
         console.error('Failed to load orders', e);
@@ -231,17 +308,28 @@ function OrdersContent() {
     return filteredOrders.slice(startIndex, startIndex + pageSize);
   }, [filteredOrders, currentPage, pageSize]);
 
+  if (authLoading || (loading && orders.length === 0)) {
+    return (
+      <AccountLayout activeItemOverride={isPaymentTab ? 'payment' : 'orders'}>
+        <div className="w-full min-h-[calc(100vh-250px)] flex items-center justify-center">
+          <WineLoading size="md" />
+        </div>
+      </AccountLayout>
+    );
+  }
+
   return (
     <AccountLayout activeItemOverride={isPaymentTab ? 'payment' : 'orders'}>
       <div className="space-y-4">
 
 
 
-        {/* 1. Shopee Status Tabs Bar — ซ่อนเมื่อ tab=payment */}
+        {/* 1. Shopee Status Tabs Bar — ซ่อนเมื่อ tab=payment พร้อมแถบสไลด์อนิเมชัน */}
         {!isPaymentTab && (
           <div className="bg-white rounded-xs border border-slate-100/90 shadow-[0_1px_1px_0_rgba(0,0,0,0.03)] overflow-hidden">
             <div
-              className="flex items-center overflow-x-auto no-scrollbar border-b border-slate-200/80"
+              ref={tabsContainerRef}
+              className="relative flex items-center overflow-x-auto no-scrollbar border-b border-slate-200/80"
               style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
             >
               {statusTabs.map((tab) => {
@@ -249,20 +337,36 @@ function OrdersContent() {
                 return (
                   <button
                     key={tab.key}
+                    ref={(el) => { tabRefs.current[tab.key] = el; }}
                     type="button"
                     onClick={() => handleTabChange(tab.key)}
-                    className={`flex-1 min-w-[90px] sm:min-w-[120px] py-3.5 sm:py-4 text-center text-xs sm:text-sm transition-colors relative cursor-pointer select-none ${isActive
-                      ? 'text-[#c81415] font-bold'
-                      : 'text-slate-700 hover:text-[#c81415] font-medium'
+                    className={`flex-1 min-w-[90px] sm:min-w-[120px] py-3.5 sm:py-4 text-center text-xs sm:text-sm transition-colors duration-200 relative cursor-pointer select-none active:scale-[0.97] ${isActive
+                      ? 'text-[#800020] font-bold'
+                      : 'text-slate-700 hover:text-[#800020] font-medium hover:bg-slate-50/50'
                       }`}
                   >
-                    <span>{tab.label}</span>
-                    {isActive && (
-                      <div className="absolute bottom-0 left-0 right-0 h-[2.5px] bg-[#c81415]" />
+                    <span className="inline-block transition-transform duration-150">
+                      {tab.label}
+                    </span>
+                    {/* Fallback เส้นใต้ก่อน JavaScript คำนวณเสร็จเพื่อไม่ให้กระตุก */}
+                    {!indicatorStyle.isReady && isActive && (
+                      <div className="absolute bottom-0 left-0 right-0 h-[2.5px] bg-[#800020]" />
                     )}
                   </button>
                 );
               })}
+
+              {/* Animated Sliding Active Indicator Underline (เส้นใต้เลื่อนตามแท็บแบบอนิเมชัน) */}
+              {indicatorStyle.isReady && (
+                <div
+                  className="absolute bottom-0 h-[2.5px] bg-[#800020] pointer-events-none z-10 transition-all duration-300"
+                  style={{
+                    transform: `translateX(${indicatorStyle.left}px)`,
+                    width: `${indicatorStyle.width}px`,
+                    transitionTimingFunction: 'cubic-bezier(0.25, 1, 0.5, 1)',
+                  }}
+                />
+              )}
             </div>
           </div>
         )}
@@ -297,23 +401,8 @@ function OrdersContent() {
 
         {/* 3. Orders Content Area */}
         {loading ? (
-          <div className="space-y-3">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="bg-white rounded-xs border border-slate-100 p-5 space-y-4 animate-pulse">
-                <div className="flex justify-between items-center">
-                  <div className="h-4 bg-slate-200 rounded w-48" />
-                  <div className="h-4 bg-slate-200 rounded w-24" />
-                </div>
-                <div className="flex gap-4">
-                  <div className="w-20 h-20 bg-slate-100 rounded shrink-0" />
-                  <div className="flex-1 space-y-2">
-                    <div className="h-4 bg-slate-200 rounded w-3/4" />
-                    <div className="h-3 bg-slate-100 rounded w-1/4" />
-                  </div>
-                </div>
-                <div className="h-8 bg-slate-50 rounded" />
-              </div>
-            ))}
+          <div className="w-full min-h-[calc(100vh-360px)] flex items-center justify-center">
+            <WineLoading size="md" />
           </div>
         ) : displayedOrders.length === 0 ? (
           <div className="bg-white rounded-xs border border-slate-100/90 shadow-[0_1px_1px_0_rgba(0,0,0,0.03)] py-16 sm:py-20 px-4 text-center flex flex-col items-center justify-center space-y-4">
@@ -333,14 +422,14 @@ function OrdersContent() {
             <div className="pt-2">
               <Link
                 href="/"
-                className="inline-flex items-center justify-center px-8 py-2.5 rounded-full bg-[#c81415] hover:bg-[#b01011] active:bg-[#960d0e] text-white font-bold text-sm shadow-sm transition-all hover:scale-[1.02] active:scale-[0.98]"
+                className="inline-flex items-center justify-center px-8 py-2.5 rounded-full bg-[#800020] hover:bg-[#6b001b] active:bg-[#570016] text-white font-bold text-sm shadow-sm transition-all hover:scale-[1.02] active:scale-[0.98]"
               >
                 <span>ไปเลือกซื้อสินค้า</span>
               </Link>
             </div>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div key={`${filterSts}-${currentPage}`} className="space-y-3 animate-tab-fade">
             {displayedOrders.map((order) => {
               const isCodOrder = (order.money_sts || '').trim() === 'M';
               const rawDocSts = (order.Doc_Sts || '').trim();
@@ -366,7 +455,7 @@ function OrdersContent() {
                           </span>
                           <Link
                             href={`/orders/${encodeURIComponent(order.Fn_Doc_No)}`}
-                            className="text-xs sm:text-sm font-bold text-slate-900 hover:text-[#c81415] tracking-tight font-mono transition-colors"
+                            className="text-xs sm:text-sm font-bold text-slate-900 hover:text-[#800020] tracking-tight font-mono transition-colors"
                           >
                             {order.Fn_Doc_No}
                           </Link>
@@ -376,17 +465,28 @@ function OrdersContent() {
                           <span>วันที่และเวลาที่สั่งซื้อ: {formatOrderDateTime(order.Fn_Doc_Date)}</span>
                         </div>
                       </div>
-                      {/* Payment Status Badge */}
+                      {/* Payment Status Stamp */}
                       {isPending ? (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-orange-50 border border-orange-200 text-orange-700 text-xs font-semibold">
-                          <Clock className="w-3.5 h-3.5" />
-                          รอชำระ
-                        </span>
+                        <PaidStamp
+                          shape="badge"
+                          label="รอชำระ"
+                          subLabel="PENDING"
+                          color="red"
+                        />
+                      ) : isCodOrder ? (
+                        <PaidStamp
+                          shape="badge"
+                          label="ชำระเงินปลายทาง"
+                          subLabel="C.O.D"
+                          color="blue"
+                        />
                       ) : (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold">
-                          <CheckCircle2 className="w-3.5 h-3.5" />
-                          ชำระแล้ว
-                        </span>
+                        <PaidStamp
+                          shape="badge"
+                          label="ชำระแล้ว"
+                          subLabel="PAID"
+                          color="green"
+                        />
                       )}
                     </div>
 
@@ -406,7 +506,7 @@ function OrdersContent() {
                       </div>
                       <div className="text-right shrink-0">
                         <p className="text-[11px] text-slate-400">ยอดชำระ</p>
-                        <p className="text-lg sm:text-xl font-bold text-[#c81415]">
+                        <p className="text-lg sm:text-xl font-bold text-[#FF6B00]">
                           {formatCurrency(payableAmount)}
                         </p>
                       </div>
@@ -417,7 +517,7 @@ function OrdersContent() {
                       {isPending && (
                         <Link
                           href={`/orders/${encodeURIComponent(order.Fn_Doc_No)}/payment`}
-                          className="px-5 py-2 rounded-xs bg-[#c81415] hover:bg-[#b01011] active:bg-[#960d0e] text-white text-xs sm:text-sm font-medium transition-colors shadow-xs"
+                          className="px-5 py-2 rounded-xs bg-red-600 hover:bg-red-700 active:bg-red-800 text-white text-xs sm:text-sm font-medium transition-colors shadow-xs"
                         >
                           ชำระเงิน
                         </Link>
@@ -449,7 +549,7 @@ function OrdersContent() {
                         </span>
                         <Link
                           href={`/orders/${encodeURIComponent(order.Fn_Doc_No)}`}
-                          className="text-xs sm:text-sm font-bold text-slate-900 hover:text-[#c81415] tracking-tight font-mono transition-colors"
+                          className="text-xs sm:text-sm font-bold text-slate-900 hover:text-[#800020] tracking-tight font-mono transition-colors"
                           title="ดูรายละเอียดคำสั่งซื้อ"
                         >
                           {order.Fn_Doc_No}
@@ -510,7 +610,7 @@ function OrdersContent() {
 
                           {/* Product Details */}
                           <div className="flex-1 min-w-0 pr-2">
-                            <h4 className="text-xs sm:text-sm font-medium text-slate-900 line-clamp-2 group-hover:text-[#c81415] transition-colors leading-relaxed">
+                            <h4 className="text-xs sm:text-sm font-medium text-slate-900 line-clamp-2 leading-relaxed">
                               {item.Trade_Name}
                             </h4>
                             <div className="text-xs text-slate-600 mt-1">
@@ -525,7 +625,7 @@ function OrdersContent() {
                                 ฿{Number(item.Sale_Price1).toLocaleString('en-US', { minimumFractionDigits: 0 })}
                               </div>
                             ) : null}
-                            <div className="text-xs sm:text-sm font-semibold text-[#c81415]">
+                            <div className="text-xs sm:text-sm font-semibold text-[#FF6B00]">
                               ฿{Number(item.Sale_Price || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </div>
                           </div>
@@ -549,7 +649,7 @@ function OrdersContent() {
                           </p>
                         </div>
                         <div className="text-right">
-                          <span className="text-sm font-semibold text-[#c81415]">
+                          <span className="text-sm font-semibold text-[#FF6B00]">
                             {formatCurrency(order.Fn_Total)}
                           </span>
                         </div>
@@ -574,28 +674,26 @@ function OrdersContent() {
                             </span>
                           </div>
 
-                          {depositAmount > 0 && (
-                            <>
-                              {/* Dashed separator */}
-                              <div className="border-t border-dashed border-slate-200 my-1.5" />
+                          {/* Dashed separator */}
+                          <div className="border-t border-dashed border-slate-200 my-1.5" />
 
-                              {/* ยอดมัดจำที่ต้องชำระ (Deposit) */}
-                              <div className="flex justify-between items-center font-bold text-[#c81415]">
-                                <span>ยอดมัดจำที่ชำระ (Deposit)</span>
-                                <span className="text-sm sm:text-base font-bold tabular-nums">
-                                  {formatCurrency(depositAmount)}
-                                </span>
-                              </div>
+                          {/* ยอดมัดจำที่ต้องชำระ (Deposit) */}
+                          <div className="flex justify-between items-center font-bold text-[#FF6B00]">
+                            <span>
+                              {docStsCode === '1' ? 'ยอดมัดจำที่ต้องชำระ (Deposit)' : 'ยอดมัดจำที่ชำระ (Deposit)'}
+                            </span>
+                            <span className="text-sm sm:text-base font-bold tabular-nums">
+                              {formatCurrency(depositAmount)}
+                            </span>
+                          </div>
 
-                              {/* คงเหลือชำระเมื่อสินค้ามาถึง (Remaining) */}
-                              <div className="flex justify-between items-center text-slate-400">
-                                <span>คงเหลือชำระเมื่อสินค้ามาถึง (Remaining)</span>
-                                <span className="text-slate-500 font-medium tabular-nums">
-                                  {formatCurrency(remainingAmount)}
-                                </span>
-                              </div>
-                            </>
-                          )}
+                          {/* ยอดคงเหลือชำระเมื่อรับมอบ / Remaining */}
+                          <div className="flex justify-between items-center text-slate-400">
+                            <span>ยอดคงเหลือชำระเมื่อรับมอบ / Remaining</span>
+                            <span className="text-slate-500 font-medium tabular-nums">
+                              {formatCurrency(remainingAmount)}
+                            </span>
+                          </div>
                         </div>
                       );
                     })()}
@@ -604,17 +702,17 @@ function OrdersContent() {
                   {/* Card Actions Row */}
                   <div className="bg-white border-t border-slate-100/80 px-4 sm:px-6 py-3 flex items-center justify-end gap-2.5 flex-wrap">
                     {/* Primary Button */}
-                    {docStsCode === '3' ? (
+                    {docStsCode === '3' || docStsCode === '0' ? (
                       <Link
                         href={`/orders/${encodeURIComponent(order.Fn_Doc_No)}/view-purchase-order`}
-                        className="px-6 py-2 rounded-full bg-[#c81415] hover:bg-[#b01011] active:bg-[#960d0e] text-white text-xs sm:text-sm font-medium transition-colors shadow-xs inline-flex items-center justify-center"
+                        className="px-6 py-2 rounded-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-xs sm:text-sm font-medium transition-colors shadow-xs inline-flex items-center justify-center"
                       >
                         ดูใบสั่งซื้อ
                       </Link>
                     ) : docStsCode === '1' ? (
                       <Link
                         href={`/orders/${encodeURIComponent(order.Fn_Doc_No)}/payment`}
-                        className="px-6 py-2 rounded-full bg-[#c81415] hover:bg-[#b01011] active:bg-[#960d0e] text-white text-xs sm:text-sm font-medium transition-colors shadow-xs inline-flex items-center justify-center"
+                        className="px-6 py-2 rounded-full bg-red-600 hover:bg-red-700 active:bg-red-800 text-white text-xs sm:text-sm font-medium transition-colors shadow-xs inline-flex items-center justify-center"
                       >
                         ชำระเงิน
                       </Link>
@@ -652,7 +750,7 @@ function OrdersContent() {
                       setPageSize(Number(e.target.value));
                       setCurrentPage(1);
                     }}
-                    className="appearance-none bg-white border border-slate-200 rounded-xs pl-3 pr-7 py-1 text-xs sm:text-sm text-slate-800 cursor-pointer focus:outline-none focus:border-[#c81415] shadow-2xs"
+                    className="appearance-none bg-white border border-slate-200 rounded-xs pl-3 pr-7 py-1 text-xs sm:text-sm text-slate-800 cursor-pointer focus:outline-none focus:border-[#800020] shadow-2xs"
                   >
                     <option value={5}>5</option>
                     <option value={10}>10</option>
@@ -703,7 +801,15 @@ function OrdersContent() {
 
 export default function OrdersHistoryPage() {
   return (
-    <Suspense fallback={<div className="max-w-[1600px] mx-auto p-8 animate-pulse">กำลังโหลดข้อมูลคำสั่งซื้อ...</div>}>
+    <Suspense
+      fallback={
+        <AccountLayout activeItemOverride="orders">
+          <div className="w-full min-h-[calc(100vh-250px)] flex items-center justify-center">
+            <WineLoading size="md" />
+          </div>
+        </AccountLayout>
+      }
+    >
       <OrdersContent />
     </Suspense>
   );

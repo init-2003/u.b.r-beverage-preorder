@@ -27,7 +27,7 @@ export function LoginForm({
 
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [rememberMe, setRememberMe] = useState(true);
+  const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [loading, setLoading] = useState(false);
@@ -36,14 +36,30 @@ export function LoginForm({
     try {
       const savedRemember = localStorage.getItem(REMEMBER_ME_STORAGE_KEY);
       const savedUser = localStorage.getItem(SAVED_USERNAME_STORAGE_KEY);
-      if (savedRemember === 'false') {
-        setRememberMe(false);
-      } else if (savedUser) {
-        setUsername(savedUser);
+
+      // ครั้งแรก (savedRemember ยังเป็น null): ไม่ติ๊ก (false)
+      // ถ้าเคยติ๊กแล้ว ('true'): จำว่าติ๊กต่อไป และใส่ชื่อผู้ใช้ที่บันทึกไว้
+      // ถ้าเคยกดติ๊กออก ('false'): จำว่าไม่ติ๊ก (false)
+      if (savedRemember === 'true') {
         setRememberMe(true);
+        if (savedUser) {
+          setUsername(savedUser);
+        }
+      } else {
+        setRememberMe(false);
       }
     } catch {}
   }, []);
+
+  const handleRememberMeChange = (checked: boolean) => {
+    setRememberMe(checked);
+    try {
+      localStorage.setItem(REMEMBER_ME_STORAGE_KEY, checked ? 'true' : 'false');
+      if (!checked) {
+        localStorage.removeItem(SAVED_USERNAME_STORAGE_KEY);
+      }
+    } catch {}
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -146,7 +162,7 @@ export function LoginForm({
                 type="checkbox"
                 id="remember-me-checkbox"
                 checked={rememberMe}
-                onChange={(e) => setRememberMe(e.target.checked)}
+                onChange={(e) => handleRememberMeChange(e.target.checked)}
                 className="sr-only peer"
               />
               <span

@@ -2,7 +2,7 @@ import io
 import re
 import time
 from typing import Optional, Tuple, Dict, Any
-from PIL import Image
+from PIL import Image, ImageOps
 import cv2
 import numpy as np
 import zxingcpp
@@ -19,22 +19,37 @@ def get_ocr() -> RapidOCR:
 
 
 THAI_BANK_NAMES: Dict[str, str] = {
+    # ธนาคารพาณิชย์หลัก (Major Commercial Banks)
     "002": "ธนาคารกรุงเทพ (BBL)",
     "004": "ธนาคารกสิกรไทย (KBANK)",
     "006": "ธนาคารกรุงไทย (KTB)",
     "011": "ธนาคารทหารไทยธนชาต (TTB)",
     "014": "ธนาคารไทยพาณิชย์ (SCB)",
-    "025": "ธนาคารกรุงศรีอยุธยา (BAY)",
-    "069": "ธนาคารเกียรตินาคินภัทร (KKP)",
     "022": "ธนาคารซีไอเอ็มบีไทย (CIMBT)",
-    "067": "ธนาคารทิสโก้ (TISCO)",
     "024": "ธนาคารยูโอบี (UOB)",
+    "025": "ธนาคารกรุงศรีอยุธยา (BAY)",
+    "067": "ธนาคารทิสโก้ (TISCO)",
+    "069": "ธนาคารเกียรตินาคินภัทร (KKP)",
     "071": "ธนาคารไทยเครดิต (TCRB)",
     "073": "ธนาคารแลนด์ แอนด์ เฮ้าส์ (LH Bank)",
+    
+    # สถาบันการเงินเฉพาะกิจของรัฐ (Specialized Financial Institutions - SFIs)
     "030": "ธนาคารออมสิน (GSB)",
-    "034": "ธ.ก.ส. (BAAC)",
     "033": "ธนาคารอาคารสงเคราะห์ (GHB)",
+    "034": "ธ.ก.ส. (BAAC)",
+    "066": "ธนาคารอิสลามแห่งประเทศไทย (IBANK)",
     "070": "ธนาคารเพื่อการส่งออกและนำเข้าแห่งประเทศไทย (EXIM)",
+    "098": "ธนาคารพัฒนาวิสาหกิจขนาดกลางและขนาดย่อมฯ (SME D Bank)",
+    
+    # ธนาคารต่างประเทศในไทย (Foreign Bank Branches/Subsidiaries)
+    "020": "ธนาคารสแตนดาร์ดชาร์เตอร์ด (ไทย) (SCBT)",
+    "039": "ธนาคารไอซีบีซี (ไทย) (ICBCT)",
+    "052": "ธนาคารแห่งประเทศจีน (ไทย) (BOC)",
+    
+    # กระเป๋าเงินอิเล็กทรอนิกส์ (E-Wallets / Non-Banks) ที่รองรับ PromptPay
+    "099": "ทรูมันนี่ (TrueMoney)",
+    "096": "ช้อปปี้เพย์ (ShopeePay)",
+    "097": "แรบบิท ไลน์ เพย์ (Rabbit LINE Pay)",
 }
 
 
@@ -264,7 +279,8 @@ def verify_slip(image_bytes: bytes, expected_amount: Optional[float] = None) -> 
     t_start = time.time()
 
     try:
-        pil_img = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+        raw_pil = Image.open(io.BytesIO(image_bytes))
+        pil_img = ImageOps.exif_transpose(raw_pil).convert("RGB")
     except Exception as e:
         return {
             "isValid": False,

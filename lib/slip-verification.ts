@@ -1,6 +1,6 @@
 import sharp from 'sharp';
 import jsQR from 'jsqr';
-import { createWorker } from 'tesseract.js';
+import { createWorker, OEM, PSM, type Worker } from 'tesseract.js';
 
 export interface SlipVerificationResult {
   hasQr: boolean;
@@ -30,22 +30,37 @@ export interface SlipVerificationFullResult {
 }
 
 export const THAI_BANK_NAMES: Record<string, string> = {
+  // ธนาคารพาณิชย์หลัก (Major Commercial Banks)
   '002': 'ธนาคารกรุงเทพ (BBL)',
   '004': 'ธนาคารกสิกรไทย (KBANK)',
   '006': 'ธนาคารกรุงไทย (KTB)',
   '011': 'ธนาคารทหารไทยธนชาต (TTB)',
   '014': 'ธนาคารไทยพาณิชย์ (SCB)',
-  '025': 'ธนาคารกรุงศรีอยุธยา (BAY)',
-  '069': 'ธนาคารเกียรตินาคินภัทร (KKP)',
   '022': 'ธนาคารซีไอเอ็มบีไทย (CIMBT)',
-  '067': 'ธนาคารทิสโก้ (TISCO)',
   '024': 'ธนาคารยูโอบี (UOB)',
+  '025': 'ธนาคารกรุงศรีอยุธยา (BAY)',
+  '067': 'ธนาคารทิสโก้ (TISCO)',
+  '069': 'ธนาคารเกียรตินาคินภัทร (KKP)',
   '071': 'ธนาคารไทยเครดิต (TCRB)',
   '073': 'ธนาคารแลนด์ แอนด์ เฮ้าส์ (LH Bank)',
+
+  // สถาบันการเงินเฉพาะกิจของรัฐ (Specialized Financial Institutions - SFIs)
   '030': 'ธนาคารออมสิน (GSB)',
-  '034': 'ธ.ก.ส. (BAAC)',
   '033': 'ธนาคารอาคารสงเคราะห์ (GHB)',
+  '034': 'ธ.ก.ส. (BAAC)',
+  '066': 'ธนาคารอิสลามแห่งประเทศไทย (IBANK)',
   '070': 'ธนาคารเพื่อการส่งออกและนำเข้าแห่งประเทศไทย (EXIM)',
+  '098': 'ธนาคารพัฒนาวิสาหกิจขนาดกลางและขนาดย่อมฯ (SME D Bank)',
+
+  // ธนาคารต่างประเทศในไทย (Foreign Bank Branches/Subsidiaries)
+  '020': 'ธนาคารสแตนดาร์ดชาร์เตอร์ด (ไทย) (SCBT)',
+  '039': 'ธนาคารไอซีบีซี (ไทย) (ICBCT)',
+  '052': 'ธนาคารแห่งประเทศจีน (ไทย) (BOC)',
+
+  // กระเป๋าเงินอิเล็กทรอนิกส์ (E-Wallets / Non-Banks) ที่รองรับ PromptPay
+  '099': 'ทรูมันนี่ (TrueMoney)',
+  '096': 'ช้อปปี้เพย์ (ShopeePay)',
+  '097': 'แรบบิท ไลน์ เพย์ (Rabbit LINE Pay)',
 };
 
 export function decodeTlvTags(payload: string): Record<string, string> {
@@ -141,7 +156,7 @@ export async function verifySlipQr(imageBuffer: Buffer): Promise<SlipVerificatio
 
     for (const targetWidth of targetWidths) {
       try {
-        let pipeline = sharp(imageBuffer);
+        let pipeline = sharp(imageBuffer).rotate();
 
         if (targetWidth && metadata.width > targetWidth) {
           pipeline = pipeline.resize({ width: targetWidth, withoutEnlargement: true });
@@ -168,9 +183,10 @@ export async function verifySlipQr(imageBuffer: Buffer): Promise<SlipVerificatio
       }
     }
 
-    // Pass พิเศษ: ปรับความคมชัด/คอนทราสต์ (Greyscale + Normalise)
+    // Pass พิเศษ: ปรับความคมชัด/คอนทราสต์ (Greyscale + Normalise พร้อม auto-rotate)
     try {
       const { data, info } = await sharp(imageBuffer)
+        .rotate()
         .resize({ width: 1000, withoutEnlargement: true })
         .grayscale()
         .normalise()
@@ -197,11 +213,12 @@ export async function verifySlipQr(imageBuffer: Buffer): Promise<SlipVerificatio
       hasQr: false,
       error: 'สลิปไม่ถูกต้อง! กรุณาอัปโหลดสลิปที่ถูกต้อง',
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errMessage = error instanceof Error ? error.message : String(error);
     console.error('Error verifying slip QR:', error);
     return {
       hasQr: false,
-      error: 'เกิดข้อผิดพลาดในการประมวลผลรูปภาพสลิป: ' + (error.message || ''),
+      error: 'เกิดข้อผิดพลาดในการประมวลผลรูปภาพสลิป: ' + (errMessage || ''),
     };
   }
 }
@@ -287,11 +304,32 @@ export function extractAmountFromOcrText(
 }
 
 // ตัวแปรแคช Worker ของ Tesseract เพื่อไม่ต้องโหลดใหม่ทุกครั้ง (Warm Worker Optimization)
-let cachedTesseractWorkerPromise: Promise<any> | null = null;
+let cachedTesseractWorkerPromise: Promise<Worker> | null = null;
+let cachedOsdWorkerPromise: Promise<Worker | null> | null = null;
+
+async function getWarmOsdWorker() {
+  if (!cachedOsdWorkerPromise) {
+    cachedOsdWorkerPromise = createWorker('osd', OEM.TESSERACT_ONLY, {
+      legacyCore: true,
+    }).catch((err) => {
+      console.warn('Failed to initialize Tesseract OSD worker:', err);
+      cachedOsdWorkerPromise = null;
+      return null;
+    });
+  }
+  return cachedOsdWorkerPromise;
+}
 
 async function getWarmTesseractWorker() {
   if (!cachedTesseractWorkerPromise) {
-    cachedTesseractWorkerPromise = createWorker('tha+eng').catch((err) => {
+    cachedTesseractWorkerPromise = (async () => {
+      const worker = await createWorker('tha+eng');
+      // กำหนดค่าเริ่มต้นเป็น PSM.AUTO_OSD เพื่อรองรับการประเมินทิศทางหน้าเอกสาร
+      await worker.setParameters({
+        tessedit_pageseg_mode: PSM.AUTO_OSD,
+      });
+      return worker;
+    })().catch((err) => {
       cachedTesseractWorkerPromise = null;
       throw err;
     });
@@ -300,22 +338,78 @@ async function getWarmTesseractWorker() {
 }
 
 /**
- * ใช้ Tesseract OCR สกัดจำนวนเงินจากภาพสลิป (Optimized High-Speed)
+ * ประเมินทิศทางของรูปภาพโดยใช้ Tesseract โมเดล OSD (Orientation and Script Detection)
+ * คืนค่าองศาที่ภาพเอียง (0, 90, 180, 270) และระดับความเชื่อมั่น (confidence)
+ */
+export async function detectOrientationWithOsd(imageBuffer: Buffer): Promise<{
+  orientationDegrees: number;
+  confidence: number;
+}> {
+  try {
+    const osdWorker = await getWarmOsdWorker();
+    if (!osdWorker) {
+      return { orientationDegrees: 0, confidence: 0 };
+    }
+
+    const { data } = await osdWorker.detect(imageBuffer);
+    const degrees = data?.orientation_degrees ?? 0;
+    const confidence = data?.orientation_confidence ?? 0;
+
+    return {
+      orientationDegrees: degrees,
+      confidence,
+    };
+  } catch (err) {
+    console.warn('OSD orientation detection failed, fallback to 0 degrees:', err);
+    return { orientationDegrees: 0, confidence: 0 };
+  }
+}
+
+/**
+ * ปรับทิศทางรูปภาพสลิปให้ตั้งตรง (Auto-orient to 0 degrees)
+ * โดยใช้โมเดล Tesseract OSD ในการประเมินทิศทางก่อน หากภาพเอียงหรือกลับหัว (90, 180, 270 องศา)
+ * จะทำการหมุนภาพกลับเป็นแนวนอนปกติก่อนส่งไปให้ OCR tha+eng ทำการอ่านตัวอักษร
+ */
+export async function autoOrientSlipWithOsd(
+  imageBuffer: Buffer
+): Promise<{ buffer: Buffer; rotatedDegrees: number }> {
+  try {
+    const { orientationDegrees, confidence } = await detectOrientationWithOsd(imageBuffer);
+
+    // หาก OSD ตรวจพบว่าภาพไม่ได้อยู่ในแนวนอน 0 องศา และมีความเชื่อมั่นมากกว่า 0
+    if (orientationDegrees > 0 && confidence > 0) {
+      const rotated = await sharp(imageBuffer).rotate(orientationDegrees).toBuffer();
+      return { buffer: rotated, rotatedDegrees: orientationDegrees };
+    }
+
+    return { buffer: imageBuffer, rotatedDegrees: 0 };
+  } catch (err) {
+    console.warn('Auto-orient with OSD failed:', err);
+    return { buffer: imageBuffer, rotatedDegrees: 0 };
+  }
+}
+
+/**
+ * ใช้ Tesseract OCR สกัดจำนวนเงินจากภาพสลิป (Optimized High-Speed พร้อม OSD Orientation Handling)
  */
 export async function extractAmountFromSlipImage(
   imageBuffer: Buffer,
   expectedAmount?: number
 ): Promise<{ detectedAmount: number | null; matchesExpected: boolean; rawText?: string }> {
   try {
-    // ปรับขนาดความกว้างเป็น 800px ซึ่งเป็นขนาดที่เหมาะสมที่สุดสำหรับ OCR อ่านตัวเลข (เร็วกว่าขนาด 1400px เดิมหลายเท่า)
-    const processedBuffer = await sharp(imageBuffer)
+    // 1. หมุนภาพตาม EXIF metadata ของกล้องมือถือก่อน และปรับขนาดความกว้างเป็น 800px
+    const baseProcessed = await sharp(imageBuffer)
+      .rotate() // หมุนภาพตาม EXIF อัตโนมัติ
       .resize({ width: 800, withoutEnlargement: true })
       .grayscale()
       .normalise()
       .toBuffer();
 
+    // 2. ใช้โมเดล Tesseract OSD ในการประเมินทิศทางก่อน หากภาพเอียงหรือกลับหัวจะหมุนภาพให้เป็นแนวนอนปกติ (0 องศา)
+    const { buffer: orientedBuffer, rotatedDegrees } = await autoOrientSlipWithOsd(baseProcessed);
+
     const worker = await getWarmTesseractWorker();
-    const { data } = await worker.recognize(processedBuffer);
+    const { data } = await worker.recognize(orientedBuffer);
     const rawText = data?.text || '';
 
     const { detectedAmount, matchesExpected } = extractAmountFromOcrText(
@@ -323,15 +417,38 @@ export async function extractAmountFromSlipImage(
       expectedAmount
     );
 
+    // 3. Fallback Multi-angle: หากยังไม่พบยอดเงินที่ตรงกับที่คาดหวัง และก่อนหน้านี้ยังไม่ได้หมุนตาม OSD
+    // ทดลองหมุนองศาหลัก (90, 180, 270) เพิ่มเติมเพื่อความแม่นยำสูงสุด
+    if (!matchesExpected && rotatedDegrees === 0 && expectedAmount) {
+      for (const angle of [90, 180, 270]) {
+        try {
+          const testBuffer = await sharp(baseProcessed).rotate(angle).toBuffer();
+          const testResult = await worker.recognize(testBuffer);
+          const testText = testResult.data?.text || '';
+          const testExtracted = extractAmountFromOcrText(testText, expectedAmount);
+          if (testExtracted.matchesExpected) {
+            return {
+              detectedAmount: testExtracted.detectedAmount,
+              matchesExpected: true,
+              rawText: testText,
+            };
+          }
+        } catch {
+          // ignore
+        }
+      }
+    }
+
     return {
       detectedAmount,
       matchesExpected,
       rawText,
     };
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Error performing slip OCR:', err);
     // กรณีเกิดข้อผิดพลาด ให้รีเซ็ตแคช worker เพื่อให้รอบหน้าสร้างใหม่
     cachedTesseractWorkerPromise = null;
+    cachedOsdWorkerPromise = null;
     return {
       detectedAmount: null,
       matchesExpected: false,
