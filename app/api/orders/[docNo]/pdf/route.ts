@@ -185,12 +185,15 @@ export async function handlePdfDownload(req: NextRequest, docNo: string) {
       );
     }
 
-    // ใบสั่งซื้อ (PO) ออกให้เมื่อสถานะเป็น '0' หรือ '3' (หรือเปิดด้วยชื่อ/รหัสผ่านที่ถูกต้องโดยตรง)
-    const isDirectAuth = Boolean(paramUser && paramPass);
+    // ใบสั่งซื้อ (PO) ออกให้เมื่อสถานะเป็น '0' (กำลังดำเนินการ / ชำระแล้ว) หรือ '3' (ออกใบเสร็จแล้ว) เท่านั้น
     const docSts = (header.Doc_Sts || '').trim();
-    if (!isDirectAuth && docSts !== '0' && docSts !== '3') {
+    if (docSts !== '0' && docSts !== '3') {
+      const msg =
+        docSts === '4'
+          ? 'คำสั่งซื้อนี้ถูกยกเลิกแล้ว'
+          : 'ยังไม่สร้างใบสั่งซื้อสำหรับออร์เดอร์นี้ เพราะระบบต้องชำระเงินก่อนถึงจะสร้างได้';
       return NextResponse.json(
-        { success: false, message: 'เอกสารใบสั่งซื้อจะดาวน์โหลดได้ เมื่อสถานะเป็น "กำลังดำเนินการ" หรือ "ออกใบเสร็จแล้ว" เท่านั้น' },
+        { success: false, message: msg },
         { status: 403 }
       );
     }

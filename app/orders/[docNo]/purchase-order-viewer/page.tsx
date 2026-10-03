@@ -162,14 +162,19 @@ export default function ViewPurchaseOrderPage() {
     );
   }
 
-  // ใบสั่งซื้อ (PO) ออกให้เมื่อสถานะเป็น '0' หรือ '3' (หรือเมื่อเปิดด้วยการระบุชื่อ/รหัสผ่าน/Token ที่ถูกต้องโดยตรง)
+  // ใบสั่งซื้อ (PO) ออกให้เมื่อสถานะเป็น '0' (กำลังดำเนินการ / ชำระแล้ว) หรือ '3' (ออกใบเสร็จแล้ว)
   const docSts = (order.Doc_Sts || '').trim();
-  const canViewPo = hasDirectAuth || docSts === '0' || docSts === '3';
+  const canViewPo = docSts === '0' || docSts === '3';
   if (!canViewPo) {
     const currentStatusText =
       docSts === '4'
         ? 'ยกเลิก Order'
         : order.Doc_Sts_Name || 'รอชำระ';
+
+    const unconfirmedMsg =
+      docSts === '4'
+        ? 'คำสั่งซื้อนี้ถูกยกเลิกแล้ว'
+        : 'ยังไม่สร้างใบสั่งซื้อสำหรับออร์เดอร์นี้ เพราะระบบต้องชำระเงินก่อนถึงจะสร้างได้';
 
     return (
       <div className="min-h-screen bg-slate-100 flex flex-col items-center justify-center p-6">
@@ -178,10 +183,8 @@ export default function ViewPurchaseOrderPage() {
             <AlertCircle className="w-6 h-6" />
           </div>
           <h2 className="text-lg font-bold text-slate-800">ยังไม่สามารถเปิดใบสั่งซื้อได้</h2>
-          <p className="text-xs text-slate-600 leading-relaxed">
-            เอกสารใบสั่งซื้อจะสามารถพิมพ์หรือดาวน์โหลดได้ เมื่อสถานะคำสั่งซื้อเป็น{' '}
-            <strong className="text-blue-700 font-bold">&quot;กำลังดำเนินการ&quot;</strong> หรือ{' '}
-            <strong className="text-emerald-700 font-bold">&quot;ออกใบเสร็จแล้ว&quot;</strong> เรียบร้อยแล้วเท่านั้น
+          <p className="text-xs text-slate-600 leading-relaxed font-medium">
+            {unconfirmedMsg}
           </p>
           <div className="text-xs bg-slate-50 border border-slate-200 rounded p-2.5 text-slate-500">
             สถานะคำสั่งซื้อปัจจุบัน:{' '}
