@@ -174,7 +174,7 @@ export default function ViewPurchaseOrderPage() {
     const unconfirmedMsg =
       docSts === '4'
         ? 'คำสั่งซื้อนี้ถูกยกเลิกแล้ว'
-        : 'ยังไม่สร้างใบสั่งซื้อสำหรับออร์เดอร์นี้ เพราะระบบต้องชำระเงินก่อนถึงจะสร้างได้';
+        : 'ยังไม่มีใบสั่งซื้อสำหรับออร์เดอร์นี้';
 
     return (
       <div className="min-h-screen bg-slate-100 flex flex-col items-center justify-center p-6">

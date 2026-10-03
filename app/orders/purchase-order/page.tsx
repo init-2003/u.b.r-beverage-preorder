@@ -21,6 +21,9 @@ function PurchaseOrderViewer() {
   };
 
   const docNo = getParam(['docno', 'doc_no', 'docno_local', 'orderno', 'order_no', 'orderno_local', 'id']);
+  const paramUser = getParam(['cususer', 'cus_user', 'user', 'u', 'username']);
+  const paramPass = getParam(['cuspass', 'cus_pass', 'pass', 'p', 'password']);
+  const tokenParam = getParam(['token', 'internal_token']);
 
   const [order, setOrder] = useState<PurchaseOrderData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -30,6 +33,12 @@ function PurchaseOrderViewer() {
     if (!docNo) {
       setLoading(false);
       setErrorMsg('กรุณาระบุเลขที่คำสั่งซื้อ (docno)');
+      return;
+    }
+
+    if (!tokenParam && (!paramUser || !paramPass)) {
+      setLoading(false);
+      setErrorMsg('กรุณาระบุชื่อผู้ใช้และรหัสผ่าน (cususer, cuspass)');
       return;
     }
 
@@ -106,7 +115,7 @@ function PurchaseOrderViewer() {
     const unconfirmedMsg =
       docSts === '4'
         ? 'คำสั่งซื้อนี้ถูกยกเลิกแล้ว'
-        : 'ยังไม่สร้างใบสั่งซื้อสำหรับออร์เดอร์นี้ เพราะระบบต้องชำระเงินก่อนถึงจะสร้างได้';
+        : 'ยังไม่มีใบสั่งซื้อสำหรับออร์เดอร์นี้';
 
     return (
       <div className="fixed inset-0 z-50 flex flex-col items-center justify-center p-6 bg-slate-100 print:hidden">

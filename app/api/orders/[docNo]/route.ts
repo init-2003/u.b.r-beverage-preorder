@@ -8,6 +8,7 @@ export async function GET(
 ) {
   try {
     const { docNo } = await params;
+    const cleanDocNo = decodeURIComponent(docNo || '').trim();
     const pool = await getDbPool();
 
     const internalSecret = process.env.INTERNAL_PRINT_SECRET || 'ubr_internal_print_secret_2026';
@@ -29,8 +30,8 @@ export async function GET(
     const paramPass = getParam(['cuspass', 'cus_pass', 'pass', 'p', 'password']);
 
     let isInternal = internalToken === internalSecret || tokenParam === internalSecret;
-    if (!isInternal && tokenParam && docNo) {
-      if (verifyOrderToken(docNo, tokenParam)) {
+    if (!isInternal && tokenParam && cleanDocNo) {
+      if (verifyOrderToken(cleanDocNo, tokenParam)) {
         isInternal = true;
       }
     }
@@ -118,7 +119,7 @@ export async function GET(
     // ดึงข้อมูล Header
     const headerResult = await pool
       .request()
-      .input('docNo', docNo)
+      .input('docNo', cleanDocNo)
       .query(`
         SELECT TOP 1
           h.Branch_Id,
@@ -186,7 +187,7 @@ export async function GET(
     // ดึงข้อมูลรายการสินค้าจาก Fnt_Detail_online ร่วมกับตาราง Trade เพื่อดึง Sale_Price1
     const detailResult = await pool
       .request()
-      .input('docNo', docNo)
+      .input('docNo', cleanDocNo)
       .query(`
         SELECT 
           d.ID_NO,
@@ -213,7 +214,7 @@ export async function GET(
     // ดึงข้อมูล Snapshot ที่อยู่และข้อมูลลูกค้าจาก Customer_online
     const cusOnlineResult = await pool
       .request()
-      .input('docNo', docNo)
+      .input('docNo', cleanDocNo)
       .query(`
         SELECT TOP 1
           Customer_Id,
@@ -258,7 +259,7 @@ export async function GET(
         Fn_Total: finalTotal,
         shipping: shippingInfo,
         items,
-        orderToken: generateOrderToken(docNo),
+        orderToken: generateOrderToken(cleanDocNo),
       },
     });
   } catch (error: any) {
@@ -277,12 +278,13 @@ export async function PATCH(
 ) {
   try {
     const { docNo } = await params;
+    const cleanDocNo = decodeURIComponent(docNo || '').trim();
     const body = await req.json();
     const { docSts, docStsName, trackingNo, remark, paymentSlipFilename } = body;
 
     const pool = await getDbPool();
     const request = pool.request();
-    request.input('docNo', docNo);
+    request.input('docNo', cleanDocNo);
 
     const setClauses = [];
 

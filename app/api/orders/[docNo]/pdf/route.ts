@@ -13,6 +13,7 @@ export async function GET(
 
 export async function handlePdfDownload(req: NextRequest, docNo: string) {
   try {
+    const cleanDocNo = decodeURIComponent(docNo || '').trim();
     const pool = await getDbPool();
 
     const internalSecret = process.env.INTERNAL_PRINT_SECRET || 'ubr_internal_print_secret_2026';
@@ -33,8 +34,8 @@ export async function handlePdfDownload(req: NextRequest, docNo: string) {
     const paramPass = getParam(['cuspass', 'cus_pass', 'pass', 'p', 'password']);
 
     let isInternal = internalToken === internalSecret || tokenParam === internalSecret;
-    if (!isInternal && tokenParam && docNo) {
-      if (verifyOrderToken(docNo, tokenParam)) {
+    if (!isInternal && tokenParam && cleanDocNo) {
+      if (verifyOrderToken(cleanDocNo, tokenParam)) {
         isInternal = true;
       }
     }
@@ -121,7 +122,7 @@ export async function handlePdfDownload(req: NextRequest, docNo: string) {
     // ดึงข้อมูล Header
     const headerResult = await pool
       .request()
-      .input('docNo', docNo)
+      .input('docNo', cleanDocNo)
       .query(`
         SELECT TOP 1
           h.Branch_Id,
@@ -191,7 +192,7 @@ export async function handlePdfDownload(req: NextRequest, docNo: string) {
       const msg =
         docSts === '4'
           ? 'คำสั่งซื้อนี้ถูกยกเลิกแล้ว'
-          : 'ยังไม่สร้างใบสั่งซื้อสำหรับออร์เดอร์นี้ เพราะระบบต้องชำระเงินก่อนถึงจะสร้างได้';
+          : 'ยังไม่มีใบสั่งซื้อสำหรับออร์เดอร์นี้';
       return NextResponse.json(
         { success: false, message: msg },
         { status: 403 }
@@ -201,7 +202,7 @@ export async function handlePdfDownload(req: NextRequest, docNo: string) {
     // ดึงข้อมูลรายการสินค้า
     const detailResult = await pool
       .request()
-      .input('docNo', docNo)
+      .input('docNo', cleanDocNo)
       .query(`
         SELECT 
           d.ID_NO,
@@ -223,7 +224,7 @@ export async function handlePdfDownload(req: NextRequest, docNo: string) {
     // ดึงข้อมูลจัดส่งจาก Customer_online
     const cusOnlineResult = await pool
       .request()
-      .input('docNo', docNo)
+      .input('docNo', cleanDocNo)
       .query(`
         SELECT TOP 1
           Customer_Id,
