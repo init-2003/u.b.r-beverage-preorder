@@ -29,7 +29,7 @@ function PurchaseOrderViewer() {
   useEffect(() => {
     if (!docNo) {
       setLoading(false);
-      setErrorMsg('missing_docno');
+      setErrorMsg('กรุณาระบุเลขที่คำสั่งซื้อ (docno)');
       return;
     }
 
@@ -46,13 +46,8 @@ function PurchaseOrderViewer() {
 
         if (!isMounted) return;
 
-        if (res.status === 401 || res.status === 403) {
-          setErrorMsg('unauthorized');
-          return;
-        }
-
         if (!res.ok || !data.success || !data.order) {
-          setErrorMsg('not_found');
+          setErrorMsg(data.message || 'ไม่สามารถเปิดเอกสารได้');
           return;
         }
 
@@ -95,37 +90,9 @@ function PurchaseOrderViewer() {
         <div className="max-w-md w-full bg-white p-6 sm:p-8 rounded-lg shadow-sm border border-slate-200 text-center space-y-3">
           <AlertCircle className="w-10 h-10 text-red-500 mx-auto" />
           <h2 className="text-base font-bold text-slate-800">ไม่สามารถเปิดเอกสารได้</h2>
-        </div>
-      </div>
-    );
-  }
-
-  // ตรวจสอบสถานะคำสั่งซื้อ (อนุญาตให้ดูใบสั่งซื้อเฉพาะเมื่อสถานะเป็น '0' หรือ '3')
-  const docSts = (order.Doc_Sts || '').trim();
-  const canViewPo = docSts === '0' || docSts === '3';
-
-  if (!canViewPo) {
-    const currentStatusText =
-      docSts === '4'
-        ? 'ยกเลิก Order'
-        : order.Doc_Sts_Name || 'รอชำระ';
-
-    return (
-      <div className="fixed inset-0 z-50 flex flex-col items-center justify-center p-6 bg-slate-100 print:hidden">
-        <div className="max-w-md w-full bg-white p-6 sm:p-8 rounded-lg shadow-sm border border-slate-200 text-center space-y-3">
-          <div className="w-12 h-12 bg-amber-50 text-amber-600 rounded-full flex items-center justify-center mx-auto border border-amber-200">
-            <AlertCircle className="w-6 h-6" />
-          </div>
-          <h2 className="text-base font-bold text-slate-800">ยังไม่สามารถเปิดใบสั่งซื้อได้</h2>
-          <p className="text-xs text-slate-600 leading-relaxed">
-            เอกสารใบสั่งซื้อจะสามารถแสดงได้ เมื่อสถานะคำสั่งซื้อเป็น{' '}
-            <strong className="text-blue-700 font-bold">&quot;กำลังดำเนินการ&quot;</strong> หรือ{' '}
-            <strong className="text-emerald-700 font-bold">&quot;ออกใบเสร็จแล้ว&quot;</strong> เรียบร้อยแล้วเท่านั้น
+          <p className="text-xs text-slate-600 leading-relaxed font-medium">
+            {errorMsg || 'ข้อมูลไม่ถูกต้อง'}
           </p>
-          <div className="text-xs bg-slate-50 border border-slate-200 rounded p-2.5 text-slate-500">
-            สถานะคำสั่งซื้อปัจจุบัน:{' '}
-            <strong className="text-slate-800">{currentStatusText}</strong>
-          </div>
         </div>
       </div>
     );

@@ -162,9 +162,9 @@ export default function ViewPurchaseOrderPage() {
     );
   }
 
-  // ใบสั่งซื้อ (PO) ออกให้เฉพาะคำสั่งซื้อที่มีสถานะเป็น '0' (กำลังดำเนินการ) หรือ '3' (ออกใบเสร็จแล้ว)
+  // ใบสั่งซื้อ (PO) ออกให้เมื่อสถานะเป็น '0' หรือ '3' (หรือเมื่อเปิดด้วยการระบุชื่อ/รหัสผ่าน/Token ที่ถูกต้องโดยตรง)
   const docSts = (order.Doc_Sts || '').trim();
-  const canViewPo = docSts === '0' || docSts === '3';
+  const canViewPo = hasDirectAuth || docSts === '0' || docSts === '3';
   if (!canViewPo) {
     const currentStatusText =
       docSts === '4'

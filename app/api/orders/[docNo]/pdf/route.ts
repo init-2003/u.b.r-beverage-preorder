@@ -79,19 +79,24 @@ export async function handlePdfDownload(req: NextRequest, docNo: string) {
           };
         } else {
           return NextResponse.json(
-            { success: false, message: 'รหัสผ่านไม่ถูกต้อง' },
+            { success: false, message: 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง' },
             { status: 401 }
           );
         }
       } else {
         return NextResponse.json(
-          { success: false, message: 'ไม่พบบัญชีผู้ใช้นี้' },
+          { success: false, message: 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง' },
           { status: 401 }
         );
       }
     } else if (paramUser && !paramPass) {
       return NextResponse.json(
         { success: false, message: 'กรุณาระบุรหัสผ่าน (cuspass)' },
+        { status: 401 }
+      );
+    } else if (!paramUser && paramPass) {
+      return NextResponse.json(
+        { success: false, message: 'กรุณาระบุชื่อผู้ใช้ (cususer)' },
         { status: 401 }
       );
     }
@@ -157,24 +162,33 @@ export async function handlePdfDownload(req: NextRequest, docNo: string) {
 
     if (headerResult.recordset.length === 0) {
       return NextResponse.json(
-        { success: false, message: 'ไม่พบข้อมูลคำสั่งซื้อ' },
+        { success: false, message: 'ไม่พบเลขที่คำสั่งซื้อนี้' },
         { status: 404 }
       );
     }
 
     const header = headerResult.recordset[0];
 
-    const orderCustomerId = (header.Customer_Id || '').trim();
-    if (!isInternal && orderCustomerId && customer && orderCustomerId !== customer.customerId) {
+    const orderCustomerId = (header.Customer_Id || '').trim().toLowerCase();
+    const currentCustId = (customer?.customerId || '').trim().toLowerCase();
+    const currentCusUser = (customer?.cusUser || '').trim().toLowerCase();
+    if (
+      !isInternal &&
+      orderCustomerId &&
+      customer &&
+      orderCustomerId !== currentCustId &&
+      orderCustomerId !== currentCusUser
+    ) {
       return NextResponse.json(
-        { success: false, message: 'คุณไม่มีสิทธิ์ดาวน์โหลดเอกสารนี้' },
+        { success: false, message: 'เลขที่คำสั่งซื้อนี้ไม่ใช่ของบัญชีผู้ใช้นี้' },
         { status: 403 }
       );
     }
 
-    // ใบสั่งซื้อ (PO) ออกให้เฉพาะคำสั่งซื้อที่มีสถานะเป็น '0' (กำลังดำเนินการ) หรือ '3' (ออกใบเสร็จแล้ว)
+    // ใบสั่งซื้อ (PO) ออกให้เมื่อสถานะเป็น '0' หรือ '3' (หรือเปิดด้วยชื่อ/รหัสผ่านที่ถูกต้องโดยตรง)
+    const isDirectAuth = Boolean(paramUser && paramPass);
     const docSts = (header.Doc_Sts || '').trim();
-    if (docSts !== '0' && docSts !== '3') {
+    if (!isDirectAuth && docSts !== '0' && docSts !== '3') {
       return NextResponse.json(
         { success: false, message: 'เอกสารใบสั่งซื้อจะดาวน์โหลดได้ เมื่อสถานะเป็น "กำลังดำเนินการ" หรือ "ออกใบเสร็จแล้ว" เท่านั้น' },
         { status: 403 }

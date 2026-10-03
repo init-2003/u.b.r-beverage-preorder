@@ -75,19 +75,24 @@ export async function GET(
           };
         } else {
           return NextResponse.json(
-            { success: false, message: 'รหัสผ่านไม่ถูกต้อง' },
+            { success: false, message: 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง' },
             { status: 401 }
           );
         }
       } else {
         return NextResponse.json(
-          { success: false, message: 'ไม่พบบัญชีผู้ใช้นี้' },
+          { success: false, message: 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง' },
           { status: 401 }
         );
       }
     } else if (paramUser && !paramPass) {
       return NextResponse.json(
         { success: false, message: 'กรุณาระบุรหัสผ่าน (cuspass)' },
+        { status: 401 }
+      );
+    } else if (!paramUser && paramPass) {
+      return NextResponse.json(
+        { success: false, message: 'กรุณาระบุชื่อผู้ใช้ (cususer)' },
         { status: 401 }
       );
     }
@@ -154,18 +159,26 @@ export async function GET(
 
     if (headerResult.recordset.length === 0) {
       return NextResponse.json(
-        { success: false, message: 'ไม่พบเอกสารคำสั่งซื้อนี้' },
+        { success: false, message: 'ไม่พบเลขที่คำสั่งซื้อนี้' },
         { status: 404 }
       );
     }
 
     const header = headerResult.recordset[0];
-    const orderCustomerId = (header.Customer_Id || '').trim();
+    const orderCustomerId = (header.Customer_Id || '').trim().toLowerCase();
+    const currentCustId = (customer?.customerId || '').trim().toLowerCase();
+    const currentCusUser = (customer?.cusUser || '').trim().toLowerCase();
 
     // ตรวจสอบความเป็นเจ้าของคำสั่งซื้อ (ข้ามถ้าเป็นคำขอจาก internal print server)
-    if (!isInternal && orderCustomerId && customer && orderCustomerId !== customer.customerId) {
+    if (
+      !isInternal &&
+      orderCustomerId &&
+      customer &&
+      orderCustomerId !== currentCustId &&
+      orderCustomerId !== currentCusUser
+    ) {
       return NextResponse.json(
-        { success: false, message: 'คุณไม่มีสิทธิ์เข้าถึงคำสั่งซื้อนี้' },
+        { success: false, message: 'เลขที่คำสั่งซื้อนี้ไม่ใช่ของบัญชีผู้ใช้นี้' },
         { status: 403 }
       );
     }
