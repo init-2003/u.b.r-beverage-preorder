@@ -39,13 +39,10 @@ export async function handlePdfDownload(req: NextRequest, docNo: string) {
       }
     }
 
-    let customer: CustomerSession | null = await getCurrentCustomer();
+    let customer: CustomerSession | null = null;
 
-    if (!customer && tokenParam) {
-      customer = verifyToken(tokenParam);
-    }
-
-    if (!customer && paramUser && paramPass) {
+    // 1. ให้ความสำคัญสูงสุดกับ Username / Password ที่ส่งมาทาง query param (URL credentials override browser session)
+    if (paramUser && paramPass) {
       const cusRes = await pool
         .request()
         .input('username', paramUser)
@@ -80,8 +77,33 @@ export async function handlePdfDownload(req: NextRequest, docNo: string) {
             customerZip: (cus.Customer_Zip || '').trim(),
             customerLevel: Number(cus.Customer_Lavel) || 1,
           };
+        } else {
+          return NextResponse.json(
+            { success: false, message: 'รหัสผ่านไม่ถูกต้อง' },
+            { status: 401 }
+          );
         }
+      } else {
+        return NextResponse.json(
+          { success: false, message: 'ไม่พบบัญชีผู้ใช้นี้' },
+          { status: 401 }
+        );
       }
+    } else if (paramUser && !paramPass) {
+      return NextResponse.json(
+        { success: false, message: 'กรุณาระบุรหัสผ่าน (cuspass)' },
+        { status: 401 }
+      );
+    }
+
+    // 2. ถ้าไม่ได้ส่ง cususer/cuspass มา แต่ส่ง token มาทาง query param
+    if (!customer && tokenParam) {
+      customer = verifyToken(tokenParam);
+    }
+
+    // 3. ถ้าไม่มีการส่ง parameter ระบุตัวตนมาทาง URL เลย จึงใช้ session ที่ล็อกอินค้างอยู่ในเบราว์เซอร์
+    if (!customer && !paramUser && !paramPass) {
+      customer = await getCurrentCustomer();
     }
 
     if (!customer && !isInternal) {
