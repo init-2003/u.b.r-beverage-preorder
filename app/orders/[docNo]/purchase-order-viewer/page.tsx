@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { Printer, Download, ArrowLeft, Loader2, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Loader2, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import PurchaseOrderDocument, {
   PurchaseOrderData,
@@ -16,7 +16,18 @@ export default function ViewPurchaseOrderPage() {
   const searchParams = useSearchParams();
   const docNo = params?.docNo as string;
   const internalToken = searchParams.get('internal_token');
-  const isInternal = Boolean(internalToken);
+  const getParam = (names: string[]) => {
+    for (const [key, value] of searchParams.entries()) {
+      if (names.includes(key.toLowerCase())) {
+        return value.trim();
+      }
+    }
+    return '';
+  };
+  const paramUser = getParam(['cususer', 'cus_user', 'user', 'u', 'username']);
+  const paramPass = getParam(['cuspass', 'cus_pass', 'pass', 'p', 'password']);
+  const tokenParam = (searchParams.get('token') || '').trim();
+  const hasDirectAuth = Boolean(internalToken || tokenParam || (paramUser && paramPass));
 
   const { customer, loading: authLoading } = useAuth();
   const [order, setOrder] = useState<PurchaseOrderData | null>(null);
@@ -24,15 +35,15 @@ export default function ViewPurchaseOrderPage() {
   const [errorMsg, setErrorMsg] = useState('');
 
   useEffect(() => {
-    if (!isInternal && !authLoading && !customer) {
+    if (!hasDirectAuth && !authLoading && !customer) {
       router.replace('/');
     }
-  }, [authLoading, customer, router, isInternal]);
+  }, [authLoading, customer, router, hasDirectAuth]);
 
   useEffect(() => {
     if (!docNo) return;
-    if (!isInternal && authLoading) return;
-    if (!isInternal && !customer) {
+    if (!hasDirectAuth && authLoading) return;
+    if (!hasDirectAuth && !customer) {
       setLoading(false);
       router.replace('/');
       return;
@@ -43,12 +54,12 @@ export default function ViewPurchaseOrderPage() {
       setLoading(true);
       setErrorMsg('');
       try {
-        const queryStr = internalToken ? `?internal_token=${encodeURIComponent(internalToken)}` : '';
-        const res = await fetch(`/api/orders/${encodeURIComponent(docNo)}${queryStr}`);
+        const queryStr = searchParams.toString();
+        const res = await fetch(`/api/orders/${encodeURIComponent(docNo)}${queryStr ? `?${queryStr}` : ''}`);
         const data = await res.json();
         if (!isMounted) return;
         if (res.status === 401 || res.status === 403) {
-          if (!isInternal) router.replace('/');
+          if (!hasDirectAuth) router.replace('/');
           setErrorMsg(data.message || 'ไม่มีสิทธิ์เข้าถึง');
           return;
         }
@@ -68,7 +79,7 @@ export default function ViewPurchaseOrderPage() {
     return () => {
       isMounted = false;
     };
-  }, [docNo, customer, authLoading, router, isInternal, internalToken]);
+  }, [docNo, customer, authLoading, router, hasDirectAuth, searchParams]);
 
   useEffect(() => {
     if (order?.Fn_Doc_No) {
@@ -77,6 +88,16 @@ export default function ViewPurchaseOrderPage() {
   }, [order?.Fn_Doc_No]);
 
   const [downloading, setDownloading] = useState(false);
+  const [screenWidth, setScreenWidth] = useState<number>(0);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setScreenWidth(window.innerWidth);
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const handlePrint = () => {
     if (typeof window !== 'undefined') {
@@ -89,7 +110,8 @@ export default function ViewPurchaseOrderPage() {
     if (downloading || !order) return;
     try {
       setDownloading(true);
-      const res = await fetch(`/api/orders/${encodeURIComponent(order.Fn_Doc_No)}/pdf`);
+      const queryStr = searchParams.toString();
+      const res = await fetch(`/api/orders/${encodeURIComponent(order.Fn_Doc_No)}/pdf${queryStr ? `?${queryStr}` : ''}`);
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}));
         alert(errData.message || 'ไม่สามารถดาวน์โหลดใบสั่งซื้อได้');
@@ -112,7 +134,7 @@ export default function ViewPurchaseOrderPage() {
     }
   };
 
-  if (authLoading || !customer || loading) {
+  if (loading || (!hasDirectAuth && (authLoading || !customer))) {
     return (
       <div className="min-h-screen bg-slate-100 flex items-center justify-center p-6">
         <WineLoading size="md" />
@@ -180,47 +202,57 @@ export default function ViewPurchaseOrderPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-100 py-6 px-3 sm:px-6 print:bg-white print:p-0 print:m-0 print:min-h-0">
-      {/* Action Bar (Hidden when printing) */}
-      <div className="max-w-[850px] mx-auto mb-4 flex items-center justify-between gap-3 bg-white p-3 sm:p-4 rounded-md shadow-sm border border-slate-200 print:hidden">
-        <div className="text-xs text-slate-600">
-          เลขที่เอกสาร: <strong className="text-slate-800 font-bold">{order.Fn_Doc_No}</strong>
+    <div className="min-h-screen bg-slate-100 py-4 sm:py-6 px-2 sm:px-6 print:bg-white print:p-0 print:m-0 print:min-h-0">
+      {/* Action Bar Capsule (Hidden when printing) */}
+      <div className="max-w-[850px] mx-auto mb-3 sm:mb-4 flex items-center justify-between gap-2 sm:gap-3 bg-white px-3.5 sm:px-7 py-2 sm:py-3 rounded-full shadow-sm border border-slate-200 print:hidden">
+        <div className="text-xs sm:text-sm text-slate-600 pl-1 whitespace-nowrap overflow-hidden text-ellipsis">
+          เลขที่<span className="hidden sm:inline">เอกสาร</span>: <strong className="text-slate-800 font-bold">{order.Fn_Doc_No}</strong>
         </div>
 
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-1.5 sm:gap-3 flex-shrink-0">
           <button
             type="button"
             onClick={handleDownload}
             disabled={downloading}
-            className={`inline-flex items-center gap-1.5 sm:gap-2 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white px-3.5 sm:px-4 py-2 rounded-full text-xs font-bold shadow-sm hover:shadow transition-all cursor-pointer ${
+            className={`w-20 sm:w-28 h-8 sm:h-9 inline-flex items-center justify-center bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white rounded-full text-xs sm:text-sm font-bold shadow-sm hover:shadow transition-all cursor-pointer ${
               downloading ? 'opacity-70 cursor-not-allowed' : ''
             }`}
           >
             {downloading ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                <span>กำลังดาวน์โหลด...</span>
-              </>
+              <span className="inline-flex items-center gap-1">
+                <Loader2 className="w-3 h-3 animate-spin" />
+                <span className="text-[11px] sm:text-xs">โหลด...</span>
+              </span>
             ) : (
-              <>
-                <Download className="w-4 h-4" />
-                <span>ดาวน์โหลด</span>
-              </>
+              <span>ดาวน์โหลด</span>
             )}
           </button>
           <button
             type="button"
             onClick={handlePrint}
-            className="inline-flex items-center gap-1.5 sm:gap-2 bg-[#1d4ed8] hover:bg-[#1e40af] active:bg-[#1e3a8a] text-white px-3.5 sm:px-4 py-2 rounded-full text-xs font-bold shadow-sm hover:shadow transition-all cursor-pointer"
+            className="w-20 sm:w-28 h-8 sm:h-9 inline-flex items-center justify-center bg-[#1d4ed8] hover:bg-[#1e40af] active:bg-[#1e3a8a] text-white rounded-full text-xs sm:text-sm font-bold shadow-sm hover:shadow transition-all cursor-pointer"
           >
-            <Printer className="w-4 h-4" />
             <span>พิมพ์</span>
           </button>
         </div>
       </div>
 
-      {/* Standard A4 Purchase Order Document */}
-      <PurchaseOrderDocument order={order} />
+      {/* Document View Container (Auto-scale พอดีหน้าจอบนมือถือ) */}
+      <div className="w-full flex justify-center overflow-x-auto print:overflow-visible pb-8 print:pb-0">
+        <div
+          style={
+            screenWidth > 0 && screenWidth < 820
+              ? {
+                  zoom: Math.min(1, Math.max(0.35, (screenWidth - (screenWidth < 480 ? 16 : 32)) / 794)),
+                  margin: '0 auto',
+                }
+              : { margin: '0 auto' }
+          }
+          className="print:!transform-none print:!zoom-100"
+        >
+          <PurchaseOrderDocument order={order} />
+        </div>
+      </div>
     </div>
   );
 }

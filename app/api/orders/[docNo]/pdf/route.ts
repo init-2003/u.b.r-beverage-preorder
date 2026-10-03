@@ -1,23 +1,95 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDbPool } from '@/lib/db';
-import { getCurrentCustomer } from '@/lib/auth';
+import { getCurrentCustomer, verifyToken, verifyOrderToken, CustomerSession } from '@/lib/auth';
 import { generatePurchaseOrderPdf } from '@/lib/po-pdf-generator';
 
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ docNo: string }> }
 ) {
+  const { docNo } = await params;
+  return handlePdfDownload(req, docNo);
+}
+
+export async function handlePdfDownload(req: NextRequest, docNo: string) {
   try {
-    const customer = await getCurrentCustomer();
-    if (!customer) {
+    const pool = await getDbPool();
+
+    const internalSecret = process.env.INTERNAL_PRINT_SECRET || 'ubr_internal_print_secret_2026';
+    const searchParams = req.nextUrl.searchParams;
+    const internalToken = searchParams.get('internal_token');
+    const tokenParam = (searchParams.get('token') || '').trim();
+
+    const getParam = (names: string[]) => {
+      for (const [key, value] of searchParams.entries()) {
+        if (names.includes(key.toLowerCase())) {
+          return value.trim();
+        }
+      }
+      return '';
+    };
+
+    const paramUser = getParam(['cususer', 'cus_user', 'user', 'u', 'username']);
+    const paramPass = getParam(['cuspass', 'cus_pass', 'pass', 'p', 'password']);
+
+    let isInternal = internalToken === internalSecret || tokenParam === internalSecret;
+    if (!isInternal && tokenParam && docNo) {
+      if (verifyOrderToken(docNo, tokenParam)) {
+        isInternal = true;
+      }
+    }
+
+    let customer: CustomerSession | null = await getCurrentCustomer();
+
+    if (!customer && tokenParam) {
+      customer = verifyToken(tokenParam);
+    }
+
+    if (!customer && paramUser && paramPass) {
+      const cusRes = await pool
+        .request()
+        .input('username', paramUser)
+        .query(`
+          SELECT TOP 1 
+            Customer_Id, 
+            Customer_Name, 
+            Customer_Tel, 
+            Customer_Address, 
+            Customer_Zip, 
+            Customer_Lavel,
+            Cus_User, 
+            Cus_SPass, 
+            Customer_Sts
+          FROM Customer 
+          WHERE (
+            RTRIM(LTRIM(Cus_User)) = @username 
+            OR RTRIM(LTRIM(Customer_Id)) = @username 
+          )
+        `);
+
+      if (cusRes.recordset.length > 0) {
+        const cus = cusRes.recordset[0];
+        const storedPass = (cus.Cus_SPass || '').trim();
+        if (storedPass === paramPass) {
+          customer = {
+            customerId: (cus.Customer_Id || '').trim(),
+            cusUser: (cus.Cus_User || '').trim(),
+            customerName: (cus.Customer_Name || '').trim(),
+            customerTel: (cus.Customer_Tel || '').trim(),
+            customerAddress: (cus.Customer_Address || '').trim(),
+            customerZip: (cus.Customer_Zip || '').trim(),
+            customerLevel: Number(cus.Customer_Lavel) || 1,
+          };
+        }
+      }
+    }
+
+    if (!customer && !isInternal) {
       return NextResponse.json(
         { success: false, message: 'กรุณาเข้าสู่ระบบก่อนดาวน์โหลดใบสั่งซื้อ' },
         { status: 401 }
       );
     }
-
-    const { docNo } = await params;
-    const pool = await getDbPool();
 
     // ดึงข้อมูล Header
     const headerResult = await pool
@@ -71,7 +143,7 @@ export async function GET(
     const header = headerResult.recordset[0];
 
     const orderCustomerId = (header.Customer_Id || '').trim();
-    if (orderCustomerId && orderCustomerId !== customer.customerId) {
+    if (!isInternal && orderCustomerId && customer && orderCustomerId !== customer.customerId) {
       return NextResponse.json(
         { success: false, message: 'คุณไม่มีสิทธิ์ดาวน์โหลดเอกสารนี้' },
         { status: 403 }

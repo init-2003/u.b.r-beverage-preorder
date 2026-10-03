@@ -41,6 +41,7 @@ export interface PurchaseOrderData {
     Customer_Remark?: string;
     Pb_Now?: string;
   };
+  orderToken?: string;
   items: PurchaseOrderItem[];
 }
 
@@ -64,8 +65,8 @@ function formatDate(val?: string): string {
 }
 
 const BASE_ROW_HEIGHT = 28;
-// งบความจุบรรทัดตารางสินค้าต่อ 1 หน้า A4 (16 บรรทัด = 448px พอดีเต็มแผ่นโดยไม่ดันส่วนท้ายตกหน้า)
-const MAX_PAGE_UNITS = 16;
+// งบความจุบรรทัดตารางสินค้าต่อ 1 หน้า A4 (17 บรรทัด พอดีเต็มแผ่นโดยไม่ดันส่วนท้ายตกหน้า)
+const MAX_PAGE_UNITS = 17;
 
 /**
  * คำนวณจำนวนบรรทัดที่รายการสินค้าจะใช้จริงตามความยาวของชื่อสินค้า
@@ -73,7 +74,7 @@ const MAX_PAGE_UNITS = 16;
  */
 function getItemLineUnits(tradeName: string): number {
   if (!tradeName) return 1;
-  const charsPerLine = 36;
+  const charsPerLine = 48;
   const segments = tradeName.split('\n');
   let totalLines = 0;
   for (const seg of segments) {
@@ -302,7 +303,7 @@ export default function PurchaseOrderDocument({
             <table>
               <thead>
                 <tr>
-                  <th className="text-center" style={{ width: '40px' }}>
+                  <th className="text-center" style={{ width: '38px' }}>
                     ลำดับ
                     <br />
                     No.
@@ -312,22 +313,22 @@ export default function PurchaseOrderDocument({
                     <br />
                     Item list
                   </th>
-                  <th className="text-center" style={{ width: '80px' }}>
+                  <th className="text-center" style={{ width: '55px' }}>
                     จำนวน
                     <br />
                     Qty
                   </th>
-                  <th className="text-center" style={{ width: '90px' }}>
+                  <th className="text-center" style={{ width: '65px' }}>
                     หน่วย
                     <br />
                     Unit
                   </th>
-                  <th className="text-center" style={{ width: '110px' }}>
+                  <th className="text-center" style={{ width: '100px' }}>
                     ราคาต่อหน่วย
                     <br />
                     Unit Price
                   </th>
-                  <th className="text-center" style={{ width: '120px' }}>
+                  <th className="text-center" style={{ width: '110px' }}>
                     จำนวนเงิน
                     <br />
                     Amount
@@ -501,6 +502,8 @@ export default function PurchaseOrderDocument({
           margin: 0 auto;
           box-sizing: border-box;
           max-width: 850px;
+          min-width: 794px;
+          width: 794px;
           border-radius: 4px;
           box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
@@ -793,7 +796,21 @@ export default function PurchaseOrderDocument({
             color: #000000 !important;
             margin: 0 !important;
             padding: 0 !important;
+            height: auto !important;
+            min-height: 0 !important;
             font-family: "Sarabun", "TH Sarabun New", sans-serif !important;
+          }
+
+          main {
+            padding: 0 !important;
+            margin: 0 !important;
+            min-height: 0 !important;
+            height: auto !important;
+            display: block !important;
+          }
+
+          next-route-announcer {
+            display: none !important;
           }
 
           .no-print,
@@ -819,21 +836,67 @@ export default function PurchaseOrderDocument({
             font-family: "Sarabun", "TH Sarabun New", sans-serif !important;
           }
 
+          .crtorderpdf-wrapper {
+            box-shadow: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            width: 100% !important;
+            max-width: none !important;
+            min-width: 0 !important;
+            zoom: 1 !important;
+            transform: none !important;
+          }
+
           .crtorderpdf-wrapper .a4 {
             box-shadow: none !important;
             border-radius: 0 !important;
             padding: 0 1.5mm !important;
             width: 100% !important;
+            height: 282mm !important;
+            max-height: 282mm !important;
             box-sizing: border-box !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: space-between !important;
+            page-break-after: always !important;
+            break-after: page !important;
+          }
+
+          .crtorderpdf-wrapper .a4:last-child {
+            page-break-after: avoid !important;
+            break-after: avoid !important;
           }
 
           .crtorderpdf-wrapper header,
           .crtorderpdf-wrapper .customer-order-cards,
           .crtorderpdf-wrapper .totals,
-          .crtorderpdf-wrapper .signatures,
-          .crtorderpdf-wrapper tr {
+          .crtorderpdf-wrapper .signatures {
+            flex-shrink: 0 !important;
             break-inside: avoid;
             page-break-inside: avoid;
+          }
+
+          .crtorderpdf-wrapper .table-wrapper {
+            flex: 1 !important;
+            display: flex !important;
+            flex-direction: column !important;
+          }
+
+          .crtorderpdf-wrapper table {
+            flex: 1 !important;
+            height: 100% !important;
+          }
+
+          .crtorderpdf-wrapper tbody {
+            height: 100% !important;
+          }
+
+          .crtorderpdf-wrapper tbody tr.table-filler-row {
+            height: 100% !important;
+          }
+
+          .crtorderpdf-wrapper tbody tr.table-filler-row td {
+            height: 100% !important;
           }
 
           * {

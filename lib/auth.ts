@@ -40,3 +40,14 @@ export async function getCurrentCustomer(): Promise<CustomerSession | null> {
   if (!token) return null;
   return verifyToken(token);
 }
+
+export function generateOrderToken(docNo: string): string {
+  return crypto.createHmac('sha256', SECRET_KEY).update(`po_${docNo.trim()}`).digest('hex').slice(0, 32);
+}
+
+export function verifyOrderToken(docNo: string, token: string): boolean {
+  if (!docNo || !token) return false;
+  const expected = generateOrderToken(docNo);
+  return token.trim().toLowerCase() === expected.toLowerCase();
+}
+

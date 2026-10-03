@@ -450,7 +450,7 @@ export default function OrderDetailPage() {
                 </button>
 
                 <Link
-                  href={`/orders/${encodeURIComponent(order.Fn_Doc_No)}/view-purchase-order`}
+                  href={`/orders/${encodeURIComponent(order.Fn_Doc_No)}/purchase-order-viewer`}
                   className="w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-5 py-2 rounded-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold text-xs shadow-2xs hover:shadow transition-all"
                   title="เปิดดูและพิมพ์ใบสั่งซื้อ A4"
                 >

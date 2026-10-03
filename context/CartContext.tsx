@@ -61,7 +61,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     return [];
   });
 
-  const [isLoaded, setIsLoaded] = useState(true);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isAddedModalOpen, setIsAddedModalOpen] = useState(false);
   const [lastAddedItem, setLastAddedItem] = useState<AddedModalData | null>(null);

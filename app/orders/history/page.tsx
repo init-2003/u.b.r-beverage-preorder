@@ -704,7 +704,7 @@ function OrdersContent() {
                     {/* Primary Button */}
                     {docStsCode === '3' || docStsCode === '0' ? (
                       <Link
-                        href={`/orders/${encodeURIComponent(order.Fn_Doc_No)}/view-purchase-order`}
+                        href={`/orders/${encodeURIComponent(order.Fn_Doc_No)}/purchase-order-viewer`}
                         className="px-6 py-2 rounded-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-xs sm:text-sm font-medium transition-colors shadow-xs inline-flex items-center justify-center"
                       >
                         ดูใบสั่งซื้อ

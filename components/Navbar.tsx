@@ -349,8 +349,14 @@ function UserAccountMenu({
 
 export default function Navbar({ onRefreshData }: NavbarProps = {}) {
   const router = useRouter();
+  const pathname = usePathname();
   const { customer, logout, openLoginModal } = useAuth();
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
+
+  // ซ่อน Navbar เมื่ออยู่ในหน้าเอกสารเดี่ยว (Standalone A4 Document)
+  if (pathname?.includes('/purchase-order')) {
+    return null;
+  }
 
   return (
     <header className="sticky top-0 z-40 w-full bg-[#800020] border-b border-[#68001a] shadow-md print:hidden">

@@ -2,15 +2,18 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { X } from 'lucide-react';
 
 const COOKIE_CONSENT_KEY = 'ubr_cookie_consent';
 
 export default function CookieConsentBanner() {
+  const pathname = usePathname();
   const [isVisible, setIsVisible] = useState(false);
   const [isAnimatingOut, setIsAnimatingOut] = useState(false);
 
   useEffect(() => {
+    if (pathname?.includes('/purchase-order')) return;
     // Check if user has already accepted cookies
     const consent = localStorage.getItem(COOKIE_CONSENT_KEY);
     if (!consent) {
@@ -18,7 +21,11 @@ export default function CookieConsentBanner() {
       const timer = setTimeout(() => setIsVisible(true), 800);
       return () => clearTimeout(timer);
     }
-  }, []);
+  }, [pathname]);
+
+  if (pathname?.includes('/purchase-order')) {
+    return null;
+  }
 
   const handleAccept = () => {
     setIsAnimatingOut(true);

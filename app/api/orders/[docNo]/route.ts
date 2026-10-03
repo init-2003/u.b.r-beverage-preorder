@@ -1,24 +1,94 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDbPool } from '@/lib/db';
-import { getCurrentCustomer } from '@/lib/auth';
+import { getCurrentCustomer, verifyToken, verifyOrderToken, generateOrderToken, CustomerSession } from '@/lib/auth';
 
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ docNo: string }> }
 ) {
   try {
+    const { docNo } = await params;
+    const pool = await getDbPool();
+
     const internalSecret = process.env.INTERNAL_PRINT_SECRET || 'ubr_internal_print_secret_2026';
-    const isInternal = req.nextUrl.searchParams.get('internal_token') === internalSecret;
-    const customer = await getCurrentCustomer();
+    const searchParams = req.nextUrl.searchParams;
+    const internalToken = searchParams.get('internal_token');
+    const tokenParam = (searchParams.get('token') || '').trim();
+
+    // ฟังก์ชันค้นหา query param แบบ case-insensitive รองรับทั้ง cususer/cuspass, user/pass, u/p
+    const getParam = (names: string[]) => {
+      for (const [key, value] of searchParams.entries()) {
+        if (names.includes(key.toLowerCase())) {
+          return value.trim();
+        }
+      }
+      return '';
+    };
+
+    const paramUser = getParam(['cususer', 'cus_user', 'user', 'u', 'username']);
+    const paramPass = getParam(['cuspass', 'cus_pass', 'pass', 'p', 'password']);
+
+    let isInternal = internalToken === internalSecret || tokenParam === internalSecret;
+    if (!isInternal && tokenParam && docNo) {
+      if (verifyOrderToken(docNo, tokenParam)) {
+        isInternal = true;
+      }
+    }
+
+    let customer: CustomerSession | null = await getCurrentCustomer();
+
+    // ตรวจสอบ Token ที่ส่งมาทาง query param (ถ้ายังไม่มี session)
+    if (!customer && tokenParam) {
+      customer = verifyToken(tokenParam);
+    }
+
+    // ตรวจสอบ Username / Password ที่ส่งมาทาง query param (ถ้ายังไม่มี session)
+    if (!customer && paramUser && paramPass) {
+      const cusRes = await pool
+        .request()
+        .input('username', paramUser)
+        .query(`
+          SELECT TOP 1 
+            Customer_Id, 
+            Customer_Name, 
+            Customer_Tel, 
+            Customer_Address, 
+            Customer_Zip, 
+            Customer_Lavel,
+            Cus_User, 
+            Cus_SPass, 
+            Customer_Sts
+          FROM Customer 
+          WHERE (
+            RTRIM(LTRIM(Cus_User)) = @username 
+            OR RTRIM(LTRIM(Customer_Id)) = @username 
+          )
+        `);
+
+      if (cusRes.recordset.length > 0) {
+        const cus = cusRes.recordset[0];
+        const storedPass = (cus.Cus_SPass || '').trim();
+        if (storedPass === paramPass) {
+          customer = {
+            customerId: (cus.Customer_Id || '').trim(),
+            cusUser: (cus.Cus_User || '').trim(),
+            customerName: (cus.Customer_Name || '').trim(),
+            customerTel: (cus.Customer_Tel || '').trim(),
+            customerAddress: (cus.Customer_Address || '').trim(),
+            customerZip: (cus.Customer_Zip || '').trim(),
+            customerLevel: Number(cus.Customer_Lavel) || 1,
+          };
+        }
+      }
+    }
+
     if (!customer && !isInternal) {
       return NextResponse.json(
-        { success: false, message: 'กรุณาเข้าสู่ระบบก่อนดูข้อมูลคำสั่งซื้อ' },
+        { success: false, message: '' },
         { status: 401 }
       );
     }
 
-    const { docNo } = await params;
-    const pool = await getDbPool();
 
     // ดึงข้อมูล Header
     const headerResult = await pool
@@ -155,6 +225,7 @@ export async function GET(
         Fn_Total: finalTotal,
         shipping: shippingInfo,
         items,
+        orderToken: generateOrderToken(docNo),
       },
     });
   } catch (error: any) {

@@ -14,5 +14,5 @@ export default async function OrderPrintPage({
     ? `?internal_token=${encodeURIComponent(Array.isArray(internalToken) ? internalToken[0] : internalToken)}`
     : '';
 
-  redirect(`/orders/${encodeURIComponent(docNo)}/view-purchase-order${tokenQuery}`);
+  redirect(`/orders/${encodeURIComponent(docNo)}/purchase-order-viewer${tokenQuery}`);
 }

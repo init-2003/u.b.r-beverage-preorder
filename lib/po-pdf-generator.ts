@@ -4,6 +4,8 @@ import puppeteer from 'puppeteer-core';
 import { PurchaseOrderData, PurchaseOrderItem } from '@/components/orders/PurchaseOrderDocument';
 
 let cachedFontRegular = '';
+let cachedFontMedium = '';
+let cachedFontSemiBold = '';
 let cachedFontBold = '';
 let cachedLogo = '';
 
@@ -12,6 +14,18 @@ function getAssets() {
     const fontRegularPath = path.join(process.cwd(), 'public', 'fonts', 'Sarabun', 'Sarabun-Regular.ttf');
     if (fs.existsSync(fontRegularPath)) {
       cachedFontRegular = fs.readFileSync(fontRegularPath).toString('base64');
+    }
+  }
+  if (!cachedFontMedium) {
+    const fontMediumPath = path.join(process.cwd(), 'public', 'fonts', 'Sarabun', 'Sarabun-Medium.ttf');
+    if (fs.existsSync(fontMediumPath)) {
+      cachedFontMedium = fs.readFileSync(fontMediumPath).toString('base64');
+    }
+  }
+  if (!cachedFontSemiBold) {
+    const fontSemiBoldPath = path.join(process.cwd(), 'public', 'fonts', 'Sarabun', 'Sarabun-SemiBold.ttf');
+    if (fs.existsSync(fontSemiBoldPath)) {
+      cachedFontSemiBold = fs.readFileSync(fontSemiBoldPath).toString('base64');
     }
   }
   if (!cachedFontBold) {
@@ -26,7 +40,13 @@ function getAssets() {
       cachedLogo = fs.readFileSync(logoPath).toString('base64');
     }
   }
-  return { fontRegular: cachedFontRegular, fontBold: cachedFontBold, logo: cachedLogo };
+  return {
+    fontRegular: cachedFontRegular,
+    fontMedium: cachedFontMedium,
+    fontSemiBold: cachedFontSemiBold,
+    fontBold: cachedFontBold,
+    logo: cachedLogo,
+  };
 }
 
 function getBrowserExecutablePath(): string {
@@ -57,11 +77,11 @@ function formatDate(val?: string): string {
 }
 
 const BASE_ROW_HEIGHT = 28;
-const MAX_PAGE_UNITS = 16;
+const MAX_PAGE_UNITS = 17;
 
 function getItemLineUnits(tradeName: string): number {
   if (!tradeName) return 1;
-  const charsPerLine = 36;
+  const charsPerLine = 48;
   const segments = tradeName.split('\n');
   let totalLines = 0;
   for (const seg of segments) {
@@ -146,7 +166,7 @@ function chunkOrderItems(items: PurchaseOrderItem[], extraRemarkUnits = 0): Page
 }
 
 export function generatePurchaseOrderHtml(order: PurchaseOrderData): string {
-  const { fontRegular, fontBold, logo } = getAssets();
+  const { fontRegular, fontMedium, fontSemiBold, fontBold, logo } = getAssets();
 
   const customerName = order.shipping?.Customer_Name || order.Customer_Name || '';
   const customerTel = order.shipping?.Customer_Tel || order.Customer_Tel || '';
@@ -222,13 +242,13 @@ export function generatePurchaseOrderHtml(order: PurchaseOrderData): string {
     }
 
     const fillerRow = page.fillerHeight > 0 ? `
-      <tr class="table-filler-row" style="height: ${page.fillerHeight}px;">
-        <td style="height: ${page.fillerHeight}px;">&nbsp;</td>
-        <td style="height: ${page.fillerHeight}px;">&nbsp;</td>
-        <td style="height: ${page.fillerHeight}px;">&nbsp;</td>
-        <td style="height: ${page.fillerHeight}px;">&nbsp;</td>
-        <td style="height: ${page.fillerHeight}px;">&nbsp;</td>
-        <td style="height: ${page.fillerHeight}px;">&nbsp;</td>
+      <tr class="table-filler-row">
+        <td>&nbsp;</td>
+        <td>&nbsp;</td>
+        <td>&nbsp;</td>
+        <td>&nbsp;</td>
+        <td>&nbsp;</td>
+        <td>&nbsp;</td>
       </tr>
     ` : '';
 
@@ -334,12 +354,12 @@ export function generatePurchaseOrderHtml(order: PurchaseOrderData): string {
           <table>
             <thead>
               <tr>
-                <th class="text-center" style="width: 40px;">ลำดับ<br>No.</th>
+                <th class="text-center" style="width: 38px;">ลำดับ<br>No.</th>
                 <th class="text-center">รายการสินค้า<br>Item list</th>
-                <th class="text-center" style="width: 80px;">จำนวน<br>Qty</th>
-                <th class="text-center" style="width: 90px;">หน่วย<br>Unit</th>
-                <th class="text-center" style="width: 110px;">ราคาต่อหน่วย<br>Unit Price</th>
-                <th class="text-center" style="width: 120px;">จำนวนเงิน<br>Amount</th>
+                <th class="text-center" style="width: 55px;">จำนวน<br>Qty</th>
+                <th class="text-center" style="width: 65px;">หน่วย<br>Unit</th>
+                <th class="text-center" style="width: 100px;">ราคาต่อหน่วย<br>Unit Price</th>
+                <th class="text-center" style="width: 110px;">จำนวนเงิน<br>Amount</th>
               </tr>
             </thead>
             <tbody>
@@ -365,6 +385,18 @@ export function generatePurchaseOrderHtml(order: PurchaseOrderData): string {
       font-family: 'Sarabun';
       src: url('data:font/truetype;charset=utf-8;base64,${fontRegular}') format('truetype');
       font-weight: 400;
+      font-style: normal;
+    }
+    @font-face {
+      font-family: 'Sarabun';
+      src: url('data:font/truetype;charset=utf-8;base64,${fontMedium}') format('truetype');
+      font-weight: 500;
+      font-style: normal;
+    }
+    @font-face {
+      font-family: 'Sarabun';
+      src: url('data:font/truetype;charset=utf-8;base64,${fontSemiBold}') format('truetype');
+      font-weight: 600;
       font-style: normal;
     }
     @font-face {
@@ -406,15 +438,28 @@ export function generatePurchaseOrderHtml(order: PurchaseOrderData): string {
     }
     .crtorderpdf-wrapper .a4 {
       width: 100%;
+      height: 282mm;
+      max-height: 282mm;
       box-sizing: border-box;
       background: #ffffff;
       padding: 0 1.5mm;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
       page-break-after: always;
       break-after: page;
     }
     .crtorderpdf-wrapper .a4:last-child {
       page-break-after: avoid;
       break-after: avoid;
+    }
+    .crtorderpdf-wrapper header,
+    .crtorderpdf-wrapper .customer-order-cards,
+    .crtorderpdf-wrapper .totals,
+    .crtorderpdf-wrapper .signatures {
+      flex-shrink: 0;
+      break-inside: avoid;
+      page-break-inside: avoid;
     }
     .crtorderpdf-wrapper header {
       border-bottom: 2px solid var(--border);
@@ -506,6 +551,9 @@ export function generatePurchaseOrderHtml(order: PurchaseOrderData): string {
       overflow: hidden;
       margin-top: 10px;
       background: #ffffff;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
     }
     .crtorderpdf-wrapper table {
       width: 100%;
@@ -513,6 +561,8 @@ export function generatePurchaseOrderHtml(order: PurchaseOrderData): string {
       margin: 0;
       font-size: 14px;
       border: none;
+      flex: 1;
+      height: 100%;
     }
     .crtorderpdf-wrapper thead th {
       background: #ffffff;
@@ -531,6 +581,9 @@ export function generatePurchaseOrderHtml(order: PurchaseOrderData): string {
     .crtorderpdf-wrapper thead th:last-child {
       border-right: none;
     }
+    .crtorderpdf-wrapper tbody {
+      height: 100%;
+    }
     .crtorderpdf-wrapper tbody td {
       border: 1px solid var(--border);
       padding: 5px 6px;
@@ -548,7 +601,11 @@ export function generatePurchaseOrderHtml(order: PurchaseOrderData): string {
     .crtorderpdf-wrapper tbody tr:last-child td {
       border-bottom: none;
     }
+    .crtorderpdf-wrapper tbody tr.table-filler-row {
+      height: 100% !important;
+    }
     .crtorderpdf-wrapper tbody tr.table-filler-row td {
+      height: 100% !important;
       padding: 0;
       border: 1px solid var(--border);
       background: #ffffff;
@@ -649,6 +706,7 @@ export async function generatePurchaseOrderPdf(order: PurchaseOrderData): Promis
 
   try {
     const page = await browser.newPage();
+    await page.setViewport({ width: 794, height: 1123, deviceScaleFactor: 2 });
     await page.setContent(html, { waitUntil: 'load' });
     await page.evaluateHandle('document.fonts.ready');
     const pdfBuffer = await page.pdf({
@@ -656,10 +714,10 @@ export async function generatePurchaseOrderPdf(order: PurchaseOrderData): Promis
       printBackground: true,
       preferCSSPageSize: true,
       margin: {
-        top: '6mm',
-        bottom: '6mm',
-        left: '7mm',
-        right: '7mm',
+        top: '0mm',
+        bottom: '0mm',
+        left: '0mm',
+        right: '0mm',
       },
     });
     return Buffer.from(pdfBuffer);

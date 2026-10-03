@@ -74,8 +74,8 @@ This document provides developer and AI agent instructions, system architecture,
   - `4` = `ยกเลิก Order` (Cancelled order)
   - *Note*: Pre-order system only sets/updates `1` and `0`. When a payment slip is uploaded for an order with status `1`, it transitions to `0` ONLY when: (1) slip contains a valid reference QR code, and (2) the detected slip amount matches the expected payable amount (deposit `fn_deposit_H` or `Fn_Total`).
 - **Purchase Order Document (ใบสั่งซื้อ / PO)**:
-  - Can be viewed/printed/downloaded (`/orders/[docNo]/view-purchase-order`) when `Doc_Sts` is `'0'` (`กำลังดำเนินการ`) or `'3'` (`ออกใบเสร็จแล้ว`).
-  - When `Doc_Sts` is awaiting payment (`'1'`) or cancelled (`'4'`), the print/download button is hidden from the order details page, and direct access to `/view-purchase-order` shows a notification informing the user.
+  - Can be viewed/printed/downloaded (`/orders/[docNo]/purchase-order-viewer`) when `Doc_Sts` is `'0'` (`กำลังดำเนินการ`) or `'3'` (`ออกใบเสร็จแล้ว`).
+  - When `Doc_Sts` is awaiting payment (`'1'`) or cancelled (`'4'`), the print/download button is hidden from the order details page, and direct access to `/purchase-order-viewer` shows a notification informing the user.
 - Slip upload endpoint: `/api/upload` (validates that image contains a readable QR code and matches the order amount before saving payment slips to `/public/uploads/slips/[docNo]/[originalFilename]` retaining original file name and storing `[originalFilename]` in `Fnt_Header_online.FILE_NAME_PIC`).
   - **ทน build (durable path)**: standalone `server.js` ทำ `process.chdir(__dirname)` → `process.cwd()` = `.next/standalone` ซึ่งถูกลบทุกครั้งที่ `next build` — `/api/upload` จึงเขียนไฟล์สลิปทั้งที่ `public/uploads/slips` ของรูทโปรเจกต์ (รอด rebuild) และที่ public ที่ server กำลังเสิร์ฟ (เปิดดูได้ทันที) ถ้าทั้งสองที่เป็นที่เดียวกันจะเขียนแค่รอบเดียว
   - **High-Speed Python Microservice**: FastAPI service (`python-service/`) runs on `http://127.0.0.1:8000` with `zxing-cpp` QR detection and `RapidOCR` ONNX engine (< 0.5s response).
