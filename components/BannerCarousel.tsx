@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Image from 'next/image';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
@@ -8,9 +8,12 @@ interface SlideData {
   id: number;
   title: string;
   image: string;
+  subtitle?: string;
+  btn1Text?: string;
+  btn1Link?: string;
 }
 
-const SLIDES: SlideData[] = [
+const DEFAULT_SLIDES: SlideData[] = [
   {
     id: 1,
     title: 'Johnnie Walker Blue Label',
@@ -31,6 +34,28 @@ const SLIDES: SlideData[] = [
 const SLIDE_DURATION = 5500; // ms
 
 export function BannerCarousel() {
+  const [slides, setSlides] = useState<SlideData[]>(DEFAULT_SLIDES);
+
+  // Fetch banner slides dynamically from Web_Carousel database table
+  useEffect(() => {
+    let isMounted = true;
+    async function loadCarousel() {
+      try {
+        const res = await fetch('/api/carousel');
+        const data = await res.json();
+        if (isMounted && data.success && Array.isArray(data.slides) && data.slides.length > 0) {
+          setSlides(data.slides);
+        }
+      } catch (err) {
+        console.error('Failed to load carousel from Web_Carousel:', err);
+      }
+    }
+    loadCarousel();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   // Index in extended array: [last, ...slides, first]
   // Real slide 0 starts at index 1
   const [currentIndex, setCurrentIndex] = useState(1);
@@ -39,21 +64,28 @@ export function BannerCarousel() {
   const touchStartXRef = useRef<number | null>(null);
   const touchEndXRef = useRef<number | null>(null);
 
+  // Reset to slide 1 when slides list updates
+  useEffect(() => {
+    setCurrentIndex(1);
+    setIsTransitioning(false);
+  }, [slides]);
+
+  const hasMultipleSlides = slides.length > 1;
+
   // Extended slides for infinite sliding:
   // [Slide 3 (clone), Slide 1, Slide 2, Slide 3, Slide 1 (clone)]
-  const extendedSlides = [
-    SLIDES[SLIDES.length - 1],
-    ...SLIDES,
-    SLIDES[0],
-  ];
+  const extendedSlides = hasMultipleSlides
+    ? [slides[slides.length - 1], ...slides, slides[0]]
+    : slides;
 
   // Active real slide index (0, 1, 2) for indicators
-  const activeSlide =
-    currentIndex === 0
-      ? SLIDES.length - 1
-      : currentIndex === extendedSlides.length - 1
-      ? 0
-      : currentIndex - 1;
+  const activeSlide = !hasMultipleSlides
+    ? 0
+    : currentIndex === 0
+    ? slides.length - 1
+    : currentIndex === extendedSlides.length - 1
+    ? 0
+    : currentIndex - 1;
 
   const nextSlide = useCallback(() => {
     setIsTransitioning(true);
@@ -147,72 +179,78 @@ export function BannerCarousel() {
         </div>
       </div>
 
-      {/* Navigation Buttons (Previous / Next) */}
-      <button
-        type="button"
-        onClick={prevSlide}
-        className="absolute left-2.5 sm:left-4 top-1/2 -translate-y-1/2 z-20 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-black/40 hover:bg-black/75 text-white/90 hover:text-white border border-white/20 backdrop-blur-xs flex items-center justify-center transition-all duration-200 opacity-80 sm:opacity-0 sm:group-hover:opacity-100 hover:scale-110 active:scale-95 cursor-pointer shadow-lg"
-        title="สไลด์ก่อนหน้า"
-        aria-label="สไลด์ก่อนหน้า"
-      >
-        <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
-      </button>
+      {/* Navigation Buttons (Previous / Next) - Only show if more than 1 slide */}
+      {hasMultipleSlides && (
+        <>
+          <button
+            type="button"
+            onClick={prevSlide}
+            className="absolute left-2.5 sm:left-4 top-1/2 -translate-y-1/2 z-20 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-black/40 hover:bg-black/75 text-white/90 hover:text-white border border-white/20 backdrop-blur-xs flex items-center justify-center transition-all duration-200 opacity-80 sm:opacity-0 sm:group-hover:opacity-100 hover:scale-110 active:scale-95 cursor-pointer shadow-lg"
+            title="สไลด์ก่อนหน้า"
+            aria-label="สไลด์ก่อนหน้า"
+          >
+            <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
+          </button>
 
-      <button
-        type="button"
-        onClick={nextSlide}
-        className="absolute right-2.5 sm:right-4 top-1/2 -translate-y-1/2 z-20 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-black/40 hover:bg-black/75 text-white/90 hover:text-white border border-white/20 backdrop-blur-xs flex items-center justify-center transition-all duration-200 opacity-80 sm:opacity-0 sm:group-hover:opacity-100 hover:scale-110 active:scale-95 cursor-pointer shadow-lg"
-        title="สไลด์ถัดไป"
-        aria-label="สไลด์ถัดไป"
-      >
-        <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
-      </button>
+          <button
+            type="button"
+            onClick={nextSlide}
+            className="absolute right-2.5 sm:right-4 top-1/2 -translate-y-1/2 z-20 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-black/40 hover:bg-black/75 text-white/90 hover:text-white border border-white/20 backdrop-blur-xs flex items-center justify-center transition-all duration-200 opacity-80 sm:opacity-0 sm:group-hover:opacity-100 hover:scale-110 active:scale-95 cursor-pointer shadow-lg"
+            title="สไลด์ถัดไป"
+            aria-label="สไลด์ถัดไป"
+          >
+            <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
+          </button>
+        </>
+      )}
 
       {/* Slide Indicators with Progress Bar on Active & Round Dots on Inactive */}
-      <div className="absolute bottom-2.5 sm:bottom-3.5 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 sm:gap-2">
-        <style>{`
-          @keyframes banner-progress-scale {
-            0% {
-              transform: scaleX(0);
+      {hasMultipleSlides && (
+        <div className="absolute bottom-2.5 sm:bottom-3.5 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 sm:gap-2">
+          <style>{`
+            @keyframes banner-progress-scale {
+              0% {
+                transform: scaleX(0);
+              }
+              100% {
+                transform: scaleX(1);
+              }
             }
-            100% {
-              transform: scaleX(1);
-            }
-          }
-        `}</style>
-        {SLIDES.map((slide, idx) => {
-          const isActive = idx === activeSlide;
+          `}</style>
+          {slides.map((slide, idx) => {
+            const isActive = idx === activeSlide;
 
-          return (
-            <button
-              key={slide.id}
-              type="button"
-              onClick={() => goToSlide(idx)}
-              className={`relative overflow-hidden transition-all duration-300 rounded-full cursor-pointer p-0 border-0 ${
-                isActive
-                  ? 'w-8 sm:w-12 h-1.5 sm:h-2 bg-white/30 backdrop-blur-xs shadow-xs'
-                  : 'w-1.5 sm:w-2 h-1.5 sm:h-2 bg-white/50 hover:bg-white/80'
-              }`}
-              title={`ไปยังสไลด์ที่ ${idx + 1}`}
-              aria-label={`ไปยังสไลด์ที่ ${idx + 1}`}
-              aria-current={isActive ? 'true' : undefined}
-            >
-              {/* Active current slide - smooth GPU-accelerated fill */}
-              {isActive && (
-                <span
-                  key={`banner-bar-${activeSlide}`}
-                  onAnimationEnd={nextSlide}
-                  className="absolute inset-0 bg-white rounded-full origin-left will-change-transform shadow-[0_0_8px_rgba(255,255,255,0.8)]"
-                  style={{
-                    animation: `banner-progress-scale ${SLIDE_DURATION}ms linear forwards`,
-                    animationPlayState: isPaused ? 'paused' : 'running',
-                  }}
-                />
-              )}
-            </button>
-          );
-        })}
-      </div>
+            return (
+              <button
+                key={slide.id}
+                type="button"
+                onClick={() => goToSlide(idx)}
+                className={`relative overflow-hidden transition-all duration-300 rounded-full cursor-pointer p-0 border-0 ${
+                  isActive
+                    ? 'w-8 sm:w-12 h-1.5 sm:h-2 bg-white/30 backdrop-blur-xs shadow-xs'
+                    : 'w-1.5 sm:w-2 h-1.5 sm:h-2 bg-white/50 hover:bg-white/80'
+                }`}
+                title={`ไปยังสไลด์ที่ ${idx + 1}`}
+                aria-label={`ไปยังสไลด์ที่ ${idx + 1}`}
+                aria-current={isActive ? 'true' : undefined}
+              >
+                {/* Active current slide - smooth GPU-accelerated fill */}
+                {isActive && (
+                  <span
+                    key={`banner-bar-${activeSlide}`}
+                    onAnimationEnd={nextSlide}
+                    className="absolute inset-0 bg-white rounded-full origin-left will-change-transform shadow-[0_0_8px_rgba(255,255,255,0.8)]"
+                    style={{
+                      animation: `banner-progress-scale ${SLIDE_DURATION}ms linear forwards`,
+                      animationPlayState: isPaused ? 'paused' : 'running',
+                    }}
+                  />
+                )}
+              </button>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
