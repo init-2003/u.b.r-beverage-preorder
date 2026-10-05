@@ -315,7 +315,7 @@ function UserAccountMenu({
               <span>บัญชีของฉัน</span>
             </Link>
 
-            {/* Item 2: คำสั่งซื้อของคุณ */}
+            {/* Item 2: คำสั่งซื้อของฉัน */}
             <Link
               href="/orders/history"
               onClick={() => closeMenu()}

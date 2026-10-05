@@ -54,7 +54,7 @@ function AccountSidebar({ activeItemOverride }: { activeItemOverride?: string })
     },
     {
       key: 'orders',
-      label: 'คำสั่งซื้อของคุณ',
+      label: 'คำสั่งซื้อของฉัน',
       href: '/orders/history',
     },
     {
