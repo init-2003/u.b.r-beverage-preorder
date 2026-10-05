@@ -189,7 +189,7 @@ export default function ProductDetailPage({
 
         {/* Main Product Showcase Card (Shopee Style Clean Card) */}
         <div className="bg-white rounded-sm border border-slate-100/80 shadow-[0_1px_1px_0_rgba(0,0,0,0.05)] p-6 sm:p-8 lg:p-10">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
 
             {/* Left Column: Product Image Showcase (No Card / Clean Float) */}
             <div className="lg:col-span-6 flex flex-col items-center justify-center relative min-h-[380px] lg:min-h-[480px]">
@@ -336,8 +336,8 @@ export default function ProductDetailPage({
                   onClick={handleAddToCart}
                   disabled={addedSuccess}
                   className={`py-3.5 px-5 rounded-full border font-bold text-sm flex items-center justify-center gap-2 shadow-2xs transition-all cursor-pointer ${addedSuccess
-                      ? 'bg-emerald-600 text-white border-emerald-600'
-                      : 'bg-white hover:bg-slate-50 text-slate-900 border-slate-300 hover:border-slate-800'
+                    ? 'bg-emerald-600 text-white border-emerald-600'
+                    : 'bg-white hover:bg-slate-50 text-slate-900 border-slate-300 hover:border-slate-800'
                     }`}
                 >
                   {addedSuccess ? (

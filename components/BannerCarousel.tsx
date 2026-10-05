@@ -33,6 +33,9 @@ const DEFAULT_SLIDES: SlideData[] = [
 
 const SLIDE_DURATION = 5500; // ms
 
+// โลโก้ U.B.R. (พื้นหลังโปร่งใส) แสดงทับบนทุกสไลด์
+const LOGO_SRC = '/images/ubr_beverage_logo_transparent.png';
+
 export function BannerCarousel() {
   const [slides, setSlides] = useState<SlideData[]>(DEFAULT_SLIDES);
 
@@ -174,6 +177,16 @@ export function BannerCarousel() {
               />
               {/* Subtle bottom shadow overlay to ensure indicator dots and controls stand out */}
               <div className="absolute inset-x-0 bottom-0 h-12 sm:h-16 bg-gradient-to-t from-black/60 via-black/20 to-transparent pointer-events-none" />
+
+              {/* U.B.R. Logo watermark on every slide (top-right corner) */}
+              <Image
+                src={LOGO_SRC}
+                alt="U.B.R. Beverage"
+                width={240}
+                height={240}
+                loading="lazy"
+                className="absolute top-2.5 right-2.5 sm:top-4 sm:right-4 z-10 h-7 w-auto sm:h-9 lg:h-11 object-contain drop-shadow-[0_2px_6px_rgba(0,0,0,0.55)] pointer-events-none select-none"
+              />
             </div>
           ))}
         </div>

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDbPool } from '@/lib/db';
 import { getCurrentCustomer, verifyToken, verifyOrderToken, generateOrderToken, CustomerSession } from '@/lib/auth';
-import { sanitizeDocNo, sanitizeString, containsInjectionPatterns } from '@/lib/validation';
+import { sanitizeDocNo, sanitizeString, containsInjectionPatterns, validateOrderPatchPayload } from '@/lib/validation';
 
 export async function GET(
   req: NextRequest,
@@ -313,14 +313,15 @@ export async function PATCH(
       );
     }
 
-    if (!body || typeof body !== 'object') {
+    const validation = validateOrderPatchPayload(body);
+    if (!validation.isValid || !validation.data) {
       return NextResponse.json(
-        { success: false, message: 'ข้อมูลไม่ถูกต้อง' },
+        { success: false, message: validation.error || 'ข้อมูลไม่ถูกต้อง' },
         { status: 400 }
       );
     }
 
-    const { docSts, docStsName, trackingNo, remark, paymentSlipFilename } = body;
+    const { docSts, docStsName, trackingNo, remark, paymentSlipFilename } = validation.data;
 
     const pool = await getDbPool();
     const request = pool.request();
@@ -329,52 +330,39 @@ export async function PATCH(
     const setClauses = [];
 
     if (docSts !== undefined) {
-      const stsStr = String(docSts).trim();
-      const validStatuses = new Set(['0', '1', '3', '4']);
-      if (!validStatuses.has(stsStr)) {
-        return NextResponse.json(
-          { success: false, message: 'สถานะคำสั่งซื้อไม่ถูกต้อง' },
-          { status: 400 }
-        );
-      }
-
       setClauses.push('Doc_Sts = @docSts');
-      request.input('docSts', stsStr);
+      request.input('docSts', docSts);
 
       // บันทึกชื่อสถานะลงในคอลัมน์ Doc_Sts_Name อัตโนมัติตาม Doc_Sts
-      let computedName = docStsName ? sanitizeString(docStsName, 50) : '';
+      let computedName = docStsName || '';
       if (!computedName) {
-        if (stsStr === '1') computedName = 'รอชำระ';
-        else if (stsStr === '0') computedName = 'กำลังดำเนินการ';
-        else if (stsStr === '3') computedName = 'ออกใบเสร็จแล้ว';
-        else if (stsStr === '4') computedName = 'ยกเลิก Order';
+        if (docSts === '1') computedName = 'รอชำระ';
+        else if (docSts === '0') computedName = 'กำลังดำเนินการ';
+        else if (docSts === '3') computedName = 'ออกใบเสร็จแล้ว';
+        else if (docSts === '4') computedName = 'ยกเลิก Order';
       }
       if (computedName) {
         setClauses.push('Doc_Sts_Name = @docStsName');
         request.input('docStsName', computedName);
       }
     } else if (docStsName !== undefined) {
-      const cleanName = sanitizeString(docStsName, 50);
       setClauses.push('Doc_Sts_Name = @docStsName');
-      request.input('docStsName', cleanName);
+      request.input('docStsName', docStsName);
     }
 
     if (trackingNo !== undefined) {
-      const cleanTracking = sanitizeString(trackingNo, 100);
       setClauses.push('Fn_Doc_No_local = @trackingNo');
-      request.input('trackingNo', cleanTracking);
+      request.input('trackingNo', trackingNo);
     }
 
     if (remark !== undefined) {
-      const cleanRemark = sanitizeString(remark, 500);
       setClauses.push('Fn_Remark = @remark');
-      request.input('remark', cleanRemark);
+      request.input('remark', remark);
     }
 
     if (paymentSlipFilename !== undefined) {
-      const cleanFilename = sanitizeString(paymentSlipFilename, 150);
       setClauses.push('FILE_NAME_PIC = @paymentSlipFilename');
-      request.input('paymentSlipFilename', cleanFilename);
+      request.input('paymentSlipFilename', paymentSlipFilename);
       // เมื่อแนบสลิปเรียบร้อยแล้ว ถ้าไม่ได้ระบุ docSts มา ให้เปลี่ยนสถานะจาก 1 (รอชำระ) เป็น 0 (กำลังดำเนินการ) โดยอัตโนมัติ
       if (docSts === undefined) {
         setClauses.push("Doc_Sts = '0'");

@@ -2,20 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDbPool, sql } from '@/lib/db';
 import { getCurrentCustomer } from '@/lib/auth';
 import { resolveProductImageUrl } from '@/lib/image-utils';
-import { sanitizeString, escapeSqlLike, containsInjectionPatterns } from '@/lib/validation';
+import { escapeSqlLike, parseProductsQuery } from '@/lib/validation';
 
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
-    const rawCategory = searchParams.get('category') || '';
-    const rawSearch = searchParams.get('search') || '';
 
-    // Sanitize and protect against injection attempts
-    const category = sanitizeString(rawCategory, 50);
-    const search = sanitizeString(rawSearch, 100);
-
-    const page = Math.max(1, Math.min(10000, parseInt(searchParams.get('page') || '1', 10) || 1));
-    const limit = Math.max(1, Math.min(60, parseInt(searchParams.get('limit') || '24', 10) || 24));
+    // Zod: ตัดความยาว/ลบ control chars และ clamp page, limit (ค่า SQL ส่งผ่าน parameter เสมอ)
+    const { category, search, page, limit } = parseProductsQuery(searchParams);
     const offset = (page - 1) * limit;
 
     // ตรวจสอบระดับราคาของลูกค้า ถ้า Login ให้ใช้ระดับของลูกค้า ถ้าไม่ Login ให้ใช้ระดับ 1
@@ -28,7 +22,7 @@ export async function GET(req: NextRequest) {
     // แสดงเฉพาะสินค้าที่เป็น Pre Order (Type_Name = 'Pre Order') ไม่ต้องใช้ Trade_Type_Sts_Web อีกต่อไป
     let whereClause = "WHERE RTRIM(LTRIM(t.Type_Name)) = 'Pre Order'";
 
-    if (category && category !== 'ทั้งหมด' && category !== 'all' && category !== 'Pre Order' && !containsInjectionPatterns(category)) {
+    if (category && category !== 'ทั้งหมด' && category !== 'all' && category !== 'Pre Order') {
       if (category.toLowerCase().includes('macallan')) {
         whereClause += " AND (t.Trade_Name LIKE '%Macallan%' OR t.Trade_Name LIKE '%Maccallan%' OR t.Trade_Id_Main LIKE '%Macallan%')";
       } else if (category.toLowerCase().includes('glenrothes')) {
@@ -41,7 +35,7 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    if (search && !containsInjectionPatterns(search)) {
+    if (search) {
       whereClause += " AND (t.Trade_Name LIKE @search OR t.Trade_Id LIKE @search OR t.Trade_NameEN LIKE @search)";
       request.input('search', `%${escapeSqlLike(search)}%`);
     }

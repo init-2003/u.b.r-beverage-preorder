@@ -50,7 +50,7 @@ export async function getDbPool(): Promise<sql.ConnectionPool> {
       if (global.mssqlPool) {
         try {
           await global.mssqlPool.close();
-        } catch {}
+        } catch { }
       }
 
       const pool = new sql.ConnectionPool(sqlConfig);

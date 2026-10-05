@@ -85,6 +85,15 @@ function resolveNextApp() {
 const nextApp = resolveNextApp();
 console.log(`[PM2 Ecosystem] Next.js PORT=${appPort} script=${nextApp.script} ${nextApp.args || ''}`.trim());
 
+const defaultPython = path.join(
+  process.env.LOCALAPPDATA || 'C:\\Users\\Windows11\\AppData\\Local',
+  'Programs',
+  'Python',
+  'Python314',
+  'python.exe'
+);
+const pythonExe = fs.existsSync(defaultPython) ? defaultPython : 'python';
+
 module.exports = {
   apps: [
     {
@@ -108,6 +117,7 @@ module.exports = {
         SLIP_VERIFIER_URL: slipUrl,
       },
       instances: 1,
+      exec_mode: 'fork',
       autorestart: true,
       watch: false,
       max_memory_restart: '512M',
@@ -119,7 +129,7 @@ module.exports = {
     },
     {
       name: 'ubr-slip-service',
-      script: 'python',
+      script: pythonExe,
       args: `-m uvicorn python-service.main:app --host 127.0.0.1 --port ${slipPort}`,
       interpreter: 'none',
       cwd: __dirname,

@@ -2,18 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentCustomer } from '@/lib/auth';
 import { getDbPool, sql } from '@/lib/db';
 import { createPreOrder } from '@/lib/order-service';
-import { validateOrderPayload, sanitizeString, sanitizePhone, escapeSqlLike } from '@/lib/validation';
+import { validateOrderPayload, parseOrdersQuery, escapeSqlLike } from '@/lib/validation';
 
 // GET /api/orders: รายการประวัติคำสั่งซื้อ
 export async function GET(req: NextRequest) {
   try {
     const customer = await getCurrentCustomer();
     const { searchParams } = new URL(req.url);
-    const limit = Math.max(1, Math.min(200, parseInt(searchParams.get('limit') || '50', 10) || 50));
-    const rawTel = searchParams.get('tel') || '';
-    const cleanTel = sanitizePhone(rawTel);
-    const rawCustomerId = searchParams.get('customerId') || '';
-    const cleanCustomerId = sanitizeString(rawCustomerId, 50);
+    const { limit, tel: cleanTel, customerId: cleanCustomerId } = parseOrdersQuery(searchParams);
 
     const pool = await getDbPool();
     const request = pool.request().input('limit', limit);

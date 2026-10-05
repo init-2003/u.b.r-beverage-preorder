@@ -36,15 +36,28 @@ if "%INPLACE%"=="1" echo        MODE        = IN-PLACE ^(build แล้วร�
 if "%INPLACE%"=="0" echo        MODE        = COPY ^(คัดลอก standalone ไปที่ DEPLOY_DIR^)
 echo.
 
-echo [2/5] Stopping PM2 ^(ปลด lock .next\standalone ก่อน build กัน EBUSY^)...
+set "PM2_BIN=pm2"
 where pm2 >nul 2>&1
 if errorlevel 1 (
-    echo        [SKIP] ไม่พบ pm2 ใน PATH
-) else (
-    pm2 stop all >nul 2>&1
-    pm2 delete all >nul 2>&1
-    echo        [OK] pm2 stop all ^& delete all แล้ว
+    if exist "%LOCALAPPDATA%\Author Software\nvm\installs\v24.21.0\pm2.cmd" (
+        set "PM2_BIN=%LOCALAPPDATA%\Author Software\nvm\installs\v24.21.0\pm2.cmd"
+    ) else if exist "%APPDATA%\npm\pm2.cmd" (
+        set "PM2_BIN=%APPDATA%\npm\pm2.cmd"
+    )
 )
+
+echo [2/5] Stopping PM2 ^(ปลด lock .next\standalone ก่อน build กัน EBUSY^)...
+if "%PM2_BIN%"=="pm2" (
+    where pm2 >nul 2>&1
+    if errorlevel 1 (
+        echo        [SKIP] ไม่พบ pm2 ใน PATH
+        goto :after_pm2_stop
+    )
+)
+call "%PM2_BIN%" stop all >nul 2>&1
+call "%PM2_BIN%" delete all >nul 2>&1
+echo        [OK] pm2 stop all ^& delete all แล้ว
+:after_pm2_stop
 echo.
 
 echo [3/5] Building Next.js production ^(standalone + postbuild assets^)...
@@ -96,16 +109,18 @@ echo.
 echo [5/5] Starting PM2 processes from %DDIR%...
 cd /d "%DDIR%"
 
-where pm2 >nul 2>&1
-if errorlevel 1 (
-    echo        [SKIP] ไม่พบ pm2 ใน PATH - เริ่มเองด้วย "npm run start" หรือ start_all.bat
-    goto :done
+if "%PM2_BIN%"=="pm2" (
+    where pm2 >nul 2>&1
+    if errorlevel 1 (
+        echo        [SKIP] ไม่พบ pm2 ใน PATH - เริ่มเองด้วย "npm run start" หรือ start_all.bat
+        goto :done
+    )
 )
 
-pm2 delete ubr-preorder 2>nul
-pm2 delete ubr-slip-service 2>nul
-pm2 start ecosystem.config.js
-pm2 save
+call "%PM2_BIN%" delete ubr-preorder 2>nul
+call "%PM2_BIN%" delete ubr-slip-service 2>nul
+call "%PM2_BIN%" start ecosystem.config.js
+call "%PM2_BIN%" save
 
 :done
 echo.

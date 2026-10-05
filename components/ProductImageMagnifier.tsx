@@ -20,13 +20,30 @@ export default function ProductImageMagnifier({
   className = '',
 }: ProductImageMagnifierProps) {
   const [isHovering, setIsHovering] = useState(false);
+  // Lens anchor point, relative to the container (so the lens center always sits on the cursor)
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  // Cursor point relative to the image itself (clamped to image bounds) — used for zoom math
+  const [imgPos, setImgPos] = useState({ x: 0, y: 0 });
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const [isLoaded, setIsLoaded] = useState(true);
   const [imgSrc, setImgSrc] = useState(src || '/images/ubr_beverage_logo.png');
+  // Drives the cursor: normal arrow until the magnifier is armed, crosshair after that
+  const [isArmed, setIsArmed] = useState(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
+
+  // The magnifier must NOT start working right after the page loads (or right after a
+  // client-side navigation) when the pointer happens to already rest on the image.
+  // It only arms once the pointer has been seen outside the image — pointing at the image
+  // again afterwards activates it normally.
+  const armedRef = useRef(false);
+
+  const arm = useCallback(() => {
+    if (armedRef.current) return;
+    armedRef.current = true;
+    setIsArmed(true);
+  }, []);
 
   useEffect(() => {
     const target = src || '/images/ubr_beverage_logo.png';
@@ -36,36 +53,75 @@ export default function ProductImageMagnifier({
     }
   }, [src]);
 
+  // Watch the pointer from mount: as soon as it is seen outside the image, the magnifier is armed.
+  useEffect(() => {
+    const handlePointerMove = (e: MouseEvent) => {
+      const target = imgRef.current || containerRef.current;
+      if (!target) return;
+
+      const r = target.getBoundingClientRect();
+      const outside =
+        e.clientX < r.left ||
+        e.clientX > r.right ||
+        e.clientY < r.top ||
+        e.clientY > r.bottom;
+
+      if (outside) {
+        arm();
+        window.removeEventListener('mousemove', handlePointerMove);
+      }
+    };
+
+    window.addEventListener('mousemove', handlePointerMove, { passive: true });
+    return () => window.removeEventListener('mousemove', handlePointerMove);
+  }, [arm]);
+
   const lensRadius = lensSize / 2;
 
-  const handleMouseEnter = useCallback(() => {
-    if (imgRef.current) {
-      const rect = imgRef.current.getBoundingClientRect();
-      setDimensions({ width: rect.width, height: rect.height });
-    }
-    setIsHovering(true);
+  const updatePosition = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    const container = containerRef.current;
+    const img = imgRef.current;
+    if (!container || !img) return false;
+
+    const cRect = container.getBoundingClientRect();
+    const iRect = img.getBoundingClientRect();
+
+    const rawX = e.clientX - iRect.left;
+    const rawY = e.clientY - iRect.top;
+    const insideImage =
+      rawX >= 0 && rawX <= iRect.width && rawY >= 0 && rawY <= iRect.height;
+
+    // Cursor relative to the image, clamped inside the image (drives the zoomed background)
+    const ix = Math.max(0, Math.min(rawX, iRect.width));
+    const iy = Math.max(0, Math.min(rawY, iRect.height));
+
+    // Cursor relative to the container (the lens' positioned parent) — keeps the lens centered on the cursor
+    setMousePos({ x: e.clientX - cRect.left, y: e.clientY - cRect.top });
+    setImgPos({ x: ix, y: iy });
+    setDimensions({ width: iRect.width, height: iRect.height });
+
+    return insideImage;
   }, []);
 
+  const handleMouseEnter = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      const insideImage = updatePosition(e);
+      setIsHovering(armedRef.current && insideImage);
+    },
+    [updatePosition]
+  );
+
   const handleMouseLeave = useCallback(() => {
+    arm();
     setIsHovering(false);
-  }, []);
+  }, [arm]);
 
   const handleMouseMove = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
-      if (!imgRef.current) return;
-
-      const rect = imgRef.current.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-
-      // Keep within bounds
-      const clampedX = Math.max(0, Math.min(x, rect.width));
-      const clampedY = Math.max(0, Math.min(y, rect.height));
-
-      setMousePos({ x: clampedX, y: clampedY });
-      setDimensions({ width: rect.width, height: rect.height });
+      const insideImage = updatePosition(e);
+      setIsHovering(armedRef.current && insideImage);
     },
-    []
+    [updatePosition]
   );
 
   return (
@@ -74,7 +130,7 @@ export default function ProductImageMagnifier({
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       onMouseMove={handleMouseMove}
-      className={`relative inline-flex items-center justify-center cursor-crosshair select-none overflow-visible min-h-[300px] w-full ${className}`}
+      className={`relative inline-flex items-center justify-center ${isArmed ? 'cursor-crosshair' : 'cursor-default'} select-none overflow-visible min-h-[300px] w-full ${className}`}
     >
       {/* Shimmer skeleton while loading */}
       {!isLoaded && (
@@ -89,9 +145,8 @@ export default function ProductImageMagnifier({
         loading="eager"
         decoding="async"
         onLoad={() => setIsLoaded(true)}
-        className={`max-h-[360px] sm:max-h-[440px] w-auto h-auto object-contain transition-opacity duration-200 ${
-          isHovering ? 'opacity-40' : 'opacity-100'
-        }`}
+        className={`max-h-[360px] sm:max-h-[440px] w-auto h-auto object-contain transition-opacity duration-200 ${isHovering ? 'opacity-40' : 'opacity-100'
+          }`}
         onError={() => {
           setImgSrc('/images/ubr_beverage_logo.png');
           setIsLoaded(true);
@@ -101,9 +156,8 @@ export default function ProductImageMagnifier({
       {/* Magnifying Glass Loupe (Circular Lens / Square Lens) */}
       {isHovering && dimensions.width > 0 && dimensions.height > 0 && (
         <div
-          className={`absolute pointer-events-none ${
-            shape === 'square' ? 'rounded-none' : 'rounded-full'
-          } overflow-hidden z-30 transition-transform duration-75 ease-out animate-in fade-in zoom-in-75 duration-150`}
+          className={`absolute pointer-events-none ${shape === 'square' ? 'rounded-none' : 'rounded-full'
+            } overflow-hidden z-30 transition-transform duration-75 ease-out animate-in fade-in zoom-in-75 duration-150`}
           style={{
             width: `${lensSize}px`,
             height: `${lensSize}px`,
@@ -114,7 +168,7 @@ export default function ProductImageMagnifier({
             backgroundImage: `url(${imgSrc})`,
             backgroundRepeat: 'no-repeat',
             backgroundSize: `${dimensions.width * zoomLevel}px ${dimensions.height * zoomLevel}px`,
-            backgroundPosition: `${-(mousePos.x * zoomLevel - lensRadius)}px ${-(mousePos.y * zoomLevel - lensRadius)}px`,
+            backgroundPosition: `${-(imgPos.x * zoomLevel - lensRadius)}px ${-(imgPos.y * zoomLevel - lensRadius)}px`,
             backgroundColor: '#ffffff',
           }}
         />

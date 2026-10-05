@@ -8,6 +8,8 @@ export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> 
   variant?: InputVariant;
   label?: string;
   error?: string;
+  /** แสดงข้อความ `error` เป็น placeholder สีแดงในช่องกรอกแทนที่จะแสดงเป็นข้อความใต้ช่อง */
+  errorAsPlaceholder?: boolean;
   helperText?: string;
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
@@ -20,17 +22,25 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
       variant = 'outline',
       label,
       error,
+      errorAsPlaceholder = false,
       helperText,
       leftIcon,
       rightIcon,
       className = '',
       containerClassName = '',
       id,
+      placeholder,
       ...props
     },
     ref
   ) => {
     const inputId = id || (label ? label.toLowerCase().replace(/\s+/g, '-') : undefined);
+    // ข้อความ error แสดงแทน placeholder ได้เมื่อช่องนั้นว่าง (ค่าจะถูกล้างโดย LoginForm)
+    const errorPlaceholder = errorAsPlaceholder ? error || '' : '';
+    const effectivePlaceholder = errorPlaceholder || placeholder;
+    const placeholderColor = errorPlaceholder
+      ? 'placeholder-red-500'
+      : 'placeholder-slate-400';
 
     if (variant === 'underline') {
       return (
@@ -51,14 +61,15 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
             <input
               ref={ref}
               id={inputId}
-              className={`w-full py-2.5 sm:py-3 bg-transparent text-slate-900 placeholder-slate-400 text-sm sm:text-[15px] focus:outline-none ${
+              placeholder={effectivePlaceholder}
+              className={`w-full py-2.5 sm:py-3 bg-transparent text-slate-900 ${placeholderColor} text-sm sm:text-[15px] focus:outline-none ${
                 leftIcon ? 'pl-1' : 'px-1'
               } ${rightIcon ? 'pr-10' : ''} ${className}`}
               {...props}
             />
             {rightIcon && <span className="absolute right-1 shrink-0">{rightIcon}</span>}
           </div>
-          {error && <p className="text-xs text-red-600 pt-0.5">{error}</p>}
+          {error && !errorAsPlaceholder && <p className="text-xs text-red-600 pt-0.5">{error}</p>}
           {!error && helperText && <p className="text-xs text-slate-400 pt-0.5">{helperText}</p>}
         </div>
       );
@@ -81,7 +92,8 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
           <input
             ref={ref}
             id={inputId}
-            className={`w-full rounded-sm bg-slate-50 border text-slate-900 placeholder-slate-400 text-xs sm:text-sm transition-all focus:bg-white focus:outline-none focus:ring-2 ${
+            placeholder={effectivePlaceholder}
+            className={`w-full rounded-sm bg-slate-50 border text-slate-900 ${placeholderColor} text-xs sm:text-sm transition-all focus:bg-white focus:outline-none focus:ring-2 ${
               leftIcon ? 'pl-10' : 'pl-3.5'
             } ${rightIcon ? 'pr-10' : 'pr-3.5'} py-2.5 ${
               error
@@ -96,7 +108,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
             </span>
           )}
         </div>
-        {error && <p className="text-xs text-red-600 pt-0.5">{error}</p>}
+        {error && !errorAsPlaceholder && <p className="text-xs text-red-600 pt-0.5">{error}</p>}
         {!error && helperText && <p className="text-[11px] text-slate-400 pt-0.5">{helperText}</p>}
       </div>
     );

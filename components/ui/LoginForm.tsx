@@ -29,7 +29,11 @@ export function LoginForm({
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [errorMsg, setErrorMsg] = useState('');
+  // Error แสดงเป็น placeholder ในช่องกรอกที่กรอกผิด (username/password)
+  // ส่วน error ที่ไม่เกี่ยวกับช่องใดช่องหนึ่ง (เช่น ขัดข้อง) ยังแสดงเป็น Alert ด้านบน
+  const [usernameError, setUsernameError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [formError, setFormError] = useState('');
   const [loading, setLoading] = useState(false);
 
   React.useEffect(() => {
@@ -61,15 +65,47 @@ export function LoginForm({
     } catch {}
   };
 
+  // จำแนกข้อความ error จากเซิร์ฟเวอร์ว่าควรไปแสดงที่ช่องไหน
+  // - มีคำว่า "รหัสผ่าน"  -> placeholder ของช่องรหัสผ่าน
+  // - มีคำว่า "ยูสเซอร์" / "บัญชีลูกค้า" / "รหัสลูกค้า" -> placeholder ของช่องรหัสลูกค้า
+  // - อื่น ๆ -> Alert ด้านบนฟอร์ม
+  const applyError = (message: string) => {
+    if (message.includes('รหัสผ่าน')) {
+      setPasswordError(message);
+      setPassword('');
+    } else if (
+      message.includes('ยูสเซอร์') ||
+      message.includes('บัญชีลูกค้า') ||
+      message.includes('รหัสลูกค้า')
+    ) {
+      setUsernameError(message);
+      setUsername('');
+    } else {
+      setFormError(message);
+    }
+  };
+
+  const clearErrors = () => {
+    setUsernameError('');
+    setPasswordError('');
+    setFormError('');
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    clearErrors();
+
     if (!username.trim()) {
-      setErrorMsg('กรุณากรอกรหัสลูกค้า');
+      setUsernameError('กรุณากรอกรหัสลูกค้า');
+      return;
+    }
+
+    if (!password.trim()) {
+      setPasswordError('กรุณากรอกรหัสผ่าน');
       return;
     }
 
     setLoading(true);
-    setErrorMsg('');
 
     try {
       const res = await fetch('/api/auth/login', {
@@ -84,7 +120,7 @@ export function LoginForm({
 
       const data = await res.json();
       if (!res.ok || !data.success) {
-        setErrorMsg(data.message || 'เข้าสู่ระบบไม่สำเร็จ');
+        applyError(data.message || 'เข้าสู่ระบบไม่สำเร็จ');
         return;
       }
 
@@ -103,7 +139,7 @@ export function LoginForm({
         onSuccess(data.customer);
       }
     } catch {
-      setErrorMsg('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์');
+      setFormError('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์');
     } finally {
       setLoading(false);
     }
@@ -111,10 +147,10 @@ export function LoginForm({
 
   return (
     <div className={`w-full ${className}`}>
-      {/* Error Alert */}
-      {errorMsg && (
+      {/* Error Alert — ใช้เฉพาะ error ที่ไม่ได้ผูกกับช่องกรอกใดช่องหนึ่ง */}
+      {formError && (
         <Alert variant="error" className="mb-5">
-          {errorMsg}
+          {formError}
         </Alert>
       )}
 
@@ -124,10 +160,14 @@ export function LoginForm({
         <Input
           variant="underline"
           type="text"
-          required
           placeholder="รหัสลูกค้า"
+          error={usernameError}
+          errorAsPlaceholder
           value={username}
-          onChange={(e) => setUsername(e.target.value)}
+          onChange={(e) => {
+            setUsername(e.target.value);
+            if (usernameError) setUsernameError('');
+          }}
           autoFocus={autoFocus}
         />
 
@@ -137,8 +177,13 @@ export function LoginForm({
             variant="underline"
             type={showPassword ? 'text' : 'password'}
             placeholder="รหัสผ่าน"
+            error={passwordError}
+            errorAsPlaceholder
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={(e) => {
+              setPassword(e.target.value);
+              if (passwordError) setPasswordError('');
+            }}
             rightIcon={
               <button
                 type="button"

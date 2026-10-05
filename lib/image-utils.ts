@@ -54,7 +54,7 @@ export const DEFAULT_PRODUCT_IMAGE_PNG = '/images/ubr_beverage_logo.png';
  */
 export function resolveProductImageUrl(
   imagePath?: string | null,
-  highRes = false
+  _highRes = false
 ): string {
   if (!imagePath || !imagePath.trim()) {
     return DEFAULT_PRODUCT_IMAGE_PNG;
