@@ -192,7 +192,7 @@ export default function ProductCatalog({
               <div
                 key={product.id}
                 onClick={() => router.push(`/products/${product.id}`)}
-                className="rounded-sm bg-white border border-slate-100/80 shadow-[0_1px_1px_0_rgba(0,0,0,0.05)] hover:shadow-md hover:border-slate-300 flex flex-col justify-between group transition-shadow duration-200 relative cursor-pointer overflow-hidden"
+                className="rounded-sm bg-white border border-slate-100/80 shadow-[0_1px_1px_0_rgba(0,0,0,0.05)] hover:shadow-xl hover:shadow-slate-300/50 hover:border-slate-300 hover:scale-[1.03] hover:-translate-y-1 hover:z-20 flex flex-col justify-between group transition-all duration-300 ease-out relative cursor-pointer overflow-hidden will-change-transform"
               >
                 {/* Product Image Box (Full Bleed: เต็ม Card บน ซ้าย ขวา - นิ่งไม่ขยับเมื่อ hover) */}
                 <Link
