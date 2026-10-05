@@ -271,7 +271,7 @@ export async function handlePdfDownload(req: NextRequest, docNo: string) {
 
     const pdfBuffer = await generatePurchaseOrderPdf(orderData);
 
-    const filename = `PurchaseOrderNo${header.Fn_Doc_No}.pdf`;
+    const filename = `PO-${header.Fn_Doc_No}.pdf`;
     const encodedFilename = encodeURIComponent(filename);
 
     return new Response(new Uint8Array(pdfBuffer), {

@@ -83,7 +83,7 @@ export default function ViewPurchaseOrderPage() {
 
   useEffect(() => {
     if (order?.Fn_Doc_No) {
-      document.title = `PurchaseOrderNo${order.Fn_Doc_No}`;
+      document.title = `PO-${order.Fn_Doc_No}`;
     }
   }, [order?.Fn_Doc_No]);
 
@@ -101,7 +101,7 @@ export default function ViewPurchaseOrderPage() {
 
   const handlePrint = () => {
     if (typeof window !== 'undefined') {
-      document.title = `PurchaseOrderNo${order?.Fn_Doc_No || docNo}`;
+      document.title = `PO-${order?.Fn_Doc_No || docNo}`;
       window.print();
     }
   };
@@ -121,7 +121,7 @@ export default function ViewPurchaseOrderPage() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `PurchaseOrderNo${order.Fn_Doc_No}.pdf`;
+      a.download = `PO-${order.Fn_Doc_No}.pdf`;
       document.body.appendChild(a);
       a.click();
       a.remove();

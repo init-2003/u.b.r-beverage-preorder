@@ -261,7 +261,7 @@ export default function OrderDetailPage() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `PurchaseOrderNo${order.Fn_Doc_No}.pdf`;
+      a.download = `PO-${order.Fn_Doc_No}.pdf`;
       document.body.appendChild(a);
       a.click();
       a.remove();

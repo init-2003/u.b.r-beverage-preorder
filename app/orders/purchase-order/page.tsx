@@ -81,7 +81,7 @@ function PurchaseOrderViewer() {
 
   useEffect(() => {
     if (order?.Fn_Doc_No) {
-      document.title = `PurchaseOrderNo${order.Fn_Doc_No}`;
+      document.title = `PO-${order.Fn_Doc_No}`;
     }
   }, [order?.Fn_Doc_No]);
 

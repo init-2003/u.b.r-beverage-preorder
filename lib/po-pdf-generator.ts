@@ -379,7 +379,7 @@ export function generatePurchaseOrderHtml(order: PurchaseOrderData): string {
 <html lang="th">
 <head>
   <meta charset="utf-8">
-  <title>PurchaseOrderNo${order.Fn_Doc_No || 'PO'}</title>
+  <title>PO-${order.Fn_Doc_No || 'PO'}</title>
   <style>
     @font-face {
       font-family: 'Sarabun';
