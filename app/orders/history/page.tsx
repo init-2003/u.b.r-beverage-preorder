@@ -419,14 +419,6 @@ function OrdersContent() {
                   : 'คุณยังไม่มีประวัติการสั่งซื้อในหมวดหมู่นี้'}
               </p>
             </div>
-            <div className="pt-2">
-              <Link
-                href="/"
-                className="inline-flex items-center justify-center px-8 py-2.5 rounded-full bg-[#800020] hover:bg-[#6b001b] active:bg-[#570016] text-white font-bold text-sm shadow-sm transition-all hover:scale-[1.02] active:scale-[0.98]"
-              >
-                <span>ไปเลือกซื้อสินค้า</span>
-              </Link>
-            </div>
           </div>
         ) : (
           <div key={`${filterSts}-${currentPage}`} className="space-y-3 animate-tab-fade">

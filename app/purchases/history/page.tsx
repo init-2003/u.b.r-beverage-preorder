@@ -259,14 +259,6 @@ function PurchasesContent() {
                   : 'ยังไม่มีรายการที่รอชำระเงินหรือที่ชำระแล้วในขณะนี้'}
               </p>
             </div>
-            <div className="pt-2">
-              <Link
-                href="/"
-                className="inline-flex items-center justify-center px-8 py-2.5 rounded-full bg-[#800020] text-white font-bold text-xs sm:text-sm hover:bg-[#6b001b] active:bg-[#570016] transition-all hover:scale-[1.02] active:scale-[0.98] shadow-xs"
-              >
-                <span>ไปเลือกซื้อสินค้า</span>
-              </Link>
-            </div>
           </div>
         ) : (
           <div className="space-y-3">
