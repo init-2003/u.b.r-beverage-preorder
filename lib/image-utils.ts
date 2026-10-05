@@ -43,43 +43,28 @@ export function getPublicFilesSet(): Set<string> {
   return set;
 }
 
-export const DEFAULT_PRODUCT_IMAGE = '/images/ubr_beverage_logo_thumb.webp';
-export const DEFAULT_PRODUCT_IMAGE_HIGHRES = '/images/ubr_beverage_logo.webp';
+export const DEFAULT_PRODUCT_IMAGE = '/images/ubr_beverage_logo.png';
+export const DEFAULT_PRODUCT_IMAGE_HIGHRES = '/images/ubr_beverage_logo.png';
 export const DEFAULT_PRODUCT_IMAGE_PNG = '/images/ubr_beverage_logo.png';
 
 /**
  * Resolve product image path:
- * If the image exists on disk in `public/`, return its web path.
- * If not, return the highly optimized 9KB WebP thumbnail logo.
+ * - If imagePath is null or empty -> fallback to /images/ubr_beverage_logo.png
+ * - If imagePath is provided -> ensure clean root-relative or external URL path
  */
 export function resolveProductImageUrl(
   imagePath?: string | null,
   highRes = false
 ): string {
-  const defaultFallback = highRes
-    ? DEFAULT_PRODUCT_IMAGE_HIGHRES
-    : DEFAULT_PRODUCT_IMAGE;
-
   if (!imagePath || !imagePath.trim()) {
-    return defaultFallback;
+    return DEFAULT_PRODUCT_IMAGE_PNG;
   }
 
-  const clean = imagePath.trim().replace(/^[\/\\]+/, '').replace(/\\/g, '/');
-  const filesSet = getPublicFilesSet();
-
-  // 1. Direct match in public directory
-  if (filesSet.has(clean.toLowerCase()) || filesSet.has(`/${clean.toLowerCase()}`)) {
-    return `/${clean}`;
+  const clean = imagePath.trim();
+  if (clean.startsWith('http://') || clean.startsWith('https://')) {
+    return clean;
   }
 
-  // 2. Check if clean starts with 'images/' or 'uploads/'
-  if (!clean.startsWith('images/') && !clean.startsWith('uploads/')) {
-    const withImages = `images/${clean}`;
-    if (filesSet.has(withImages.toLowerCase()) || filesSet.has(`/${withImages.toLowerCase()}`)) {
-      return `/${withImages}`;
-    }
-  }
-
-  // 3. Fallback to lightweight optimized logo
-  return defaultFallback;
+  const normalized = clean.replace(/\\/g, '/');
+  return normalized.startsWith('/') ? normalized : `/${normalized}`;
 }

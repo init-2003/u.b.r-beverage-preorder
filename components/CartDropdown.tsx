@@ -210,11 +210,11 @@ export default function CartDropdown() {
                     {/* Square Thumbnail */}
                     <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-none bg-white shrink-0 overflow-hidden border border-slate-200/80 p-0.5 flex items-center justify-center">
                       <ProductImage
-                        src={item.image || '/images/ubr_beverage_logo_thumb.webp'}
+                        src={item.image || '/images/ubr_beverage_logo.png'}
                         alt={item.tradeName}
                         objectFit="contain"
                         priority={true}
-                        fallbackSrc="/images/ubr_beverage_logo_thumb.webp"
+                        fallbackSrc="/images/ubr_beverage_logo.png"
                       />
                     </div>
 

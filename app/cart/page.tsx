@@ -302,11 +302,11 @@ export default function CartPage() {
                       className="w-20 h-20 bg-white border border-slate-100 rounded-sm shrink-0 p-1 flex items-center justify-center overflow-hidden shadow-2xs hover:border-slate-300 transition-colors"
                     >
                       <ProductImage
-                        src={item.image || '/images/ubr_beverage_logo_thumb.webp'}
+                        src={item.image || '/images/ubr_beverage_logo.png'}
                         alt={item.tradeName}
                         objectFit="contain"
                         priority={true}
-                        fallbackSrc="/images/ubr_beverage_logo_thumb.webp"
+                        fallbackSrc="/images/ubr_beverage_logo.png"
                       />
                     </Link>
 

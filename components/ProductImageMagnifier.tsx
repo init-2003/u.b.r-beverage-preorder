@@ -22,15 +22,18 @@ export default function ProductImageMagnifier({
   const [isHovering, setIsHovering] = useState(false);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
-  const [isLoaded, setIsLoaded] = useState(false);
-  const [imgSrc, setImgSrc] = useState(src || '/images/ubr_beverage_logo.webp');
+  const [isLoaded, setIsLoaded] = useState(true);
+  const [imgSrc, setImgSrc] = useState(src || '/images/ubr_beverage_logo.png');
 
   const containerRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
 
   useEffect(() => {
-    setImgSrc(src || '/images/ubr_beverage_logo.webp');
-    setIsLoaded(false);
+    const target = src || '/images/ubr_beverage_logo.png';
+    setImgSrc(target);
+    if (imgRef.current && imgRef.current.complete) {
+      setIsLoaded(true);
+    }
   }, [src]);
 
   const lensRadius = lensSize / 2;
@@ -86,15 +89,11 @@ export default function ProductImageMagnifier({
         loading="eager"
         decoding="async"
         onLoad={() => setIsLoaded(true)}
-        className={`max-h-[360px] sm:max-h-[440px] w-auto h-auto object-contain transition-opacity duration-300 ${
-          !isLoaded ? 'opacity-0' : isHovering ? 'opacity-40' : 'opacity-100'
+        className={`max-h-[360px] sm:max-h-[440px] w-auto h-auto object-contain transition-opacity duration-200 ${
+          isHovering ? 'opacity-40' : 'opacity-100'
         }`}
         onError={() => {
-          if (imgSrc !== '/images/ubr_beverage_logo.webp') {
-            setImgSrc('/images/ubr_beverage_logo.webp');
-          } else {
-            setImgSrc('/images/ubr_beverage_logo.png');
-          }
+          setImgSrc('/images/ubr_beverage_logo.png');
           setIsLoaded(true);
         }}
       />

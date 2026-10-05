@@ -15,8 +15,7 @@ export interface ProductImageProps {
   fallbackSrc?: string;
 }
 
-const DEFAULT_FALLBACK = '/images/ubr_beverage_logo_thumb.webp';
-const SECONDARY_FALLBACK = '/images/ubr_beverage_logo.png';
+const DEFAULT_FALLBACK = '/images/ubr_beverage_logo.png';
 
 export function ProductImage({
   src,
@@ -35,18 +34,18 @@ export function ProductImage({
   }, [src, fallbackSrc]);
 
   const [currentSrc, setCurrentSrc] = useState<string>(normalizedSrc);
-  const [isLoaded, setIsLoaded] = useState<boolean>(false);
-  const [hasError, setHasError] = useState<boolean>(false);
+  const [isLoaded, setIsLoaded] = useState<boolean>(true);
+  const imgRef = React.useRef<HTMLImageElement>(null);
 
   useEffect(() => {
     if (failedImagesCache.has(normalizedSrc)) {
       setCurrentSrc(fallbackSrc);
-      setHasError(true);
       setIsLoaded(true);
     } else {
       setCurrentSrc(normalizedSrc);
-      setIsLoaded(false);
-      setHasError(false);
+      if (imgRef.current && imgRef.current.complete) {
+        setIsLoaded(true);
+      }
     }
   }, [normalizedSrc, fallbackSrc]);
 
@@ -56,9 +55,8 @@ export function ProductImage({
     }
     if (currentSrc !== fallbackSrc) {
       setCurrentSrc(fallbackSrc);
-      setHasError(true);
-    } else if (currentSrc !== SECONDARY_FALLBACK) {
-      setCurrentSrc(SECONDARY_FALLBACK);
+    } else if (currentSrc !== '/images/ubr_beverage_logo.png') {
+      setCurrentSrc('/images/ubr_beverage_logo.png');
     }
     setIsLoaded(true);
   };
@@ -74,8 +72,9 @@ export function ProductImage({
         <div className="absolute inset-0 bg-slate-100 animate-pulse pointer-events-none z-0" />
       )}
 
-      {/* Main Image with Async Decoding and Smooth Fade-in */}
+      {/* Main Image with Async Decoding */}
       <img
+        ref={imgRef}
         src={currentSrc}
         alt={alt}
         loading={priority ? 'eager' : 'lazy'}
@@ -85,9 +84,7 @@ export function ProductImage({
         onError={handleError}
         className={`w-full h-full ${
           objectFit === 'contain' ? 'object-contain p-2' : 'object-cover'
-        } transition-opacity duration-300 ease-out ${
-          isLoaded ? 'opacity-100' : 'opacity-0'
-        }`}
+        } block`}
       />
     </div>
   );

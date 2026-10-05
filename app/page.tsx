@@ -51,7 +51,7 @@ function HomeAppPageContent() {
             origin: p.Trade_Province || '',
             alcoholPercent: 0,
             description: p.Trade_Note || '',
-            imageUrl: p.Trade_Part_Image ? p.Trade_Part_Image : '/images/ubr_beverage_logo_thumb.webp',
+            imageUrl: p.Trade_Part_Image ? p.Trade_Part_Image : '/images/ubr_beverage_logo.png',
           };
         });
 

@@ -216,7 +216,7 @@ export default function ProductCatalog({
                     alt={product.name}
                     priority={index < 5}
                     objectFit="cover"
-                    fallbackSrc="/images/ubr_beverage_logo_thumb.webp"
+                    fallbackSrc="/images/ubr_beverage_logo.png"
                   />
                 </Link>
 
