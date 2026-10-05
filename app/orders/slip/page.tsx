@@ -28,6 +28,7 @@ function SlipViewerContent() {
   const paramUser = getParam(['cususer', 'cus_user', 'user', 'u', 'username']);
   const paramPass = getParam(['cuspass', 'cus_pass', 'pass', 'p', 'password']);
   const tokenParam = getParam(['token', 'internal_token']);
+  const paramFile = getParam(['file', 'filename', 'file_name', 'slip', 'pic', 'img', 'image']);
 
   const [order, setOrder] = useState<OrderData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -73,6 +74,19 @@ function SlipViewerContent() {
         if (!picFile) {
           setErrorMsg('คำสั่งซื้อนี้ยังไม่มีรูปสลิปชำระเงิน');
           return;
+        }
+
+        // ตรวจสอบชื่อไฟล์หากมีการระบุเข้ามาใน URL (Hybrid Mode)
+        if (paramFile) {
+          const cleanParamFile = paramFile.trim().toLowerCase();
+          const cleanPicFile = picFile.toLowerCase();
+          const baseParamFile = cleanParamFile.split('/').pop() || cleanParamFile;
+          const basePicFile = cleanPicFile.split('/').pop() || cleanPicFile;
+
+          if (baseParamFile !== basePicFile) {
+            setErrorMsg('ชื่อไฟล์รูปภาพไม่ตรงกับคำสั่งซื้อนี้');
+            return;
+          }
         }
 
         // กำหนด path รูปสลิป
