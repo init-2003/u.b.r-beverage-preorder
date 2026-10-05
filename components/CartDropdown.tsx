@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
 import { ShoppingCart } from 'lucide-react';
+import { ProductImage } from '@/components/ui/ProductImage';
 
 function EmptyCartIllustration() {
   return (
@@ -208,13 +209,12 @@ export default function CartDropdown() {
                   >
                     {/* Square Thumbnail */}
                     <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-none bg-white shrink-0 overflow-hidden border border-slate-200/80 p-0.5 flex items-center justify-center">
-                      <img
-                        src={item.image || '/images/ubr_beverage_logo.png'}
+                      <ProductImage
+                        src={item.image || '/images/ubr_beverage_logo_thumb.webp'}
                         alt={item.tradeName}
-                        className="max-h-full max-w-full object-contain"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = '/images/ubr_beverage_logo.png';
-                        }}
+                        objectFit="contain"
+                        priority={true}
+                        fallbackSrc="/images/ubr_beverage_logo_thumb.webp"
                       />
                     </div>
 

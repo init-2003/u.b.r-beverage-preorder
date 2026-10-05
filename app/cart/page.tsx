@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { EmptyCartIllustration } from '@/components/EmptyCartIllustration';
 import { CartIllustration } from '@/components/CartIllustration';
+import { ProductImage } from '@/components/ui/ProductImage';
 
 const CART_SELECTION_STORAGE_KEY = 'ubr_cart_selected_trade_ids';
 
@@ -300,19 +301,12 @@ export default function CartPage() {
                       href={`/products/${encodeURIComponent(item.tradeId)}`}
                       className="w-20 h-20 bg-white border border-slate-100 rounded-sm shrink-0 p-1 flex items-center justify-center overflow-hidden shadow-2xs hover:border-slate-300 transition-colors"
                     >
-                      <img
-                        src={
-                          item.image
-                            ? item.image.startsWith('/')
-                              ? item.image
-                              : `/${item.image}`
-                            : '/images/ubr_beverage_logo.png'
-                        }
+                      <ProductImage
+                        src={item.image || '/images/ubr_beverage_logo_thumb.webp'}
                         alt={item.tradeName}
-                        className="max-h-full max-w-full object-contain"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = '/images/ubr_beverage_logo.png';
-                        }}
+                        objectFit="contain"
+                        priority={true}
+                        fallbackSrc="/images/ubr_beverage_logo_thumb.webp"
                       />
                     </Link>
 

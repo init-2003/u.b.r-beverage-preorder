@@ -1,4 +1,5 @@
 import { getDbPool, sql } from '@/lib/db';
+import { resolveProductImageUrl } from '@/lib/image-utils';
 
 export interface CartItemSyncInput {
   tradeId: string;
@@ -171,9 +172,7 @@ export async function getCartFromDb(customerId: string): Promise<CartDbItem[]> {
       ? Number(row.Trade_deposit)
       : (Number(row.fn_deposit_D) || 0) / (qty || 1);
 
-    const image = row.Trade_Part_Image
-      ? (row.Trade_Part_Image.startsWith('/') ? row.Trade_Part_Image : `/${row.Trade_Part_Image}`)
-      : '/images/ubr_beverage_logo.png';
+    const image = resolveProductImageUrl(row.Trade_Part_Image);
 
     return {
       tradeId: (row.Trade_Id || '').trim(),

@@ -10,6 +10,7 @@ import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 import DraggableCartButton from './DraggableCartButton';
 import { BannerCarousel } from './BannerCarousel';
+import { ProductImage } from '@/components/ui';
 
 interface ProductCatalogProps {
   products: Product[];
@@ -183,7 +184,7 @@ export default function ProductCatalog({
         </div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3.5 sm:gap-4 lg:gap-5">
-          {filteredProducts.map((product) => {
+          {filteredProducts.map((product, index) => {
             const depositAmt = (product.depositPrice && product.depositPrice > 0)
               ? product.depositPrice
               : 0;
@@ -210,13 +211,12 @@ export default function ProductCatalog({
                     </div>
                   )}
 
-                  <img
-                    src={product.imageUrl ? (product.imageUrl.startsWith('/') ? product.imageUrl : `/${product.imageUrl}`) : '/images/ubr_beverage_logo.png'}
+                  <ProductImage
+                    src={product.imageUrl}
                     alt={product.name}
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = '/images/ubr_beverage_logo.png';
-                    }}
+                    priority={index < 5}
+                    objectFit="cover"
+                    fallbackSrc="/images/ubr_beverage_logo_thumb.webp"
                   />
                 </Link>
 

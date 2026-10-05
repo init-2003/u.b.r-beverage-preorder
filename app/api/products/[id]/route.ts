@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDbPool, sql } from '@/lib/db';
 import { getCurrentCustomer } from '@/lib/auth';
+import { resolveProductImageUrl } from '@/lib/image-utils';
 
 export async function GET(
   req: NextRequest,
@@ -78,7 +79,7 @@ export async function GET(
       leadTimeDays: 0,
       origin,
       description: (p.Detail_Trade || p.Trade_Note || '').trim(),
-      imageUrl: p.Trade_Part_Image ? p.Trade_Part_Image : '/images/ubr_beverage_logo.png',
+      imageUrl: resolveProductImageUrl(p.Trade_Part_Image, true),
       isPreorderOnly: (p.Type_Name || '').trim().toLowerCase() === 'pre order',
     };
 

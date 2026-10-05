@@ -22,13 +22,15 @@ export default function ProductImageMagnifier({
   const [isHovering, setIsHovering] = useState(false);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
-  const [imgSrc, setImgSrc] = useState(src || '/images/ubr_beverage_logo.png');
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [imgSrc, setImgSrc] = useState(src || '/images/ubr_beverage_logo.webp');
 
   const containerRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
 
   useEffect(() => {
-    setImgSrc(src || '/images/ubr_beverage_logo.png');
+    setImgSrc(src || '/images/ubr_beverage_logo.webp');
+    setIsLoaded(false);
   }, [src]);
 
   const lensRadius = lensSize / 2;
@@ -69,18 +71,31 @@ export default function ProductImageMagnifier({
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       onMouseMove={handleMouseMove}
-      className={`relative inline-flex items-center justify-center cursor-crosshair select-none overflow-visible ${className}`}
+      className={`relative inline-flex items-center justify-center cursor-crosshair select-none overflow-visible min-h-[300px] w-full ${className}`}
     >
+      {/* Shimmer skeleton while loading */}
+      {!isLoaded && (
+        <div className="absolute inset-0 max-h-[360px] sm:max-h-[440px] max-w-[360px] bg-slate-100 animate-pulse rounded-md mx-auto pointer-events-none" />
+      )}
+
       {/* Base Product Image */}
       <img
         ref={imgRef}
         src={imgSrc}
         alt={alt}
-        className={`max-h-[360px] sm:max-h-[440px] w-auto h-auto object-contain transition-opacity duration-200 ${
-          isHovering ? 'opacity-40' : 'opacity-100'
+        loading="eager"
+        decoding="async"
+        onLoad={() => setIsLoaded(true)}
+        className={`max-h-[360px] sm:max-h-[440px] w-auto h-auto object-contain transition-opacity duration-300 ${
+          !isLoaded ? 'opacity-0' : isHovering ? 'opacity-40' : 'opacity-100'
         }`}
         onError={() => {
-          setImgSrc('/images/ubr_beverage_logo.png');
+          if (imgSrc !== '/images/ubr_beverage_logo.webp') {
+            setImgSrc('/images/ubr_beverage_logo.webp');
+          } else {
+            setImgSrc('/images/ubr_beverage_logo.png');
+          }
+          setIsLoaded(true);
         }}
       />
 

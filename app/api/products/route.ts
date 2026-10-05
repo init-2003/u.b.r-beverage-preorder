@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDbPool, sql } from '@/lib/db';
 import { getCurrentCustomer } from '@/lib/auth';
+import { resolveProductImageUrl } from '@/lib/image-utils';
 
 export async function GET(req: NextRequest) {
   try {
@@ -83,6 +84,10 @@ export async function GET(req: NextRequest) {
     request.input('limit', limit);
 
     const dataResult = await request.query(dataQuery);
+    const products = (dataResult.recordset || []).map((p: any) => ({
+      ...p,
+      Trade_Part_Image: resolveProductImageUrl(p.Trade_Part_Image),
+    }));
 
     return NextResponse.json({
       success: true,
@@ -91,7 +96,7 @@ export async function GET(req: NextRequest) {
       limit,
       total,
       totalPages: Math.ceil(total / limit),
-      products: dataResult.recordset,
+      products,
     });
   } catch (error: any) {
     console.error('Fetch products error:', error);
