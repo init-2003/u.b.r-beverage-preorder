@@ -9,7 +9,7 @@ export default function Footer() {
   const pathname = usePathname();
 
   // ซ่อน Footer ในหน้าเอกสารเดี่ยว (Standalone A4 Document)
-  if (pathname?.includes('/purchase-order')) {
+  if (pathname?.includes('/purchase-order') || pathname?.includes('/a4')) {
     return null;
   }
 

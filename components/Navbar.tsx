@@ -354,7 +354,7 @@ export default function Navbar({ onRefreshData }: NavbarProps = {}) {
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
 
   // ซ่อน Navbar เมื่ออยู่ในหน้าเอกสารเดี่ยว (Standalone A4 Document)
-  if (pathname?.includes('/purchase-order')) {
+  if (pathname?.includes('/purchase-order') || pathname?.includes('/a4')) {
     return null;
   }
 
