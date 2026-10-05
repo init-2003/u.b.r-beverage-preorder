@@ -192,35 +192,36 @@ export default function ProductCatalog({
               <div
                 key={product.id}
                 onClick={() => router.push(`/products/${product.id}`)}
-                className="rounded-sm bg-white border border-slate-100/80 shadow-[0_1px_1px_0_rgba(0,0,0,0.05)] hover:shadow-xl hover:shadow-slate-300/50 hover:border-slate-300 hover:scale-[1.04] hover:-translate-y-1 hover:z-20 p-3 sm:p-3.5 flex flex-col justify-between group transition-all duration-300 ease-out relative cursor-pointer"
+                className="rounded-sm bg-white border border-slate-100/80 shadow-[0_1px_1px_0_rgba(0,0,0,0.05)] hover:shadow-xl hover:shadow-slate-300/50 hover:border-slate-300 hover:scale-[1.04] hover:-translate-y-1 hover:z-20 flex flex-col justify-between group transition-all duration-300 ease-out relative cursor-pointer overflow-hidden"
               >
-                <div>
-                  {/* Product Image Box (Centered, Object Contain, Advice Style) */}
-                  <Link
-                    href={`/products/${product.id}`}
-                    className="w-full aspect-square flex items-center justify-center p-2 mb-2 relative overflow-hidden group/img block cursor-pointer bg-white"
-                  >
-                    {/* Yellow Sticker Badge (Advice Style) */}
-                    {product.depositPercent > 0 && (
-                      <div
-                        className="absolute top-1 right-1 z-10 flex flex-col items-center justify-center bg-[#ffe01b] border border-amber-300 rounded-sm px-1.5 py-0.5 shadow-2xs shrink-0 select-none"
-                        title={`มัดจำ ${product.depositPercent}%`}
-                      >
-                        <span className="text-[9px] font-bold text-slate-800 leading-tight">มัดจำ</span>
-                        <span className="text-[11px] font-black text-blue-700 leading-none mt-0.5">{product.depositPercent}%</span>
-                      </div>
-                    )}
+                {/* Product Image Box (Full Bleed: เต็ม Card บน ซ้าย ขวา) */}
+                <Link
+                  href={`/products/${product.id}`}
+                  className="w-full aspect-square relative overflow-hidden group/img block cursor-pointer bg-slate-50 shrink-0"
+                >
+                  {/* Yellow Sticker Badge (Advice Style) */}
+                  {product.depositPercent > 0 && (
+                    <div
+                      className="absolute top-1.5 right-1.5 z-10 flex flex-col items-center justify-center bg-[#ffe01b] border border-amber-300 rounded-sm px-1.5 py-0.5 shadow-2xs shrink-0 select-none"
+                      title={`มัดจำ ${product.depositPercent}%`}
+                    >
+                      <span className="text-[9px] font-bold text-slate-800 leading-tight">มัดจำ</span>
+                      <span className="text-[11px] font-black text-blue-700 leading-none mt-0.5">{product.depositPercent}%</span>
+                    </div>
+                  )}
 
-                    <img
-                      src={product.imageUrl ? (product.imageUrl.startsWith('/') ? product.imageUrl : `/${product.imageUrl}`) : '/images/ubr_beverage_logo.png'}
-                      alt={product.name}
-                      className="max-h-full max-w-full object-contain"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = '/images/ubr_beverage_logo.png';
-                      }}
-                    />
-                  </Link>
+                  <img
+                    src={product.imageUrl ? (product.imageUrl.startsWith('/') ? product.imageUrl : `/${product.imageUrl}`) : '/images/ubr_beverage_logo.png'}
+                    alt={product.name}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = '/images/ubr_beverage_logo.png';
+                    }}
+                  />
+                </Link>
 
+                {/* Content Area (Padded: ชื่อสินค้า, ราคา, ปุ่มกด) */}
+                <div className="p-3 sm:p-3.5 flex flex-col flex-1 justify-between">
                   {/* Product Name (Clean 2-line title) */}
                   <div className="space-y-1 mb-2">
                     <Link href={`/products/${product.id}`} className="block group/title">
@@ -229,55 +230,55 @@ export default function ProductCatalog({
                       </h3>
                     </Link>
                   </div>
-                </div>
 
-                {/* Bottom Section: Price, Deposit & Action Buttons */}
-                <div className="pt-1 space-y-2">
-                  {/* Price Tag */}
-                  <div>
-                    <div className="flex items-baseline gap-1">
-                      <span className="text-base sm:text-lg font-bold text-[#FF6B00]">
-                        ฿{(product.price || 0).toLocaleString()}
-                      </span>
+                  {/* Bottom Section: Price, Deposit & Action Buttons */}
+                  <div className="pt-1 space-y-2">
+                    {/* Price Tag */}
+                    <div>
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-base sm:text-lg font-bold text-[#FF6B00]">
+                          ฿{(product.price || 0).toLocaleString()}
+                        </span>
+                      </div>
+
+                      <p className="text-[11px] sm:text-xs text-slate-500 font-medium mt-0.5">
+                        มัดจำล่วงหน้า ฿{depositAmt.toLocaleString()}
+                      </p>
                     </div>
 
-                    <p className="text-[11px] sm:text-xs text-slate-500 font-medium mt-0.5">
-                      มัดจำล่วงหน้า ฿{depositAmt.toLocaleString()}
-                    </p>
-                  </div>
+                    {/* Action Buttons: Add to Cart (Icon only) + กดสั่ง */}
+                    <div className="flex items-center gap-1.5 pt-0.5">
+                      {/* ปุ่มเพิ่มลงในตะกร้า (พื้นหลังสีดำ ไอคอนสีขาว ทรงกลมแคปซูล) */}
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleAddToCart(product);
+                        }}
+                        className={`h-9 w-9 shrink-0 rounded-full font-bold text-xs flex items-center justify-center transition-all duration-150 active:scale-80 border cursor-pointer select-none ${addedProductId === product.id
+                            ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
+                            : 'bg-black hover:bg-neutral-800 text-white border-black shadow-2xs'
+                          }`}
+                        title={addedProductId === product.id ? 'เพิ่มลงในตะกร้าแล้ว' : 'เพิ่มลงในตะกร้า'}
+                        aria-label="เพิ่มลงในตะกร้า"
+                      >
+                        {addedProductId === product.id ? (
+                          <Check className="w-4 h-4 text-white stroke-[3] animate-pop-check" />
+                        ) : (
+                          <ShoppingCart className="w-4 h-4 text-white" />
+                        )}
+                      </button>
 
-                  {/* Action Buttons: Add to Cart (Icon only) + กดสั่ง */}
-                  <div className="flex items-center gap-1.5 pt-0.5">
-                    {/* ปุ่มเพิ่มลงในตะกร้า (พื้นหลังสีดำ ไอคอนสีขาว ทรงกลมแคปซูล) */}
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleAddToCart(product);
-                      }}
-                      className={`h-9 w-9 shrink-0 rounded-full font-bold text-xs flex items-center justify-center transition-all duration-150 active:scale-80 border cursor-pointer select-none ${addedProductId === product.id
-                          ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
-                          : 'bg-black hover:bg-neutral-800 text-white border-black shadow-2xs'
-                        }`}
-                      title={addedProductId === product.id ? 'เพิ่มลงในตะกร้าแล้ว' : 'เพิ่มลงในตะกร้า'}
-                      aria-label="เพิ่มลงในตะกร้า"
-                    >
-                      {addedProductId === product.id ? (
-                        <Check className="w-4 h-4 text-white stroke-[3] animate-pop-check" />
-                      ) : (
-                        <ShoppingCart className="w-4 h-4 text-white" />
-                      )}
-                    </button>
-
-                    {/* ปุ่ม Pre Order พร้อมอนิเมชันเวลากด */}
-                    <button
-                      type="button"
-                      onClick={(e) => handleDirectOrder(e, product)}
-                      className="flex-1 h-9 py-2 px-2.5 rounded-full font-bold text-xs flex items-center justify-center gap-1.5 transition-all duration-150 bg-[#800020] hover:bg-[#6b001b] active:bg-[#570016] text-white shadow-2xs hover:shadow-xs cursor-pointer active:scale-95 select-none"
-                      title="Pre Order"
-                    >
-                      <span>Pre Order</span>
-                    </button>
+                      {/* ปุ่ม Pre Order พร้อมอนิเมชันเวลากด */}
+                      <button
+                        type="button"
+                        onClick={(e) => handleDirectOrder(e, product)}
+                        className="flex-1 h-9 py-2 px-2.5 rounded-full font-bold text-xs flex items-center justify-center gap-1.5 transition-all duration-150 bg-[#800020] hover:bg-[#6b001b] active:bg-[#570016] text-white shadow-2xs hover:shadow-xs cursor-pointer active:scale-95 select-none"
+                        title="Pre Order"
+                      >
+                        <span>Pre Order</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
