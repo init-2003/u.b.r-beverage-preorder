@@ -105,7 +105,6 @@ export async function syncCartToDb(customerId: string, items: CartItemSyncInput[
       detailReq.input('orderby', 'CUS');
       detailReq.input('Type_Free', '0');
       detailReq.input('fn_deposit_D', lineDep);
-      detailReq.input('fn_type_sale', 'Pre Order');
 
       await detailReq.query(`
         INSERT INTO Fnt_Detail_online (
@@ -113,13 +112,13 @@ export async function syncCartToDb(customerId: string, items: CartItemSyncInput[
           Trade_Id, Trade_Name, Qty, Unit_Name,
           Type_Name, Cost_Price, Sale_Price,
           Pb_User, Pb_Now, orderby, Type_Free,
-          fn_deposit_D, fn_type_sale
+          fn_deposit_D
         ) VALUES (
           @Branch_Id, @Fn_Doc_No, @Fn_Doc_Date, @Customer_Id,
           @Trade_Id, @Trade_Name, @Qty, @Unit_Name,
           @Type_Name, @Cost_Price, @Sale_Price,
           @Pb_User, @Pb_Now, @orderby, @Type_Free,
-          @fn_deposit_D, @fn_type_sale
+          @fn_deposit_D
         )
       `);
     }
@@ -155,7 +154,6 @@ export async function getCartFromDb(customerId: string): Promise<CartDbItem[]> {
       d.Type_Name,
       d.Sale_Price,
       d.fn_deposit_D,
-      d.fn_type_sale,
       t.Trade_NameEN,
       t.Trade_deposit,
       t.Trade_Part_Image

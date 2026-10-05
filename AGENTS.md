@@ -65,7 +65,7 @@ This document provides developer and AI agent instructions, system architecture,
   - Upon checkout submission, `PBM_CTRL` atomically generates the next real document number sequence, the finalized order is saved to both `Fnt_Header_online` and `Fnt_Detail_online`, and the checked-out items are cleared/cut from the customer's `ORDautorun` cart in `Fnt_Detail_online`.
 - Pre-orders are saved to tables:
   - `Fnt_Header_online` (header info: `Branch_Id`, `Fn_Doc_No`, `Fn_Doc_Date`, `Doc_Sts`, `Customer_Id`, `Fn_Total`, `Fn_Amount`, `money_sts`, `FILE_NAME_PIC`, `Fn_Remark`, `fn_deposit_H`, `fn_type_sale = 'Pre Order'`, etc.)
-  - `Fnt_Detail_online` (line items: `Trade_Id`, `Qty`, `Unit_Name`, `Sale_Price`, `Line_Total`, `fn_deposit_D`, `fn_type_sale = 'Pre Order'`, etc.)
+  - `Fnt_Detail_online` (line items: `Trade_Id`, `Qty`, `Unit_Name`, `Type_Name = 'Pre Order'`, `Sale_Price`, `Line_Total`, `fn_deposit_D`, etc. Note: `Fnt_Detail_online` does NOT have `fn_type_sale` column; that column is in `Fnt_Header_online`)
   - `Customer_online` (ordering customer info snapshot: `Customer_Id`, `Customer_Name`, `Customer_Tel`, `Customer_Address`, `Customer_Zip`, `Customer_Email`, `Customer_Remark`, `Sts`, `Pb_User`, `Pb_Now`, `Fn_Doc_No`, `type_sale = 'Pre Order'`)
 - **Order Document Status (`Doc_Sts`)**:
   - `1` = `รอชำระ` (Waiting for payment - Bank transfer without slip attached)

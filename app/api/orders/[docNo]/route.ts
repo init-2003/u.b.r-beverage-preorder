@@ -200,7 +200,7 @@ export async function GET(
           ISNULL(t.Sale_Price1, 0) AS Sale_Price1,
           (d.Qty * COALESCE(NULLIF(d.Sale_Price, 0), NULLIF(t.Sale_Price1, 0), 0)) AS Line_Total,
           ISNULL(d.fn_deposit_D, 0) AS fn_deposit_D,
-          d.fn_type_sale,
+          d.Type_Name AS fn_type_sale,
           d.Type_Free,
           d.Promotion_No,
           RTRIM(LTRIM(ISNULL(t.Trade_Part_Image, ''))) AS Trade_Part_Image,

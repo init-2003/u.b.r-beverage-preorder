@@ -170,7 +170,6 @@ export async function createPreOrder(params: CreateOrderParams) {
       detailReq.input('orderby', sql.NVarChar, 'CUS');
       detailReq.input('Type_Free', sql.VarChar, '0');
       detailReq.input('fn_deposit_D', sql.Money, lineDeposit);
-      detailReq.input('fn_type_sale', sql.NVarChar, 'Pre Order');
 
       await detailReq.query(`
         INSERT INTO Fnt_Detail_online (
@@ -178,13 +177,13 @@ export async function createPreOrder(params: CreateOrderParams) {
           Trade_Id, Trade_Name, Qty, Unit_Name,
           Type_ID, Type_Name, Cost_Price, Sale_Price,
           Pb_User, Pb_Now, orderby, Type_Free,
-          fn_deposit_D, fn_type_sale
+          fn_deposit_D
         ) VALUES (
           @Branch_Id, @Fn_Doc_No, @Fn_Doc_Date, @Customer_Id,
           @Trade_Id, @Trade_Name, @Qty, @Unit_Name,
           @Type_ID, @Type_Name, @Cost_Price, @Sale_Price,
           @Pb_User, @Pb_Now, @orderby, @Type_Free,
-          @fn_deposit_D, @fn_type_sale
+          @fn_deposit_D
         )
       `);
     }
