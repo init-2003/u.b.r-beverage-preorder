@@ -118,7 +118,7 @@ export function BannerCarousel() {
       aria-label="ป้ายโฆษณาประชาสัมพันธ์"
     >
       {/* Slides Container with Smooth Horizontal Slide */}
-      <div className="relative w-full aspect-[2.45/1] overflow-hidden bg-slate-950">
+      <div className="relative w-full h-[150px] sm:h-[200px] md:h-[240px] lg:h-[280px] xl:h-[300px] overflow-hidden bg-slate-950">
         <div
           className={`flex w-full h-full ${
             isTransitioning ? 'transition-transform duration-500 ease-out' : ''
@@ -140,7 +140,7 @@ export function BannerCarousel() {
                 priority={i === 1}
               />
               {/* Subtle bottom shadow overlay to ensure indicator dots and controls stand out */}
-              <div className="absolute inset-x-0 bottom-0 h-16 sm:h-20 bg-gradient-to-t from-black/60 via-black/20 to-transparent pointer-events-none" />
+              <div className="absolute inset-x-0 bottom-0 h-12 sm:h-16 bg-gradient-to-t from-black/60 via-black/20 to-transparent pointer-events-none" />
             </div>
           ))}
         </div>
