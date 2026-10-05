@@ -137,8 +137,8 @@ export function BannerCarousel() {
                 fill
                 sizes="(max-width: 1600px) 100vw, 1600px"
                 className="object-cover object-center w-full h-full select-none pointer-events-none"
-                priority={i === 1}
-                loading={i === 1 ? 'eager' : 'lazy'}
+                priority={slide.id === 1}
+                loading="eager"
               />
               {/* Subtle bottom shadow overlay to ensure indicator dots and controls stand out */}
               <div className="absolute inset-x-0 bottom-0 h-12 sm:h-16 bg-gradient-to-t from-black/60 via-black/20 to-transparent pointer-events-none" />
