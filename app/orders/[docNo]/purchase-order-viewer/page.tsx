@@ -217,9 +217,8 @@ export default function ViewPurchaseOrderPage() {
             type="button"
             onClick={handleDownload}
             disabled={downloading}
-            className={`w-20 sm:w-28 h-8 sm:h-9 inline-flex items-center justify-center bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white rounded-full text-xs sm:text-sm font-bold shadow-sm hover:shadow transition-all cursor-pointer ${
-              downloading ? 'opacity-70 cursor-not-allowed' : ''
-            }`}
+            className={`w-20 sm:w-28 h-8 sm:h-9 inline-flex items-center justify-center bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white rounded-full text-xs sm:text-sm font-bold shadow-sm hover:shadow transition-all cursor-pointer ${downloading ? 'opacity-70 cursor-not-allowed' : ''
+              }`}
           >
             {downloading ? (
               <span className="inline-flex items-center gap-1">
@@ -246,9 +245,9 @@ export default function ViewPurchaseOrderPage() {
           style={
             screenWidth > 0 && screenWidth < 820
               ? {
-                  zoom: Math.min(1, Math.max(0.35, (screenWidth - (screenWidth < 480 ? 16 : 32)) / 794)),
-                  margin: '0 auto',
-                }
+                zoom: Math.min(1, Math.max(0.35, (screenWidth - (screenWidth < 480 ? 16 : 32)) / 794)),
+                margin: '0 auto',
+              }
               : { margin: '0 auto' }
           }
           className="print:!transform-none print:!zoom-100"

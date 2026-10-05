@@ -122,9 +122,9 @@ export default function ProductCatalog({
 
       {/* Active Search Results Feedback */}
       {activeSearch && (
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-2 text-sm text-slate-700 bg-white px-4 py-2 rounded-sm border border-slate-100/80 shadow-[0_1px_1px_0_rgba(0,0,0,0.05)]">
-            <span>ผลการค้นหาสำหรับ: <strong className="text-slate-950 font-bold">&quot;{activeSearch}&quot;</strong></span>
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2">
+          <div className="flex items-center gap-2 text-sm text-slate-600">
+            <span>ผลการค้นหาสำหรับ: <strong className="text-slate-900 font-bold">&quot;{activeSearch}&quot;</strong></span>
             <button
               type="button"
               onClick={() => {
@@ -135,7 +135,7 @@ export default function ProductCatalog({
               ล้างการค้นหา
             </button>
           </div>
-          <div className="text-xs text-slate-500 flex items-center gap-1.5 font-medium ml-auto">
+          <div className="text-xs text-slate-500 flex items-center gap-1.5 font-medium sm:ml-auto">
             <span>พบสินค้า</span>
             <strong className="text-red-600 font-bold text-sm">{filteredProducts.length}</strong>
             <span>รายการ</span>
