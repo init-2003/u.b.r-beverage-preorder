@@ -17,9 +17,9 @@ This document provides developer and AI agent instructions, system architecture,
 ## 1. Tech Stack & Environment
 
 - **Framework**: Next.js 16 (App Router, Turbopack)
-- **Language**: TypeScript
 - **Database**: Microsoft SQL Server (MSSQL) connected via `mssql` (`lib/db.ts`)
-- **Styling**: Tailwind CSS, Lucide React icons
+  - **Connection Pooling**: Singleton Promise lock preventing pool recreation race conditions, `max: 30`, `min: 5`, `idleTimeoutMillis: 30000`, `acquireTimeoutMillis: 15000`, self-healing error handler.
+  - **Indexes**: Optimized nonclustered covering indexes on `Trade(Type_Name, Trade_Name)`, `Trade(Trade_Id)`, `Fnt_Detail_online(Branch_Id, Fn_Doc_No, Customer_Id)`, `Fnt_Header_online(Customer_Id, Fn_Doc_Date)`, `Customer(Cus_User)`, etc. (migration script: `scripts/optimize-database.js`).
 - **State Management**: React Context (`context/`):
   - `AuthContext`: Manages customer login session, POS customer ID, address, and role.
   - `CartContext`: Pre-order cart state, item quantities, and localStorage persistence (`ubr_cart_items`).
