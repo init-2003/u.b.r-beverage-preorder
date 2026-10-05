@@ -192,9 +192,9 @@ export default function ProductCatalog({
               <div
                 key={product.id}
                 onClick={() => router.push(`/products/${product.id}`)}
-                className="rounded-sm bg-white border border-slate-100/80 shadow-[0_1px_1px_0_rgba(0,0,0,0.05)] hover:shadow-xl hover:shadow-slate-300/50 hover:border-slate-300 hover:scale-[1.04] hover:-translate-y-1 hover:z-20 flex flex-col justify-between group transition-all duration-300 ease-out relative cursor-pointer overflow-hidden"
+                className="rounded-sm bg-white border border-slate-100/80 shadow-[0_1px_1px_0_rgba(0,0,0,0.05)] hover:shadow-md hover:border-slate-300 flex flex-col justify-between group transition-shadow duration-200 relative cursor-pointer overflow-hidden"
               >
-                {/* Product Image Box (Full Bleed: เต็ม Card บน ซ้าย ขวา) */}
+                {/* Product Image Box (Full Bleed: เต็ม Card บน ซ้าย ขวา - นิ่งไม่ขยับเมื่อ hover) */}
                 <Link
                   href={`/products/${product.id}`}
                   className="w-full aspect-square relative overflow-hidden group/img block cursor-pointer bg-slate-50 shrink-0"
@@ -213,7 +213,7 @@ export default function ProductCatalog({
                   <img
                     src={product.imageUrl ? (product.imageUrl.startsWith('/') ? product.imageUrl : `/${product.imageUrl}`) : '/images/ubr_beverage_logo.png'}
                     alt={product.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    className="w-full h-full object-cover"
                     onError={(e) => {
                       (e.target as HTMLImageElement).src = '/images/ubr_beverage_logo.png';
                     }}
