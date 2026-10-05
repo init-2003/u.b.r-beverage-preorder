@@ -2,15 +2,18 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentCustomer } from '@/lib/auth';
 import { getDbPool, sql } from '@/lib/db';
 import { createPreOrder } from '@/lib/order-service';
+import { validateOrderPayload, sanitizeString, sanitizePhone, escapeSqlLike } from '@/lib/validation';
 
 // GET /api/orders: รายการประวัติคำสั่งซื้อ
 export async function GET(req: NextRequest) {
   try {
     const customer = await getCurrentCustomer();
     const { searchParams } = new URL(req.url);
-    const limit = Math.max(1, Math.min(200, parseInt(searchParams.get('limit') || '50', 10)));
-    const tel = searchParams.get('tel') || '';
-    const customerIdParam = searchParams.get('customerId') || '';
+    const limit = Math.max(1, Math.min(200, parseInt(searchParams.get('limit') || '50', 10) || 50));
+    const rawTel = searchParams.get('tel') || '';
+    const cleanTel = sanitizePhone(rawTel);
+    const rawCustomerId = searchParams.get('customerId') || '';
+    const cleanCustomerId = sanitizeString(rawCustomerId, 50);
 
     const pool = await getDbPool();
     const request = pool.request().input('limit', limit);
@@ -20,12 +23,12 @@ export async function GET(req: NextRequest) {
     if (customer) {
       whereClause += " AND h.Customer_Id = @customerId";
       request.input('customerId', customer.customerId);
-    } else if (customerIdParam) {
+    } else if (cleanCustomerId) {
       whereClause += " AND h.Customer_Id = @customerId";
-      request.input('customerId', customerIdParam);
-    } else if (tel) {
+      request.input('customerId', cleanCustomerId);
+    } else if (cleanTel) {
       whereClause += " AND EXISTS (SELECT 1 FROM Customer_online co WHERE co.Fn_Doc_No = h.Fn_Doc_No AND co.Customer_Tel LIKE @tel)";
-      request.input('tel', `%${tel}%`);
+      request.input('tel', `%${escapeSqlLike(cleanTel)}%`);
     } else {
       // สำหรับหน้าเว็บทั่วไป หรือเมื่อยังไม่ได้ล็อกอิน ให้ดึงคำสั่งจอง Pre-Order ล่าสุด
       whereClause += " AND h.Fn_Doc_No LIKE 'ORD%'";
@@ -143,18 +146,38 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const body = await req.json();
-    const { items, paymentMethod, customerName, customerTel, customerAddress, customerZip, customerEmail, remark, paymentSlipFilename } = body;
-
-    if (!items || !Array.isArray(items) || items.length === 0) {
+    let body: any;
+    try {
+      body = await req.json();
+    } catch {
       return NextResponse.json(
-        { success: false, message: 'ไม่มีรายการสินค้าในคำสั่งซื้อ' },
+        { success: false, message: 'รูปแบบข้อมูล JSON ไม่ถูกต้อง' },
         { status: 400 }
       );
     }
 
+    const validation = validateOrderPayload(body);
+    if (!validation.isValid || !validation.data) {
+      return NextResponse.json(
+        { success: false, message: validation.error || 'ข้อมูลคำสั่งซื้อไม่ถูกต้อง' },
+        { status: 400 }
+      );
+    }
+
+    const {
+      items,
+      paymentMethod,
+      customerName,
+      customerTel,
+      customerAddress,
+      customerZip,
+      customerEmail,
+      remark,
+      paymentSlipFilename,
+    } = validation.data;
+
     const customerId = customer.customerId;
-    const finalCustomerName = (customerName || customer.customerName || '').trim();
+    const finalCustomerName = (customerName || customer.customerName || customerId).trim();
     const finalCustomerTel = (customerTel || customer.customerTel || '').trim();
     const finalCustomerAddress = (customerAddress || customer.customerAddress || '').trim();
     const finalCustomerZip = (customerZip || customer.customerZip || '').trim();
@@ -169,25 +192,15 @@ export async function POST(req: NextRequest) {
 
     const orderResult = await createPreOrder({
       customerId,
-      customerName: finalCustomerName || customer.customerName || customerId,
+      customerName: finalCustomerName,
       customerTel: finalCustomerTel,
       customerAddress: finalCustomerAddress,
       customerZip: finalCustomerZip,
       customerEmail: finalCustomerEmail,
-      paymentMethod: paymentMethod === 'T' ? 'T' : 'M',
+      paymentMethod,
       paymentSlipFilename: paymentSlipFilename || '',
       remark: remark || '',
-      items: items.map((item: any) => ({
-        tradeId: item.tradeId,
-        tradeName: item.tradeName,
-        qty: Number(item.qty) || 1,
-        unitName: (item.unitName || '').trim(),
-        typeId: item.typeId || '',
-        typeName: item.typeName || '',
-        salePrice: Number(item.salePrice) || 0,
-        depositPrice: item.depositPrice ? Number(item.depositPrice) : undefined,
-        remark: item.remark ? String(item.remark).trim() : undefined,
-      })),
+      items,
     });
 
     return NextResponse.json({

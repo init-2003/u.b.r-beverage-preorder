@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentCustomer } from '@/lib/auth';
 import { getCartFromDb, syncCartToDb, clearCartInDb, CartItemSyncInput } from '@/lib/cart-service';
+import { validateCartSyncPayload } from '@/lib/validation';
 
 export async function GET() {
   try {
@@ -39,8 +40,25 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const body = await req.json();
-    const items: CartItemSyncInput[] = Array.isArray(body.items) ? body.items : [];
+    let body: any;
+    try {
+      body = await req.json();
+    } catch {
+      return NextResponse.json(
+        { success: false, message: 'รูปแบบข้อมูล JSON ไม่ถูกต้อง' },
+        { status: 400 }
+      );
+    }
+
+    const validation = validateCartSyncPayload(body);
+    if (!validation.isValid || !validation.data) {
+      return NextResponse.json(
+        { success: false, message: validation.error || 'ข้อมูลตะกร้าสินค้าไม่ถูกต้อง' },
+        { status: 400 }
+      );
+    }
+
+    const items: CartItemSyncInput[] = validation.data.items;
 
     const result = await syncCartToDb(customer.customerId, items);
 

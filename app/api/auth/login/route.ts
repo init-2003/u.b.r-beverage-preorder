@@ -1,21 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDbPool, sql } from '@/lib/db';
+import { getDbPool } from '@/lib/db';
 import { signToken, CustomerSession } from '@/lib/auth';
+import { validateLoginPayload } from '@/lib/validation';
 
 export async function POST(req: NextRequest) {
   try {
-    const { username, password, rememberMe = false } = await req.json();
-
-    if (!username) {
+    let body: any;
+    try {
+      body = await req.json();
+    } catch {
       return NextResponse.json(
-        { success: false, message: 'กรุณากรอกรหัสลูกค้า (Cus_User)' },
+        { success: false, message: 'รูปแบบข้อมูล JSON ไม่ถูกต้อง' },
         { status: 400 }
       );
     }
 
+    const validation = validateLoginPayload(body);
+    if (!validation.isValid || !validation.data) {
+      return NextResponse.json(
+        { success: false, message: validation.error || 'ข้อมูลเข้าสู่ระบบไม่ถูกต้อง' },
+        { status: 400 }
+      );
+    }
+
+    const { username: cleanUser, password: cleanPass, rememberMe } = validation.data;
     const pool = await getDbPool();
-    const cleanUser = String(username).trim();
-    const cleanPass = password ? String(password).trim() : '';
 
     // ค้นหาลูกค้าตาม Cus_User หรือ Customer_Id
     const result = await pool

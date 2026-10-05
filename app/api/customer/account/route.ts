@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentCustomer } from '@/lib/auth';
 import { getDbPool } from '@/lib/db';
+import { validateCustomerUpdatePayload } from '@/lib/validation';
 
 export async function GET() {
   try {
@@ -95,7 +96,24 @@ export async function PUT(req: NextRequest) {
       );
     }
 
-    const body = await req.json();
+    let body: any;
+    try {
+      body = await req.json();
+    } catch {
+      return NextResponse.json(
+        { success: false, message: 'รูปแบบข้อมูล JSON ไม่ถูกต้อง' },
+        { status: 400 }
+      );
+    }
+
+    const validation = validateCustomerUpdatePayload(body);
+    if (!validation.isValid || !validation.data) {
+      return NextResponse.json(
+        { success: false, message: validation.error || 'ข้อมูลไม่ถูกต้อง' },
+        { status: 400 }
+      );
+    }
+
     const {
       customerName,
       customerContact,
@@ -105,20 +123,20 @@ export async function PUT(req: NextRequest) {
       customerZip,
       customerTax,
       customerBranch,
-    } = body;
+    } = validation.data;
 
     const pool = await getDbPool();
     await pool
       .request()
       .input('customerId', session.customerId.trim())
-      .input('customerName', customerName ? String(customerName).trim() : '')
-      .input('customerContact', customerContact ? String(customerContact).trim() : '')
-      .input('customerTel', customerTel ? String(customerTel).trim() : '')
-      .input('customerEmail', customerEmail ? String(customerEmail).trim() : '')
-      .input('customerAddress', customerAddress ? String(customerAddress).trim() : '')
-      .input('customerZip', customerZip ? String(customerZip).trim() : '')
-      .input('customerTax', customerTax ? String(customerTax).trim() : '')
-      .input('customerBranch', customerBranch ? String(customerBranch).trim() : '')
+      .input('customerName', customerName)
+      .input('customerContact', customerContact)
+      .input('customerTel', customerTel)
+      .input('customerEmail', customerEmail)
+      .input('customerAddress', customerAddress)
+      .input('customerZip', customerZip)
+      .input('customerTax', customerTax)
+      .input('customerBranch', customerBranch)
       .query(`
         UPDATE Customer
         SET

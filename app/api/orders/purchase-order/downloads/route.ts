@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { handlePdfDownload } from '@/app/api/orders/[docNo]/pdf/route';
+import { sanitizeDocNo } from '@/lib/validation';
 
 export async function GET(req: NextRequest) {
   const searchParams = req.nextUrl.searchParams;
@@ -13,11 +14,12 @@ export async function GET(req: NextRequest) {
     return '';
   };
 
-  const docNo = getParam(['docno', 'doc_no', 'docno_local', 'orderno', 'order_no', 'orderno_local', 'id']);
+  const rawDocNo = getParam(['docno', 'doc_no', 'docno_local', 'orderno', 'order_no', 'orderno_local', 'id']);
+  const docNo = sanitizeDocNo(rawDocNo);
 
   if (!docNo) {
     return NextResponse.json(
-      { success: false, message: 'กรุณาระบุเลขที่คำสั่งซื้อ (docno)' },
+      { success: false, message: 'เลขที่คำสั่งซื้อไม่ถูกต้อง' },
       { status: 400 }
     );
   }

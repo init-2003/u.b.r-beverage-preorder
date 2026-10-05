@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDbPool, sql } from '@/lib/db';
 import { getCurrentCustomer } from '@/lib/auth';
 import { resolveProductImageUrl } from '@/lib/image-utils';
+import { sanitizeTradeId } from '@/lib/validation';
 
 export async function GET(
   req: NextRequest,
@@ -9,16 +10,22 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const decodedId = decodeURIComponent(id).trim();
+    const cleanId = sanitizeTradeId(decodeURIComponent(id || ''));
+
+    if (!cleanId) {
+      return NextResponse.json(
+        { success: false, message: 'รหัสสินค้าไม่ถูกต้อง' },
+        { status: 400 }
+      );
+    }
 
     const customer = await getCurrentCustomer();
     const customerLevel = customer ? customer.customerLevel : 1;
-    const priceCol = `Sale_Price${customerLevel}`;
 
     const pool = await getDbPool();
     const result = await pool
       .request()
-      .input('id', decodedId)
+      .input('id', cleanId)
       .query(`
         SELECT TOP 1
           RTRIM(LTRIM(t.Trade_Id)) AS Trade_Id,

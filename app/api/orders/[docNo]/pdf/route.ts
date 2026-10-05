@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDbPool } from '@/lib/db';
 import { getCurrentCustomer, verifyToken, verifyOrderToken, CustomerSession } from '@/lib/auth';
 import { generatePurchaseOrderPdf } from '@/lib/po-pdf-generator';
+import { sanitizeDocNo, sanitizeString, containsInjectionPatterns } from '@/lib/validation';
 
 export async function GET(
   req: NextRequest,
@@ -13,18 +14,26 @@ export async function GET(
 
 export async function handlePdfDownload(req: NextRequest, docNo: string) {
   try {
-    const cleanDocNo = decodeURIComponent(docNo || '').trim();
+    const cleanDocNo = sanitizeDocNo(decodeURIComponent(docNo || ''));
+
+    if (!cleanDocNo) {
+      return NextResponse.json(
+        { success: false, message: 'เลขที่คำสั่งซื้อไม่ถูกต้อง' },
+        { status: 400 }
+      );
+    }
+
     const pool = await getDbPool();
 
     const internalSecret = process.env.INTERNAL_PRINT_SECRET || 'ubr_internal_print_secret_2026';
     const searchParams = req.nextUrl.searchParams;
     const internalToken = searchParams.get('internal_token');
-    const tokenParam = (searchParams.get('token') || '').trim();
+    const tokenParam = sanitizeString(searchParams.get('token') || '', 255);
 
     const getParam = (names: string[]) => {
       for (const [key, value] of searchParams.entries()) {
         if (names.includes(key.toLowerCase())) {
-          return value.trim();
+          return sanitizeString(value, 100);
         }
       }
       return '';
@@ -32,6 +41,13 @@ export async function handlePdfDownload(req: NextRequest, docNo: string) {
 
     const paramUser = getParam(['cususer', 'cus_user', 'user', 'u', 'username']);
     const paramPass = getParam(['cuspass', 'cus_pass', 'pass', 'p', 'password']);
+
+    if (paramUser && containsInjectionPatterns(paramUser)) {
+      return NextResponse.json(
+        { success: false, message: 'รูปแบบชื่อผู้ใช้ไม่ถูกต้อง' },
+        { status: 400 }
+      );
+    }
 
     let isInternal = internalToken === internalSecret || tokenParam === internalSecret;
     if (!isInternal && tokenParam && cleanDocNo) {

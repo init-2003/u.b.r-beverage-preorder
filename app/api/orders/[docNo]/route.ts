@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDbPool } from '@/lib/db';
 import { getCurrentCustomer, verifyToken, verifyOrderToken, generateOrderToken, CustomerSession } from '@/lib/auth';
+import { sanitizeDocNo, sanitizeString, containsInjectionPatterns } from '@/lib/validation';
 
 export async function GET(
   req: NextRequest,
@@ -8,19 +9,27 @@ export async function GET(
 ) {
   try {
     const { docNo } = await params;
-    const cleanDocNo = decodeURIComponent(docNo || '').trim();
+    const cleanDocNo = sanitizeDocNo(decodeURIComponent(docNo || ''));
+
+    if (!cleanDocNo) {
+      return NextResponse.json(
+        { success: false, message: 'เลขที่คำสั่งซื้อไม่ถูกต้อง' },
+        { status: 400 }
+      );
+    }
+
     const pool = await getDbPool();
 
     const internalSecret = process.env.INTERNAL_PRINT_SECRET || 'ubr_internal_print_secret_2026';
     const searchParams = req.nextUrl.searchParams;
     const internalToken = searchParams.get('internal_token');
-    const tokenParam = (searchParams.get('token') || '').trim();
+    const tokenParam = sanitizeString(searchParams.get('token') || '', 255);
 
     // ฟังก์ชันค้นหา query param แบบ case-insensitive รองรับทั้ง cususer/cuspass, user/pass, u/p
     const getParam = (names: string[]) => {
       for (const [key, value] of searchParams.entries()) {
         if (names.includes(key.toLowerCase())) {
-          return value.trim();
+          return sanitizeString(value, 100);
         }
       }
       return '';
@@ -28,6 +37,13 @@ export async function GET(
 
     const paramUser = getParam(['cususer', 'cus_user', 'user', 'u', 'username']);
     const paramPass = getParam(['cuspass', 'cus_pass', 'pass', 'p', 'password']);
+
+    if (paramUser && containsInjectionPatterns(paramUser)) {
+      return NextResponse.json(
+        { success: false, message: 'รูปแบบชื่อผู้ใช้ไม่ถูกต้อง' },
+        { status: 400 }
+      );
+    }
 
     let isInternal = internalToken === internalSecret || tokenParam === internalSecret;
     if (!isInternal && tokenParam && cleanDocNo) {
@@ -278,8 +294,32 @@ export async function PATCH(
 ) {
   try {
     const { docNo } = await params;
-    const cleanDocNo = decodeURIComponent(docNo || '').trim();
-    const body = await req.json();
+    const cleanDocNo = sanitizeDocNo(decodeURIComponent(docNo || ''));
+
+    if (!cleanDocNo) {
+      return NextResponse.json(
+        { success: false, message: 'เลขที่คำสั่งซื้อไม่ถูกต้อง' },
+        { status: 400 }
+      );
+    }
+
+    let body: any;
+    try {
+      body = await req.json();
+    } catch {
+      return NextResponse.json(
+        { success: false, message: 'รูปแบบข้อมูล JSON ไม่ถูกต้อง' },
+        { status: 400 }
+      );
+    }
+
+    if (!body || typeof body !== 'object') {
+      return NextResponse.json(
+        { success: false, message: 'ข้อมูลไม่ถูกต้อง' },
+        { status: 400 }
+      );
+    }
+
     const { docSts, docStsName, trackingNo, remark, paymentSlipFilename } = body;
 
     const pool = await getDbPool();
@@ -290,11 +330,19 @@ export async function PATCH(
 
     if (docSts !== undefined) {
       const stsStr = String(docSts).trim();
+      const validStatuses = new Set(['0', '1', '3', '4']);
+      if (!validStatuses.has(stsStr)) {
+        return NextResponse.json(
+          { success: false, message: 'สถานะคำสั่งซื้อไม่ถูกต้อง' },
+          { status: 400 }
+        );
+      }
+
       setClauses.push('Doc_Sts = @docSts');
       request.input('docSts', stsStr);
 
       // บันทึกชื่อสถานะลงในคอลัมน์ Doc_Sts_Name อัตโนมัติตาม Doc_Sts
-      let computedName = docStsName;
+      let computedName = docStsName ? sanitizeString(docStsName, 50) : '';
       if (!computedName) {
         if (stsStr === '1') computedName = 'รอชำระ';
         else if (stsStr === '0') computedName = 'กำลังดำเนินการ';
@@ -303,23 +351,30 @@ export async function PATCH(
       }
       if (computedName) {
         setClauses.push('Doc_Sts_Name = @docStsName');
-        request.input('docStsName', String(computedName));
+        request.input('docStsName', computedName);
       }
     } else if (docStsName !== undefined) {
+      const cleanName = sanitizeString(docStsName, 50);
       setClauses.push('Doc_Sts_Name = @docStsName');
-      request.input('docStsName', String(docStsName));
+      request.input('docStsName', cleanName);
     }
+
     if (trackingNo !== undefined) {
+      const cleanTracking = sanitizeString(trackingNo, 100);
       setClauses.push('Fn_Doc_No_local = @trackingNo');
-      request.input('trackingNo', String(trackingNo));
+      request.input('trackingNo', cleanTracking);
     }
+
     if (remark !== undefined) {
+      const cleanRemark = sanitizeString(remark, 500);
       setClauses.push('Fn_Remark = @remark');
-      request.input('remark', String(remark));
+      request.input('remark', cleanRemark);
     }
+
     if (paymentSlipFilename !== undefined) {
+      const cleanFilename = sanitizeString(paymentSlipFilename, 150);
       setClauses.push('FILE_NAME_PIC = @paymentSlipFilename');
-      request.input('paymentSlipFilename', String(paymentSlipFilename));
+      request.input('paymentSlipFilename', cleanFilename);
       // เมื่อแนบสลิปเรียบร้อยแล้ว ถ้าไม่ได้ระบุ docSts มา ให้เปลี่ยนสถานะจาก 1 (รอชำระ) เป็น 0 (กำลังดำเนินการ) โดยอัตโนมัติ
       if (docSts === undefined) {
         setClauses.push("Doc_Sts = '0'");

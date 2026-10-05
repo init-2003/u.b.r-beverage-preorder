@@ -4,12 +4,13 @@ import path from 'path';
 import { getDbPool } from '@/lib/db';
 import { verifySlipFull } from '@/lib/slip-verification';
 import { getCurrentCustomer } from '@/lib/auth';
+import { sanitizeDocNo, sanitizeSafeFilename, sanitizePrice } from '@/lib/validation';
 
 export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData();
     const file = formData.get('file') as File;
-    const docNo = (formData.get('docNo') as string || '').trim();
+    const rawDocNo = formData.get('docNo') as string | null;
     const expectedAmountParam = formData.get('expectedAmount') as string | null;
 
     if (!file) {
@@ -17,6 +18,37 @@ export async function POST(req: NextRequest) {
         { success: false, message: 'ไม่พบไฟล์ที่อัปโหลด' },
         { status: 400 }
       );
+    }
+
+    // ตรวจสอบขนาดไฟล์ไม่เกิน 15 MB
+    const MAX_FILE_SIZE = 15 * 1024 * 1024;
+    if (file.size > MAX_FILE_SIZE) {
+      return NextResponse.json(
+        { success: false, message: 'ขนาดไฟล์เกินกำหนด (สูงสุด 15MB)' },
+        { status: 400 }
+      );
+    }
+
+    // ตรวจสอบความปลอดภัยของชื่อไฟล์และนามสกุล (ป้องกัน Path Traversal / Executables)
+    const fileCheck = sanitizeSafeFilename(file.name || 'slip.jpg');
+    if (!fileCheck.isValid) {
+      return NextResponse.json(
+        { success: false, message: fileCheck.error || 'ชื่อไฟล์หรือนามสกุลไฟล์ไม่ถูกต้อง' },
+        { status: 400 }
+      );
+    }
+
+    // ตรวจสอบความถูกต้องของเลขที่เอกสาร (ป้องกัน SQL / Path Traversal)
+    let docNo = '';
+    if (rawDocNo && rawDocNo.trim()) {
+      const sanitizedDoc = sanitizeDocNo(rawDocNo);
+      if (!sanitizedDoc) {
+        return NextResponse.json(
+          { success: false, message: 'เลขที่เอกสารไม่ถูกต้อง' },
+          { status: 400 }
+        );
+      }
+      docNo = sanitizedDoc;
     }
 
     let expectedAmount: number | undefined;
@@ -65,8 +97,8 @@ export async function POST(req: NextRequest) {
 
     // หากไม่ได้ยอดจากฐานข้อมูล ลองดูจาก expectedAmountParam
     if (expectedAmount == null && expectedAmountParam) {
-      const parsed = parseFloat(expectedAmountParam);
-      if (!isNaN(parsed) && parsed > 0) {
+      const parsed = sanitizePrice(expectedAmountParam);
+      if (parsed > 0) {
         expectedAmount = parsed;
       }
     }
@@ -134,15 +166,15 @@ export async function POST(req: NextRequest) {
     }
 
     // 4. เมื่อผ่านเงื่อนไข บันทึกไฟล์รูปสลิปลงเซิร์ฟเวอร์
-    // รูปแบบการเก็บ: public/uploads/slips/[เลขออเดอร์]/[ชื่อเดิมของไฟล์สลิป]
+    // รูปแบบการเก็บ: public/uploads/slips/[เลขออเดอร์]/[ชื่อปลอดภัยของไฟล์สลิป]
     //
     // หมายเหตุ (output: 'standalone'): server.js ทำ process.chdir(__dirname) ทำให้
     // process.cwd() ชี้ไปที่ `.next/standalone` ซึ่งถูกลบ/สร้างใหม่ทุกครั้งที่ `next build`
     // → ถ้าเขียนเฉพาะที่นั่น ไฟล์สลิปจะหายทุกครั้งที่ build
     // จึงเขียนลงโฟลเดอร์จริงของโปรเจกต์ (ทน build) และเขียนไปที่ public
     // ที่ server กำลังเสิร์ฟอยู่ด้วย เปิดดูได้ทันที
-    const originalFilename = path.basename(file.name || 'slip.jpg');
-    const orderFolder = docNo ? docNo.trim() : '';
+    const originalFilename = fileCheck.safeName;
+    const orderFolder = docNo;
 
     const cwd = process.cwd();
     const relParts = ['public', 'uploads', 'slips'];
