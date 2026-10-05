@@ -92,6 +92,16 @@ This document provides developer and AI agent instructions, system architecture,
 - **Session & Orders Binding**:
   - Always store `Customer_Id` into `CustomerSession.customerId` so all pre-order transactions link properly to the customer's POS account.
 
+### API Security & Rate Limiting (`proxy.ts`, `lib/rate-limit.ts`)
+
+- **Architecture**: Next.js 16 Proxy (`proxy.ts`) using an in-memory Sliding Window Counter (`lib/rate-limit.ts`).
+- **5-Tier Strategy**:
+  - **Tier 1 (Auth/Login)**: `POST /api/auth/login` — 5 req/min (Strict IP partition to prevent brute-force).
+  - **Tier 2 (Heavy Tasks)**: `POST /api/upload` (Slip OCR) & `/api/orders/[docNo]/pdf` (Puppeteer) — 10 req/min.
+  - **Tier 3 (Transactional)**: `POST /api/orders` (Order placement) — 15 req/min, `GET /api/orders/[docNo]` — 30 req/min.
+  - **Tier 4 (Interactive)**: `/api/cart`, `/api/customer/account`, `/api/auth/me`, `GET /api/orders` — 60 req/min.
+  - **Tier 5 (Public/Catalog)**: `/api/products`, `/api/categories`, `/api/carousel`, `/api/bank-accounts` — 180 req/min; Global API fallback — 300 req/min.
+- **Headers & 429 Response**: Returns standard `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`, and `Retry-After` on status `429`.
 
 ---
 
