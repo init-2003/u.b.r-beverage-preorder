@@ -9,13 +9,13 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
-  ShoppingBag,
   Search,
   X,
   Clock,
   CheckCircle2,
 } from 'lucide-react';
 import { WineLoading } from '@/components/WineLoading';
+import { EmptyPaymentIllustration } from '@/components/EmptyPaymentIllustration';
 
 interface OrderSummary {
   Fn_Doc_No: string;
@@ -247,20 +247,22 @@ function PurchasesContent() {
             <WineLoading size="md" />
           </div>
         ) : displayedOrders.length === 0 ? (
-          <div className="bg-white rounded-xs border border-slate-100/90 shadow-[0_1px_1px_0_rgba(0,0,0,0.03)] py-20 px-4 text-center space-y-4">
-            <div className="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center mx-auto text-slate-400">
-              <ShoppingBag className="w-8 h-8 stroke-[1.5]" />
+          <div className="bg-white rounded-xs border border-slate-100/90 shadow-[0_1px_1px_0_rgba(0,0,0,0.03)] py-16 sm:py-20 px-4 text-center flex flex-col items-center justify-center space-y-4">
+            <div className="flex items-center justify-center">
+              <EmptyPaymentIllustration className="w-36 h-36 sm:w-40 sm:h-40" />
             </div>
-            <h3 className="text-base font-semibold text-slate-800">ไม่พบรายการชำระเงิน</h3>
-            <p className="text-xs text-slate-500 max-w-sm mx-auto">
-              {searchQuery
-                ? `ไม่พบคำสั่งซื้อที่ตรงกับ "${searchQuery}"`
-                : 'ยังไม่มีรายการที่รอชำระเงินหรือที่ชำระแล้วในขณะนี้'}
-            </p>
+            <div className="space-y-1.5 max-w-md mx-auto">
+              <h3 className="text-base sm:text-lg font-bold text-slate-800">ไม่พบรายการชำระเงิน</h3>
+              <p className="text-xs sm:text-sm text-slate-500">
+                {searchQuery
+                  ? `ไม่พบคำสั่งซื้อที่ตรงกับ "${searchQuery}"`
+                  : 'ยังไม่มีรายการที่รอชำระเงินหรือที่ชำระแล้วในขณะนี้'}
+              </p>
+            </div>
             <div className="pt-2">
               <Link
                 href="/"
-                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-[#800020] text-white font-bold text-xs hover:bg-[#6b001b] active:bg-[#570016] transition-colors shadow-xs"
+                className="inline-flex items-center justify-center px-8 py-2.5 rounded-full bg-[#800020] text-white font-bold text-xs sm:text-sm hover:bg-[#6b001b] active:bg-[#570016] transition-all hover:scale-[1.02] active:scale-[0.98] shadow-xs"
               >
                 <span>ไปเลือกซื้อสินค้า</span>
               </Link>
