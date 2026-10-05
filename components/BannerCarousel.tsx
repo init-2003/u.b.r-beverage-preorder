@@ -7,20 +7,24 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 interface SlideData {
   id: number;
   title: string;
+  image: string;
 }
 
 const SLIDES: SlideData[] = [
   {
     id: 1,
-    title: 'Test Banner 1',
+    title: 'Johnnie Walker Blue Label',
+    image: '/images/banners/banner1.jpg',
   },
   {
     id: 2,
-    title: 'Test Banner 2',
+    title: 'Oak Cask Reserve Cellar',
+    image: '/images/banners/banner2.jpg',
   },
   {
     id: 3,
-    title: 'Test Banner 3',
+    title: 'Craft Beer & Premium Beverages',
+    image: '/images/banners/banner3.jpg',
   },
 ];
 
@@ -105,7 +109,7 @@ export function BannerCarousel() {
 
   return (
     <div
-      className="relative rounded-sm shadow-[0_1px_1px_0_rgba(0,0,0,0.05)] border border-[#6b0000] bg-[#800000] overflow-hidden select-none group"
+      className="relative rounded-lg shadow-sm border border-slate-200/80 bg-black overflow-hidden select-none group"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
       onTouchStart={handleTouchStart}
@@ -114,7 +118,7 @@ export function BannerCarousel() {
       aria-label="ป้ายโฆษณาประชาสัมพันธ์"
     >
       {/* Slides Container with Smooth Horizontal Slide */}
-      <div className="relative min-h-[140px] sm:min-h-[160px] md:min-h-[170px] bg-[#800000] overflow-hidden">
+      <div className="relative w-full aspect-[2.45/1] overflow-hidden bg-slate-950">
         <div
           className={`flex w-full h-full ${
             isTransitioning ? 'transition-transform duration-500 ease-out' : ''
@@ -125,31 +129,18 @@ export function BannerCarousel() {
           {extendedSlides.map((slide, i) => (
             <div
               key={`${slide.id}-${i}`}
-              className="w-full shrink-0 min-h-[140px] sm:min-h-[160px] md:min-h-[170px] bg-[#800000] text-slate-100 p-6 sm:p-8 flex items-center"
+              className="relative w-full h-full shrink-0 overflow-hidden bg-slate-950"
             >
-              <div className="relative z-10 flex flex-row items-center justify-between gap-6 w-full">
-                {/* Text Content */}
-                <div className="max-w-2xl sm:pr-4">
-                  <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-white drop-shadow-sm">
-                    {slide.title}
-                  </h2>
-                </div>
-
-                {/* Right Visual Graphic - Official Logo */}
-                <div className="flex items-center justify-center shrink-0 pr-2 lg:pr-8">
-                  <div className="relative w-24 h-24 sm:w-28 sm:h-28 lg:w-36 lg:h-36 drop-shadow-xl">
-                    <Image
-                      src="/images/ubr_beverage_logo_transparent.png"
-                      alt="U.B.R. Beverage Logo"
-                      fill
-                      sizes="(max-width: 640px) 96px, (max-width: 1024px) 112px, 144px"
-                      className="object-contain filter drop-shadow-[0_8px_16px_rgba(0,0,0,0.35)]"
-                      priority={i === 1}
-                      loading="eager"
-                    />
-                  </div>
-                </div>
-              </div>
+              <Image
+                src={slide.image}
+                alt={slide.title}
+                fill
+                sizes="(max-width: 1600px) 100vw, 1600px"
+                className="object-cover object-center w-full h-full select-none pointer-events-none"
+                priority={i === 1}
+              />
+              {/* Subtle bottom shadow overlay to ensure indicator dots and controls stand out */}
+              <div className="absolute inset-x-0 bottom-0 h-16 sm:h-20 bg-gradient-to-t from-black/60 via-black/20 to-transparent pointer-events-none" />
             </div>
           ))}
         </div>
@@ -159,25 +150,25 @@ export function BannerCarousel() {
       <button
         type="button"
         onClick={prevSlide}
-        className="absolute left-2 top-1/2 -translate-y-1/2 z-20 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-black/40 hover:bg-black/70 text-white/90 hover:text-white border border-white/20 backdrop-blur-xs flex items-center justify-center transition-all duration-200 opacity-70 group-hover:opacity-100 hover:scale-105 active:scale-95 cursor-pointer shadow-md"
+        className="absolute left-2.5 sm:left-4 top-1/2 -translate-y-1/2 z-20 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-black/40 hover:bg-black/75 text-white/90 hover:text-white border border-white/20 backdrop-blur-xs flex items-center justify-center transition-all duration-200 opacity-80 sm:opacity-0 sm:group-hover:opacity-100 hover:scale-110 active:scale-95 cursor-pointer shadow-lg"
         title="สไลด์ก่อนหน้า"
         aria-label="สไลด์ก่อนหน้า"
       >
-        <ChevronLeft className="w-5 h-5" />
+        <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
       </button>
 
       <button
         type="button"
         onClick={nextSlide}
-        className="absolute right-2 top-1/2 -translate-y-1/2 z-20 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-black/40 hover:bg-black/70 text-white/90 hover:text-white border border-white/20 backdrop-blur-xs flex items-center justify-center transition-all duration-200 opacity-70 group-hover:opacity-100 hover:scale-105 active:scale-95 cursor-pointer shadow-md"
+        className="absolute right-2.5 sm:right-4 top-1/2 -translate-y-1/2 z-20 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-black/40 hover:bg-black/75 text-white/90 hover:text-white border border-white/20 backdrop-blur-xs flex items-center justify-center transition-all duration-200 opacity-80 sm:opacity-0 sm:group-hover:opacity-100 hover:scale-110 active:scale-95 cursor-pointer shadow-lg"
         title="สไลด์ถัดไป"
         aria-label="สไลด์ถัดไป"
       >
-        <ChevronRight className="w-5 h-5" />
+        <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
       </button>
 
       {/* Slide Indicators with Progress Bar on Active & Round Dots on Inactive */}
-      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2">
+      <div className="absolute bottom-2.5 sm:bottom-3.5 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 sm:gap-2">
         <style>{`
           @keyframes banner-progress-scale {
             0% {
@@ -198,8 +189,8 @@ export function BannerCarousel() {
               onClick={() => goToSlide(idx)}
               className={`relative overflow-hidden transition-all duration-300 rounded-full cursor-pointer p-0 border-0 ${
                 isActive
-                  ? 'w-10 sm:w-12 h-2 sm:h-2.5 bg-white/25 backdrop-blur-xs shadow-xs'
-                  : 'w-2 h-2 sm:h-2.5 bg-white/40 hover:bg-white/70'
+                  ? 'w-8 sm:w-12 h-1.5 sm:h-2 bg-white/30 backdrop-blur-xs shadow-xs'
+                  : 'w-1.5 sm:w-2 h-1.5 sm:h-2 bg-white/50 hover:bg-white/80'
               }`}
               title={`ไปยังสไลด์ที่ ${idx + 1}`}
               aria-label={`ไปยังสไลด์ที่ ${idx + 1}`}
