@@ -17,6 +17,16 @@ function HomeAppPageContent() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
 
+  // ป้องกันเบราว์เซอร์จำตำแหน่ง Scroll เดิมตอนกด Refresh เพื่อให้หน้าหลักเริ่มที่บนสุด (เห็น Banner) เสมอ
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      if ('scrollRestoration' in window.history) {
+        window.history.scrollRestoration = 'manual';
+      }
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    }
+  }, []);
+
   // ตรวจสอบสถานะการเข้าสู่ระบบ หากยังไม่ล็อกอิน ให้ redirect ไป /login
   useEffect(() => {
     if (!authLoading && !customer) {
