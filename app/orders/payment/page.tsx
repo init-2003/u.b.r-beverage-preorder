@@ -221,7 +221,10 @@ function OrderPaymentContent() {
   return (
     <div className="flex-1 flex flex-col items-center justify-center bg-[#f5f5f5] py-8 sm:py-12 px-4 font-sans">
       {/* Top Heading matching reference */}
-      <div className="text-center space-y-1 mb-6">
+      <div 
+        className="text-center space-y-1 mb-6 animate-payment-slide-up"
+        style={{ animationDelay: '40ms' }}
+      >
         <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
           สแกน QR เพื่อชำระเงิน
         </h1>
@@ -231,10 +234,18 @@ function OrderPaymentContent() {
       </div>
 
       {/* Main Payment Card (Shopee Micro-Border Style) */}
-      <PromptPayQrCard amount={payableAmount} docNo={docNo} />
+      <div 
+        className="w-full flex justify-center animate-payment-slide-up"
+        style={{ animationDelay: '80ms' }}
+      >
+        <PromptPayQrCard amount={payableAmount} docNo={docNo} />
+      </div>
 
       {/* Inline Slip Upload & Auto-verification Section */}
-      <div className="w-full max-w-[400px] mt-6 bg-white border border-slate-200 rounded-lg p-4 sm:p-5 shadow-sm space-y-3.5">
+      <div 
+        className="w-full max-w-[400px] mt-6 bg-white border border-slate-200 rounded-lg p-4 sm:p-5 shadow-sm space-y-3.5 animate-payment-slide-up"
+        style={{ animationDelay: '120ms' }}
+      >
         <div className="border-b border-slate-100 pb-2.5">
           <span className="text-xs sm:text-sm font-bold text-slate-900">
             แนบสลิปเพื่อยืนยันการชำระเงิน
@@ -253,9 +264,6 @@ function OrderPaymentContent() {
             <UploadSlipIllustration className="w-12 h-12 mb-2 transition-transform duration-200 group-hover:scale-105" />
             <span className="text-xs sm:text-sm font-bold text-slate-800 group-hover:text-black transition-colors">
               คลิกเพื่ออัปโหลดสลิป
-            </span>
-            <span className="text-[11px] text-slate-400 mt-0.5">
-              รองรับไฟล์ภาพ JPG, PNG
             </span>
           </label>
         ) : (
@@ -319,9 +327,13 @@ function OrderPaymentContent() {
       </div>
 
       {/* Footer Info */}
-      <div className="w-full max-w-[400px] text-center mt-6 space-y-2">
+      <div 
+        className="w-full max-w-[400px] text-center mt-6 space-y-2 animate-payment-slide-up"
+        style={{ animationDelay: '160ms' }}
+      >
         <p className="text-[11px] sm:text-xs text-slate-500 leading-relaxed">
-          หลังสแกนชำระเงินเรียบร้อย ระบบจะตรวจสอบและยืนยันคำสั่งซื้อโดยอัตโนมัติ<br />
+          หลังสแกนชำระเงินเรียบร้อยและแนบสลิปเรียบร้อยแล้ว<br />
+          ระบบจะตรวจสอบและยืนยันคำสั่งซื้อโดยอัตโนมัติ<br />
           หรือไปที่หน้า{' '}
           <Link
             href={`/orders/${encodeURIComponent(docNo)}`}

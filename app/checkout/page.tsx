@@ -138,7 +138,7 @@ function PreOrderContent() {
   const queryQty = rawProductId ? rawQty : (directCheckout?.qty || 1);
   const fromSource = rawFrom || directCheckout?.from || (productId ? 'product' : 'cart');
 
-  const { customer, loading: authLoading, openLoginModal } = useAuth();
+  const { customer, loading: authLoading } = useAuth();
   const { items: cartItems, clearCart, updateQty, removeItem, removeItems } = useCart();
   const { setCustomTitle } = useBreadcrumb();
 
@@ -708,7 +708,7 @@ function PreOrderContent() {
 
     if (!customer) {
       setErrorMsg('กรุณาเข้าสู่ระบบก่อนทำการสั่งจองสินค้า');
-      openLoginModal();
+      router.push('/login');
       return;
     }
 
@@ -805,9 +805,8 @@ function PreOrderContent() {
 
   if (authLoading) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center max-w-4xl mx-auto px-4 py-20 space-y-6 w-full">
-        <div className="h-10 w-48 rounded-md bg-slate-200 animate-pulse" />
-        <div className="h-96 w-full rounded-lg bg-white border border-slate-200 animate-pulse" />
+      <div className="flex-1 flex flex-col items-center justify-center bg-[#f5f5f5] min-h-[calc(100vh-200px)] min-h-[calc(100dvh-200px)] py-16 px-4">
+        <WineLoading size="md" />
       </div>
     );
   }
@@ -822,7 +821,7 @@ function PreOrderContent() {
 
         {/* Page Title Header (แสดงเฉพาะเมื่อมีสินค้า) */}
         {!loadingProduct && orderItems.length > 0 && (
-          <div className="pb-3 border-b border-slate-200/80">
+          <div className="pb-3 border-b border-slate-200/80 animate-checkout-slide-up">
             <div className="flex items-center gap-3 sm:gap-3.5">
               <CheckoutIllustration className="w-12 h-12 sm:w-14 sm:h-14 shrink-0 drop-shadow-xs" />
               <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
@@ -837,7 +836,7 @@ function PreOrderContent() {
             <WineLoading size="md" />
           </div>
         ) : orderItems.length === 0 ? (
-          <div className="bg-white rounded-lg border border-slate-100 shadow-[0_1px_2px_0_rgba(0,0,0,0.04)] py-16 sm:py-24 px-4 text-center flex flex-col items-center justify-center space-y-4">
+          <div className="bg-white rounded-lg border border-slate-100 shadow-[0_1px_2px_0_rgba(0,0,0,0.04)] py-16 sm:py-24 px-4 text-center flex flex-col items-center justify-center space-y-4 animate-checkout-slide-up">
             <div className="flex items-center justify-center">
               <EmptyCheckoutIllustration className="w-36 h-36 sm:w-40 sm:h-40" />
             </div>
@@ -871,13 +870,16 @@ function PreOrderContent() {
             <form onSubmit={handleSubmitOrder} className="space-y-6">
 
               {/* Delivery Address Card (Shopee Style) */}
-              <div className="bg-white border border-slate-100/80 rounded-sm shadow-[0_1px_1px_0_rgba(0,0,0,0.05)] overflow-hidden">
+              <div 
+                className="bg-white border border-slate-100/80 rounded-sm shadow-[0_1px_1px_0_rgba(0,0,0,0.05)] overflow-hidden animate-checkout-slide-up"
+                style={{ animationDelay: '40ms' }}
+              >
                 {/* Decorative envelope ribbon strip */}
                 <div className="h-[3px] w-full bg-[repeating-linear-gradient(45deg,#6fa6d6,#6fa6d6_33px,transparent_0,transparent_41px,#f18d9b_0,#f18d9b_74px,transparent_0,transparent_82px)]" />
 
-                <div className="p-5 sm:px-7 sm:py-6 space-y-3.5">
+                <div className="p-5 sm:px-7 sm:py-6">
                   {/* Header: Pin + ที่อยู่ในการจัดส่ง */}
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between mb-3.5">
                     <div className="flex items-center gap-2">
                       <svg className="w-4 h-4 sm:w-5 sm:h-5 text-black shrink-0" viewBox="0 0 24 24" fill="currentColor">
                         <path fillRule="evenodd" clipRule="evenodd" d="M12 2C8.134 2 5 5.134 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.866-3.134-7-7-7zm0 9.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5z" />
@@ -887,20 +889,25 @@ function PreOrderContent() {
                       </h2>
                     </div>
 
-                    {!isEditingAddress && (
-                      <button
-                        type="button"
-                        onClick={handleStartEditAddress}
-                        className="text-xs sm:text-sm font-semibold text-blue-600 hover:text-blue-700 hover:underline cursor-pointer transition-colors"
-                      >
-                        เปลี่ยน
-                      </button>
-                    )}
+                    <button
+                      type="button"
+                      onClick={handleStartEditAddress}
+                      disabled={isEditingAddress}
+                      className={`text-xs sm:text-sm font-semibold text-blue-600 hover:text-blue-700 hover:underline cursor-pointer transition-all duration-200 ${
+                        isEditingAddress ? 'opacity-0 scale-95 pointer-events-none' : 'opacity-100 scale-100'
+                      }`}
+                    >
+                      เปลี่ยน
+                    </button>
                   </div>
 
                   {/* Display Mode matching Reference Image */}
-                  {!isEditingAddress ? (
-                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-6 pt-1">
+                  <div
+                    className={!isEditingAddress ? 'address-accordion-open' : 'address-accordion-closed'}
+                    aria-hidden={isEditingAddress}
+                  >
+                    <div className="min-h-0 overflow-hidden">
+                      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-6 pt-1">
                       <div className="flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-8 flex-1">
                         {/* Name & Phone (Bold) */}
                         <div className="sm:w-60 shrink-0 space-y-0.5">
@@ -934,9 +941,16 @@ function PreOrderContent() {
                         </div>
                       </div>
                     </div>
-                  ) : (
-                    /* Inline Edit Mode */
-                    <div className="pt-3 border-t border-slate-100 space-y-4">
+                  </div>
+                </div>
+
+                {/* Inline Edit Mode */}
+                  <div
+                    className={isEditingAddress ? 'address-accordion-open' : 'address-accordion-closed'}
+                    aria-hidden={!isEditingAddress}
+                  >
+                    <div className="min-h-0 overflow-hidden">
+                      <div className="pt-3 border-t border-slate-100 space-y-4">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                           <label className="block text-xs font-bold text-slate-700 mb-1.5">
@@ -950,7 +964,7 @@ function PreOrderContent() {
                               syncTempAddressToStorage({ tempName: e.target.value });
                             }}
                             placeholder="เช่น สมชาย ใจดี หรือ ร้านต้นมะกรูด"
-                            className="w-full px-3.5 py-2 rounded-sm bg-slate-50 border border-slate-300 text-slate-900 text-xs sm:text-sm focus:bg-white focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-colors"
+                            className="w-full px-3.5 py-2 rounded-lg bg-slate-50 border border-slate-300 text-slate-900 text-xs sm:text-sm focus:bg-white focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-colors"
                           />
                         </div>
 
@@ -966,7 +980,7 @@ function PreOrderContent() {
                               syncTempAddressToStorage({ tempTel: e.target.value });
                             }}
                             placeholder="เช่น 081-2345678"
-                            className="w-full px-3.5 py-2 rounded-sm bg-slate-50 border border-slate-300 text-slate-900 text-xs sm:text-sm focus:bg-white focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-colors"
+                            className="w-full px-3.5 py-2 rounded-lg bg-slate-50 border border-slate-300 text-slate-900 text-xs sm:text-sm focus:bg-white focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-colors"
                           />
                         </div>
                       </div>
@@ -983,7 +997,7 @@ function PreOrderContent() {
                             syncTempAddressToStorage({ tempAddress: e.target.value });
                           }}
                           placeholder="ระบุบ้านเลขที่, ซอย, ถนน, ตำบล, อำเภอ, จังหวัด"
-                          className="w-full p-3 rounded-sm bg-slate-50 border border-slate-300 text-slate-900 text-xs sm:text-sm focus:bg-white focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-colors"
+                          className="w-full p-3 rounded-lg bg-slate-50 border border-slate-300 text-slate-900 text-xs sm:text-sm focus:bg-white focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-colors"
                         />
                       </div>
 
@@ -1001,7 +1015,7 @@ function PreOrderContent() {
                               syncTempAddressToStorage({ tempZip: e.target.value });
                             }}
                             placeholder="รหัสไปรษณีย์ 5 หลัก"
-                            className="w-full px-3.5 py-2 rounded-sm bg-slate-50 border border-slate-300 text-slate-900 text-xs sm:text-sm focus:bg-white focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-colors"
+                            className="w-full px-3.5 py-2 rounded-lg bg-slate-50 border border-slate-300 text-slate-900 text-xs sm:text-sm focus:bg-white focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-colors"
                           />
                         </div>
 
@@ -1038,12 +1052,16 @@ function PreOrderContent() {
                         </button>
                       </div>
                     </div>
-                  )}
+                  </div>
                 </div>
               </div>
+            </div>
 
               {/* Items Card (Single Unified Card) */}
-              <div className="bg-white rounded-sm shadow-[0_1px_1px_0_rgba(0,0,0,0.05)] border border-slate-100/80 overflow-hidden">
+              <div 
+                className="bg-white rounded-sm shadow-[0_1px_1px_0_rgba(0,0,0,0.05)] border border-slate-100/80 overflow-hidden animate-checkout-slide-up"
+                style={{ animationDelay: '80ms' }}
+              >
                 {/* Table Header Row */}
                 <div className="px-5 sm:px-6 py-3.5 flex items-center justify-between border-b border-slate-100">
                   <div className="flex items-center gap-3">
@@ -1073,7 +1091,7 @@ function PreOrderContent() {
                         <div key={item.tradeId} className="p-4 space-y-3">
                           {/* Product Info Row: Image + Name */}
                           <div className="flex items-center gap-3.5">
-                            <div className="w-14 h-14 bg-white border border-slate-100 rounded shrink-0 flex items-center justify-center p-1 overflow-hidden shadow-2xs">
+                            <div className="w-14 h-14 bg-white border border-slate-100 rounded shrink-0 flex items-center justify-center overflow-hidden shadow-2xs">
                               <img
                                 src={
                                   item.image
@@ -1083,7 +1101,7 @@ function PreOrderContent() {
                                     : '/images/ubr_beverage_logo.png'
                                 }
                                 alt={item.tradeName}
-                                className="max-h-full max-w-full object-contain"
+                                className="w-full h-full object-cover"
                                 onError={(e) => {
                                   (e.target as HTMLImageElement).src = '/images/ubr_beverage_logo.png';
                                 }}
@@ -1100,9 +1118,9 @@ function PreOrderContent() {
                                 </p>
                               )}
                               <div className="flex items-center gap-2 flex-wrap text-[10px] text-slate-500">
-                                <span>หน่วย: <strong className="text-slate-700">{item.unitName || 'หน่วย'}</strong></span>
-                                <span>•</span>
                                 <span>SKU: <span className="text-slate-600">{item.tradeId}</span></span>
+                                <span>•</span>
+                                <span>หน่วย: <strong className="text-slate-700">{item.unitName || 'หน่วย'}</strong></span>
                               </div>
                             </div>
                           </div>
@@ -1145,9 +1163,6 @@ function PreOrderContent() {
                                     </p>
                                   )}
                                 </div>
-                                <span className="text-[10px] text-slate-500 font-medium mt-1 select-none">
-                                  {item.unitName || 'หน่วย'}
-                                </span>
                               </div>
                             </div>
 
@@ -1221,7 +1236,7 @@ function PreOrderContent() {
 
                               {/* Product Image & Info */}
                               <div className="flex items-center gap-3.5 min-w-0 flex-1 pr-4">
-                                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white border border-slate-100 rounded shrink-0 flex items-center justify-center p-1.5 overflow-hidden">
+                                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white border border-slate-100 rounded shrink-0 flex items-center justify-center overflow-hidden">
                                   <img
                                     src={
                                       item.image
@@ -1231,7 +1246,7 @@ function PreOrderContent() {
                                         : '/images/ubr_beverage_logo.png'
                                     }
                                     alt={item.tradeName}
-                                    className="max-h-full max-w-full object-contain"
+                                    className="w-full h-full object-cover"
                                     onError={(e) => {
                                       (e.target as HTMLImageElement).src = '/images/ubr_beverage_logo.png';
                                     }}
@@ -1342,7 +1357,7 @@ function PreOrderContent() {
                       value={remark}
                       onChange={(e) => handleRemarkChange(e.target.value)}
                       maxLength={200}
-                      className="flex-1 px-3 py-1.5 rounded-sm bg-slate-50 hover:bg-white focus:bg-white border border-slate-200 text-slate-900 text-xs sm:text-sm focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-colors placeholder:text-slate-400"
+                      className="flex-1 px-3 py-1.5 rounded-lg bg-slate-50 hover:bg-white focus:bg-white border border-slate-200 text-slate-900 text-xs sm:text-sm focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-colors placeholder:text-slate-400"
                     />
                   </div>
 
@@ -1358,7 +1373,10 @@ function PreOrderContent() {
               </div>
 
               {/* Bottom Action Bar: "< เลือกดูสินค้าต่อ" */}
-              <div className="flex items-center justify-between gap-4 pt-1">
+              <div 
+                className="flex items-center justify-between gap-4 pt-1 animate-checkout-slide-up"
+                style={{ animationDelay: '100ms' }}
+              >
                 <Link
                   href={backHref}
                   onClick={clearCheckoutDraftStorage}
@@ -1373,7 +1391,10 @@ function PreOrderContent() {
               </div>
 
               {/* 2. Shopee Full-Width Payment & Order Summary Card (Exact Match to Reference Image) */}
-              <div className="bg-white border border-slate-100/80 rounded-sm shadow-[0_1px_1px_0_rgba(0,0,0,0.05)] overflow-hidden">
+              <div 
+                className="bg-white border border-slate-100/80 rounded-sm shadow-[0_1px_1px_0_rgba(0,0,0,0.05)] overflow-hidden animate-checkout-slide-up"
+                style={{ animationDelay: '120ms' }}
+              >
 
                 {/* Top Section: วิธีการชำระเงิน & Horizontal Selection Tabs */}
                 <div className="p-5 sm:px-7 sm:py-6">
@@ -1388,11 +1409,16 @@ function PreOrderContent() {
                       <button
                         type="button"
                         onClick={() => handleSelectPaymentMethod('T')}
-                        className={`relative px-4 py-2 text-xs sm:text-sm font-medium rounded-sm border transition-all cursor-pointer select-none overflow-hidden ${paymentMethod === 'T'
+                        className={`relative px-3 sm:px-3.5 py-2 text-xs sm:text-sm font-medium rounded-sm border transition-all cursor-pointer select-none overflow-hidden inline-flex items-center gap-2 ${paymentMethod === 'T'
                           ? 'border-emerald-600 text-emerald-700 bg-white shadow-2xs font-semibold'
                           : 'border-slate-200 text-slate-700 bg-white hover:border-slate-300'
                           }`}
                       >
+                        <img
+                          src="/images/thai_qr_payment.svg"
+                          alt="Thai QR Payment"
+                          className="w-5 h-5 object-contain rounded-[2px] shrink-0"
+                        />
                         <span>QR พร้อมเพย์</span>
                         {paymentMethod === 'T' && (
                           <span className="absolute bottom-0 right-0 w-[18px] h-[18px] overflow-hidden pointer-events-none">
@@ -1408,11 +1434,16 @@ function PreOrderContent() {
                       <button
                         type="button"
                         onClick={() => handleSelectPaymentMethod('M')}
-                        className={`relative px-4 py-2 text-xs sm:text-sm font-medium rounded-sm border transition-all cursor-pointer select-none overflow-hidden ${paymentMethod === 'M'
+                        className={`relative px-3 sm:px-3.5 py-2 text-xs sm:text-sm font-medium rounded-sm border transition-all cursor-pointer select-none overflow-hidden inline-flex items-center gap-2 ${paymentMethod === 'M'
                           ? 'border-emerald-600 text-emerald-700 bg-white shadow-2xs font-semibold'
                           : 'border-slate-200 text-slate-700 bg-white hover:border-slate-300'
                           }`}
                       >
+                        <img
+                          src="/images/cod_logo.png"
+                          alt="COD"
+                          className="h-4 sm:h-4.5 w-auto object-contain shrink-0"
+                        />
                         <span>เก็บเงินปลายทาง</span>
                         {paymentMethod === 'M' && (
                           <span className="absolute bottom-0 right-0 w-[18px] h-[18px] overflow-hidden pointer-events-none">
@@ -1508,22 +1539,8 @@ export default function PreOrderPage() {
   return (
     <Suspense
       fallback={
-        <div className="max-w-[1600px] mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-          <div className="space-y-3 pb-4 border-b border-slate-200">
-            <div>
-              <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-400 bg-white px-3.5 py-2 rounded-md border border-slate-200 shadow-xs">
-                <ArrowLeft className="w-4 h-4" />
-                <span>กลับไปหน้ารายการสินค้า</span>
-              </div>
-            </div>
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <div>
-                <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-                  ยืนยันการสั่งสินค้า
-                </h1>
-              </div>
-            </div>
-          </div>
+        <div className="flex-1 flex flex-col items-center justify-center bg-[#f5f5f5] min-h-[calc(100vh-200px)] min-h-[calc(100dvh-200px)] py-16">
+          <WineLoading size="md" />
         </div>
       }
     >

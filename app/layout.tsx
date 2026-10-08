@@ -4,7 +4,6 @@ import { AuthProvider } from '@/context/AuthContext';
 import { CartProvider } from '@/context/CartContext';
 import { BreadcrumbProvider } from '@/context/BreadcrumbContext';
 import Navbar from '@/components/Navbar';
-import LoginModal from '@/components/LoginModal';
 import AddToCartModal from '@/components/AddToCartModal';
 import Footer from '@/components/Footer';
 import CookieConsentBanner from '@/components/CookieConsentBanner';
@@ -33,8 +32,7 @@ export default function RootLayout({
           <CartProvider>
             <BreadcrumbProvider>
               <Navbar />
-              <main className="flex-1 flex flex-col w-full min-h-[calc(100vh+80px)] pb-16 sm:pb-24">{children}</main>
-              <LoginModal />
+              <main className="flex-1 flex flex-col w-full">{children}</main>
               <AddToCartModal />
               <Footer />
               <CookieConsentBanner />

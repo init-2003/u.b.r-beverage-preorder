@@ -17,7 +17,7 @@ export const RATE_LIMIT_POLICIES: Record<string, RateLimitPolicy> = {
   LOGIN: {
     id: 'login',
     tier: 'Tier 1',
-    limit: 5,
+    limit: 20, // 20 requests per minute
     windowMs: 60 * 1000, // 1 minute
     useCustomerPartition: false, // strictly partition by IP to prevent brute forcing
     message: 'พยายามเข้าสู่ระบบถี่เกินไป เพื่อความปลอดภัยกรุณารอ 1 นาทีก่อนลองใหม่',
@@ -27,17 +27,17 @@ export const RATE_LIMIT_POLICIES: Record<string, RateLimitPolicy> = {
   UPLOAD_SLIP: {
     id: 'upload_slip',
     tier: 'Tier 2',
-    limit: 10,
+    limit: 30, // 30 requests per minute
     windowMs: 60 * 1000,
     useCustomerPartition: false,
-    message: 'อัปโหลดสลิปถี่เกินไป กรุณารอสักครู่ (ประมาณ 30 วินาที) ก่อนอัปโหลดใหม่',
+    message: 'อัปโหลดสลิปถี่เกินไป กรุณารอสักครู่ก่อนอัปโหลดใหม่',
   },
 
   // Tier 2: Heavy Tasks (PDF Generation via Puppeteer)
   PDF_GENERATION: {
     id: 'pdf_gen',
     tier: 'Tier 2',
-    limit: 10,
+    limit: 30, // 30 requests per minute
     windowMs: 60 * 1000,
     useCustomerPartition: true,
     message: 'กำลังสร้างไฟล์เอกสาร PDF ถี่เกินไป กรุณารอสักครู่ก่อนดาวน์โหลดใหม่',
@@ -47,7 +47,7 @@ export const RATE_LIMIT_POLICIES: Record<string, RateLimitPolicy> = {
   CHECKOUT: {
     id: 'checkout',
     tier: 'Tier 3',
-    limit: 15,
+    limit: 40, // 40 requests per minute
     windowMs: 60 * 1000,
     useCustomerPartition: true,
     message: 'ทำรายการสั่งจองถี่เกินไป กรุณารอสักครู่เพื่อป้องกันคำสั่งซื้อซ้ำซ้อน',
@@ -57,7 +57,7 @@ export const RATE_LIMIT_POLICIES: Record<string, RateLimitPolicy> = {
   ORDER_DETAIL: {
     id: 'order_detail',
     tier: 'Tier 3',
-    limit: 30,
+    limit: 120, // 120 requests per minute (2 req/sec)
     windowMs: 60 * 1000,
     useCustomerPartition: true,
     message: 'เรียกดูข้อมูลเอกสารคำสั่งซื้อถี่เกินไป กรุณารอสักครู่',
@@ -67,7 +67,7 @@ export const RATE_LIMIT_POLICIES: Record<string, RateLimitPolicy> = {
   CART: {
     id: 'cart',
     tier: 'Tier 4',
-    limit: 60,
+    limit: 240, // 240 requests per minute (4 req/sec)
     windowMs: 60 * 1000,
     useCustomerPartition: true,
     message: 'อัปเดตตะกร้าสินค้าถี่เกินไป กรุณารอสักครู่',
@@ -77,7 +77,7 @@ export const RATE_LIMIT_POLICIES: Record<string, RateLimitPolicy> = {
   ACCOUNT: {
     id: 'account',
     tier: 'Tier 4',
-    limit: 60,
+    limit: 240, // 240 requests per minute (4 req/sec)
     windowMs: 60 * 1000,
     useCustomerPartition: true,
     message: 'เรียกใช้งานข้อมูลบัญชีถี่เกินไป กรุณารอสักครู่',
@@ -87,7 +87,7 @@ export const RATE_LIMIT_POLICIES: Record<string, RateLimitPolicy> = {
   CATALOG: {
     id: 'catalog',
     tier: 'Tier 5',
-    limit: 180,
+    limit: 600, // 600 requests per minute (10 req/sec)
     windowMs: 60 * 1000,
     useCustomerPartition: false,
     message: 'เรียกดูข้อมูลสินค้าถี่เกินไป กรุณารอสักครู่',
@@ -97,7 +97,7 @@ export const RATE_LIMIT_POLICIES: Record<string, RateLimitPolicy> = {
   GLOBAL_API: {
     id: 'global_api',
     tier: 'Tier 5',
-    limit: 300,
+    limit: 1000, // 1,000 requests per minute
     windowMs: 60 * 1000,
     useCustomerPartition: false,
     message: 'มีการส่งคำขอมายังระบบถี่เกินไป กรุณารอสักครู่',

@@ -18,7 +18,7 @@ export default function CookieConsentBanner() {
     const consent = localStorage.getItem(COOKIE_CONSENT_KEY);
     if (!consent) {
       // Small delay for smooth entrance animation
-      const timer = setTimeout(() => setIsVisible(true), 800);
+      const timer = setTimeout(() => setIsVisible(true), 250);
       return () => clearTimeout(timer);
     }
   }, [pathname]);
@@ -52,6 +52,7 @@ export default function CookieConsentBanner() {
           ? 'translate-y-full opacity-0'
           : 'translate-y-0 opacity-100'
       }`}
+      style={{ zIndex: 99999 }}
       role="alert"
       aria-label="Cookie consent notification"
     >

@@ -92,11 +92,14 @@ function formatCurrency(amount: number): string {
   return `฿${num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
-function OrdersContent() {
+function OrdersContent({
+  isPaymentTab,
+  tabParam,
+}: {
+  isPaymentTab: boolean;
+  tabParam: string | null;
+}) {
   const { customer, loading: authLoading } = useAuth();
-  const searchParams = useSearchParams();
-  const tabParam = searchParams?.get('tab');
-  const isPaymentTab = tabParam === 'payment';
 
   const [orders, setOrders] = useState<OrderSummary[]>(() => {
     if (typeof window !== 'undefined') {
@@ -310,17 +313,14 @@ function OrdersContent() {
 
   if (authLoading || (loading && orders.length === 0)) {
     return (
-      <AccountLayout activeItemOverride={isPaymentTab ? 'payment' : 'orders'}>
-        <div className="w-full min-h-[calc(100vh-250px)] flex items-center justify-center">
-          <WineLoading size="md" />
-        </div>
-      </AccountLayout>
+      <div className="w-full min-h-[480px] sm:min-h-[560px] flex flex-col items-center justify-center">
+        <WineLoading size="md" />
+      </div>
     );
   }
 
   return (
-    <AccountLayout activeItemOverride={isPaymentTab ? 'payment' : 'orders'}>
-      <div className="space-y-4">
+    <div className="space-y-4 animate-account-slide-up">
 
 
 
@@ -401,7 +401,7 @@ function OrdersContent() {
 
         {/* 3. Orders Content Area */}
         {loading ? (
-          <div className="w-full min-h-[calc(100vh-360px)] flex items-center justify-center">
+          <div className="w-full min-h-[360px] sm:min-h-[420px] flex flex-col items-center justify-center">
             <WineLoading size="md" />
           </div>
         ) : displayedOrders.length === 0 ? (
@@ -589,11 +589,17 @@ function OrdersContent() {
                           className="p-3.5 sm:px-6 sm:py-4 flex items-center gap-3 sm:gap-4 hover:bg-slate-50/70 transition-colors group cursor-pointer block"
                         >
                           {/* Thumbnail Image */}
-                          <div className="w-20 h-20 sm:w-22 sm:h-22 rounded-xs border border-slate-100 bg-white shrink-0 p-1 flex items-center justify-center overflow-hidden">
+                          <div className="w-20 h-20 sm:w-22 sm:h-22 rounded border border-slate-100 bg-white shrink-0 flex items-center justify-center overflow-hidden">
                             <img
-                              src={item.Trade_Part_Image && item.Trade_Part_Image.trim() ? item.Trade_Part_Image : '/images/ubr_beverage_logo.png'}
+                              src={
+                                item.Trade_Part_Image && item.Trade_Part_Image.trim()
+                                  ? item.Trade_Part_Image.startsWith('/') || item.Trade_Part_Image.startsWith('http')
+                                    ? item.Trade_Part_Image
+                                    : `/${item.Trade_Part_Image}`
+                                  : '/images/ubr_beverage_logo.png'
+                              }
                               alt={item.Trade_Name}
-                              className="w-full h-full object-contain"
+                              className="w-full h-full object-cover"
                               onError={(e) => {
                                 (e.currentTarget as HTMLImageElement).src = '/images/ubr_beverage_logo.png';
                               }}
@@ -629,8 +635,8 @@ function OrdersContent() {
                         href={`/orders/${encodeURIComponent(order.Fn_Doc_No)}`}
                         className="p-4 sm:px-6 flex items-center gap-3 hover:bg-slate-50 transition-colors"
                       >
-                        <div className="w-16 h-16 rounded-xs border border-slate-100 bg-white shrink-0 p-1 flex items-center justify-center">
-                          <img src="/images/ubr_beverage_logo.png" alt="UBR" className="w-full h-full object-contain" />
+                        <div className="w-16 h-16 rounded border border-slate-100 bg-white shrink-0 flex items-center justify-center overflow-hidden">
+                          <img src="/images/ubr_beverage_logo.png" alt="UBR" className="w-full h-full object-cover" />
                         </div>
                         <div className="flex-1">
                           <h4 className="text-sm font-medium text-slate-900">
@@ -787,6 +793,17 @@ function OrdersContent() {
         )}
 
       </div>
+  );
+}
+
+function OrdersHistoryInner() {
+  const searchParams = useSearchParams();
+  const tabParam = searchParams?.get('tab');
+  const isPaymentTab = tabParam === 'payment';
+
+  return (
+    <AccountLayout activeItemOverride={isPaymentTab ? 'payment' : 'orders'}>
+      <OrdersContent isPaymentTab={isPaymentTab} tabParam={tabParam} />
     </AccountLayout>
   );
 }
@@ -796,13 +813,13 @@ export default function OrdersHistoryPage() {
     <Suspense
       fallback={
         <AccountLayout activeItemOverride="orders">
-          <div className="w-full min-h-[calc(100vh-250px)] flex items-center justify-center">
+          <div className="w-full min-h-[480px] sm:min-h-[560px] flex flex-col items-center justify-center">
             <WineLoading size="md" />
           </div>
         </AccountLayout>
       }
     >
-      <OrdersContent />
+      <OrdersHistoryInner />
     </Suspense>
   );
 }

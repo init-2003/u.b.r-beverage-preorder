@@ -120,7 +120,7 @@ export default function PromptPayQrCard({
             <img
               src={qrDataUrl}
               alt={docNo ? `QR Code ชำระเงิน ${docNo}` : 'QR Code พร้อมเพย์'}
-              className="w-56 h-56 object-contain rounded-sm"
+              className="w-56 h-56 object-contain rounded-sm animate-qr-reveal"
             />
           ) : (
             <div className="w-56 h-56 flex items-center justify-center text-xs text-rose-500">

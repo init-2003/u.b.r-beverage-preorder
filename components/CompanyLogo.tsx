@@ -5,6 +5,7 @@ interface CompanyLogoProps {
   showText?: boolean;
   lightText?: boolean;
   className?: string;
+  loading?: 'lazy' | 'eager';
 }
 
 export const CompanyLogo: React.FC<CompanyLogoProps> = ({
@@ -12,6 +13,7 @@ export const CompanyLogo: React.FC<CompanyLogoProps> = ({
   showText = true,
   lightText = true,
   className = '',
+  loading = 'lazy',
 }) => {
   const sizeClasses = {
     sm: 'h-9 w-auto',
@@ -27,6 +29,7 @@ export const CompanyLogo: React.FC<CompanyLogoProps> = ({
           src="/images/ubr_beverage_logo_transparent.png"
           alt="โลโก้ อุบลรุ่งเรือง เบฟเวอเรจ - U.B.R. Beverage"
           className={`${sizeClasses[size]} object-contain shrink-0 block`}
+          loading={loading}
         />
       </div>
       {showText && (

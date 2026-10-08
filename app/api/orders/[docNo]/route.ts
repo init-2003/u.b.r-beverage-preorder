@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDbPool } from '@/lib/db';
 import { getCurrentCustomer, verifyToken, verifyOrderToken, generateOrderToken, CustomerSession } from '@/lib/auth';
 import { sanitizeDocNo, sanitizeString, containsInjectionPatterns, validateOrderPatchPayload } from '@/lib/validation';
+import { resolveProductImageUrl } from '@/lib/image-utils';
 
 export async function GET(
   req: NextRequest,
@@ -260,7 +261,10 @@ export async function GET(
       type_sale: header.fn_type_sale,
     };
 
-    const items = detailResult.recordset;
+    const items = (detailResult.recordset || []).map((it: any) => ({
+      ...it,
+      Trade_Part_Image: resolveProductImageUrl(it.Trade_Part_Image),
+    }));
     const itemsSubtotal = items.reduce((acc: number, it: any) => acc + Number(it.Line_Total || 0), 0);
     const finalTotal = Number(header.Fn_Total) > 0 ? Number(header.Fn_Total) : itemsSubtotal;
 

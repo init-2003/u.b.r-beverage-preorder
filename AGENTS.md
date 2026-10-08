@@ -96,11 +96,11 @@ This document provides developer and AI agent instructions, system architecture,
 
 - **Architecture**: Next.js 16 Proxy (`proxy.ts`) using an in-memory Sliding Window Counter (`lib/rate-limit.ts`).
 - **5-Tier Strategy**:
-  - **Tier 1 (Auth/Login)**: `POST /api/auth/login` — 5 req/min (Strict IP partition to prevent brute-force).
-  - **Tier 2 (Heavy Tasks)**: `POST /api/upload` (Slip OCR) & `/api/orders/[docNo]/pdf` (Puppeteer) — 10 req/min.
-  - **Tier 3 (Transactional)**: `POST /api/orders` (Order placement) — 15 req/min, `GET /api/orders/[docNo]` — 30 req/min.
-  - **Tier 4 (Interactive)**: `/api/cart`, `/api/customer/account`, `/api/auth/me`, `GET /api/orders` — 60 req/min.
-  - **Tier 5 (Public/Catalog)**: `/api/products`, `/api/categories`, `/api/carousel`, `/api/bank-accounts` — 180 req/min; Global API fallback — 300 req/min.
+  - **Tier 1 (Auth/Login)**: `POST /api/auth/login` — 20 req/min (Strict IP partition to prevent brute-force).
+  - **Tier 2 (Heavy Tasks)**: `POST /api/upload` (Slip OCR) & `/api/orders/[docNo]/pdf` (Puppeteer) — 30 req/min.
+  - **Tier 3 (Transactional)**: `POST /api/orders` (Order placement) — 40 req/min, `GET /api/orders/[docNo]` — 120 req/min.
+  - **Tier 4 (Interactive)**: `/api/cart`, `/api/customer/account`, `/api/auth/me`, `GET /api/orders` — 240 req/min.
+  - **Tier 5 (Public/Catalog)**: `/api/products`, `/api/categories`, `/api/carousel`, `/api/bank-accounts` — 600 req/min; Global API fallback — 1,000 req/min.
 - **Headers & 429 Response**: Returns standard `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`, and `Retry-After` on status `429`.
 
 ---
@@ -153,13 +153,31 @@ This document provides developer and AI agent instructions, system architecture,
 - **Clean White Theme**:
   - Cards: `bg-white border border-slate-200 rounded-lg shadow-sm/shadow-xl`.
   - Body Background: `#f5f5f5` (Off-white / Soft gray background highlighting white cards).
-  - Navigation Bar: Burgundy (`#800020` / `#68001a`) with gold/amber accents.
-- **Login Modal (`LoginModal.tsx`)**:
-  - Modal login popup triggered dynamically across the site via `useAuth().openLoginModal()` (e.g. Navbar, checkout, and protected pages).
-  - Standalone `/login` page has been deprecated and removed.
+  - Navigation Bar: Burgundy (`#800020` / `#68001a`) with gold/amber accents. Hidden on standalone pages: `/login`, `/cookie-policy`, `/privacy-policy`, and purchase order documents.
+    - Mobile Search Morph Animation (`components/Navbar.tsx`): Tapping the mobile search icon triggers a coordinated 300ms spring slide & scale morph transition (`cubic-bezier(0.16, 1, 0.3, 1)`). The standard navbar row gracefully fades & shifts left (`opacity-0 -translate-x-3`) while the white search pill expands smoothly into place from the right (`opacity-100 translate-x-0 scale-100`) with auto-focus. Tapping `[ ✕ ]` smoothly reverses the animation.
+- **Login System (`/login` & Authentication Gate)**:
+  - Private B2B Store Gate: Visitors must log in to access the store (`/` and store pages redirect unauthenticated requests to `/login` via `proxy.ts` and client-side guards).
+  - Standalone `/login` page (`app/login/page.tsx` & `LoginClient.tsx`): Styled with `CompanyLogo` on the top Burgundy header row (`bg-[#800020]`, `max-w-[1600px]`, `h-16 sm:h-20`), with the middle area being clean white (`bg-white`) containing the centered login card (title "เข้าสู่ระบบ", input fields, remember me checkbox, customer service note, and submit button). Main Navbar hidden and Footer displayed at the bottom. During submission and redirect, an animated streaming gold/amber progress bar (`.animate-top-loading-bar`) runs along the bottom edge of the Burgundy Logo header while the submit button shows loading status, seamlessly redirecting to the store catalog without full-screen loading page flicker.
+  - Modal login popup (`LoginModal.tsx`) and guest cart merging (`ubr_pending_checkout_merge`) have been completely removed and decommissioned because authentication is 100% enforced via Private B2B Store Gate. Customers must always be logged in before viewing or purchasing products.
+- **Product Catalog Cards (`components/ProductCatalog.tsx`)**:
+  - Cards feature a smooth staggered slide-up & fade-in entrance animation (`.animate-product-card-slide-up`, `translateY: 22px -> 0`, `opacity: 0 -> 1`, `cubic-bezier(0.16, 1, 0.3, 1)`) with cascading wave delay (`min(index, 14) * 35ms`) upon entering the catalog.
 - **Product Details (`/products/[id]`)**:
   - Focus purely on product imagery, name, SKU badge, lead time, pricing, deposit calculation, and action buttons.
+  - Features smooth slide-up showcase entrance animation (`.animate-product-detail-slide-up`, `translateY: 24px -> 0`, `opacity: 0 -> 1`).
   - Omit dummy wholesale tier tables and mock workflow boxes unless explicitly requested.
+- **Cart Page (`/cart`)**:
+  - Content sections (header, items table card, sticky bottom checkout bar, and empty state) feature smooth slide-up & fade-in entrance animation (`.animate-cart-slide-up`, `translateY: 22px -> 0`, `opacity: 0 -> 1`, `cubic-bezier(0.16, 1, 0.3, 1)`) with subtle cascading delays (`40ms`, `80ms`, `120ms`).
+- **Checkout & Confirmation Page (`/checkout`)**:
+  - Content sections (header, delivery address card, items card, bottom navigation link, payment & summary card, and empty state) feature smooth slide-up & fade-in entrance animation (`.animate-checkout-slide-up`, `translateY: 22px -> 0`, `opacity: 0 -> 1`, `cubic-bezier(0.16, 1, 0.3, 1)`) with cascading delays (`40ms`, `80ms`, `100ms`, `120ms`).
+- **Order Details Page (`/orders/[docNo]`)**:
+  - Content cards (status stepper header banner, delivery address card, ordered items card, payment method card, financial summary card, and bottom action toolbar) feature smooth slide-up entrance animation (`.animate-order-slide-up`, `translateY: 22px -> 0`, `opacity: 0 -> 1`, `cubic-bezier(0.16, 1, 0.3, 1)`) with subtle cascading wave delays (`40ms`, `80ms`, `100ms`, `120ms`, `140ms`).
+- **Account & History Pages (`/customer/account`, `/orders/history`, `/customer/account/address`, `/purchases/history`)**:
+  - The left sidebar (`components/AccountLayout.tsx`) features a GPU-accelerated animated sliding active black `#000000` capsule pill (`rounded-full bg-[#000000] text-white font-semibold shadow-sm`, `transform: translateY(...)`, `duration-300 cubic-bezier(0.25, 1, 0.5, 1)`). Clicking an item triggers an immediate optimistic position glide, tactile scale press (`active:scale-[0.98]`), click pulse (`.animate-menu-click`), and hover text slide (`hover:translate-x-1 hover:text-black hover:bg-slate-200/50`). State is cached across route changes to eliminate position reset and flickering.
+  - In mobile view (< lg), the header bar features an animated rotating morph hamburger button (Menu ↔ X with `rotate-90 scale-75` transitions) and a CSS Grid accordion collapsible menu (`.mobile-menu-enter` / `.mobile-menu-exit`) for smooth height and fade open/close animations.
+  - The right-side main content panel features a gentle, smooth slide-up & fade-in entrance animation (`.animate-account-slide-up`, `translateY: 10px -> 0`, `opacity: 0 -> 1`, 0.3s cubic-bezier(0.16, 1, 0.3, 1)).
+  - During route transitions and data fetching, nested `loading.tsx` maintains the left sidebar visible while centering `WineLoading` (`size="md"`) exclusively within the right-side main content panel without layout remounts or bouncing.
+- **Unified Loading System (`components/WineLoading.tsx`)**:
+  - All page loading states across the application (homepage Suspense & catalog loading `app/page.tsx` & `ProductCatalog.tsx`, product details `app/products/[id]/page.tsx`, cart hydration `app/cart/page.tsx`, checkout `app/checkout/page.tsx`, order history, payment, and customer account) use `WineLoading` (`size="md"`) featuring the floating burgundy bottle with PRE-ORDER label and bouncing dots centered gracefully on `#f5f5f5`. Generic gray skeleton pulses are completely avoided. Root `app/loading.tsx` is omitted so route-specific layouts (like Account sidebar) maintain their persistent layout instead of flashing full-screen loading.
 - **Form Controls**:
   - Input fields use `bg-slate-50 border border-slate-200 text-slate-900 focus:border-amber-500 focus:bg-white`.
   - Primary call-to-action buttons use U.B.R. Brand Burgundy (`bg-[#800020] hover:bg-[#6b001b] active:bg-[#570016] text-white font-bold`).

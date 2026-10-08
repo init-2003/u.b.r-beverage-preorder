@@ -18,9 +18,6 @@ interface AuthContextType {
   login: (cus: Customer) => void;
   logout: () => Promise<void>;
   refreshAuth: () => Promise<void>;
-  isLoginModalOpen: boolean;
-  openLoginModal: (onSuccess?: () => void) => void;
-  closeLoginModal: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -31,8 +28,6 @@ const AUTH_SYNC_CHANNEL = 'ubr_auth_sync';
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-  const [onLoginSuccess, setOnLoginSuccess] = useState<(() => void) | null>(null);
 
   const customerRef = useRef<Customer | null>(customer);
   const loginTimestampRef = useRef<number>(0);
@@ -46,7 +41,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (isLoggingOutRef.current) return;
     isLoggingOutRef.current = true;
     setCustomer(null);
-    setIsLoginModalOpen(false);
     try {
       localStorage.removeItem('ubr_cart_items');
       localStorage.removeItem('ubr_cart_selected_trade_ids');
@@ -55,11 +49,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       sessionStorage.removeItem('ubr_cached_orders');
     } catch {}
     if (typeof window !== 'undefined') {
-      if (window.location.pathname !== '/' || window.location.search) {
-        window.location.href = '/';
-      } else {
-        window.location.reload();
-      }
+      window.location.href = '/login';
     }
   };
 
@@ -147,20 +137,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  const openLoginModal = (onSuccess?: () => void) => {
-    if (onSuccess) {
-      setOnLoginSuccess(() => onSuccess);
-    } else {
-      setOnLoginSuccess(null);
-    }
-    setIsLoginModalOpen(true);
-  };
-
-  const closeLoginModal = () => {
-    setIsLoginModalOpen(false);
-    setOnLoginSuccess(null);
-  };
-
   const login = (cus: Customer) => {
     loginTimestampRef.current = Date.now();
     try {
@@ -173,12 +149,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch {}
 
     setCustomer(cus);
-    setIsLoginModalOpen(false);
-    if (onLoginSuccess) {
-      const cb = onLoginSuccess;
-      setOnLoginSuccess(null);
-      cb();
-    }
   };
 
   const logout = async () => {
@@ -206,7 +176,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } catch {}
 
       if (typeof window !== 'undefined') {
-        window.location.href = '/';
+        window.location.href = '/login';
       }
     }
   };
@@ -219,9 +189,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         login,
         logout,
         refreshAuth,
-        isLoginModalOpen,
-        openLoginModal,
-        closeLoginModal,
       }}
     >
       {children}

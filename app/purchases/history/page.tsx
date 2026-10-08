@@ -199,17 +199,15 @@ function PurchasesContent() {
 
   if (authLoading || (loading && orders.length === 0)) {
     return (
-      <AccountLayout activeItemOverride="payment">
-        <div className="w-full min-h-[calc(100vh-250px)] flex items-center justify-center">
-          <WineLoading size="md" />
-        </div>
-      </AccountLayout>
+      <div className="w-full min-h-[480px] sm:min-h-[560px] flex flex-col items-center justify-center">
+        <WineLoading size="md" />
+      </div>
     );
   }
 
   return (
-    <AccountLayout activeItemOverride="payment">
-      <div className="space-y-4">
+    <>
+      <div className="space-y-4 animate-account-slide-up">
 
 
 
@@ -243,7 +241,7 @@ function PurchasesContent() {
 
         {/* Content Area */}
         {loading ? (
-          <div className="w-full min-h-[calc(100vh-320px)] flex items-center justify-center">
+          <div className="w-full min-h-[360px] sm:min-h-[420px] flex flex-col items-center justify-center">
             <WineLoading size="md" />
           </div>
         ) : displayedOrders.length === 0 ? (
@@ -484,22 +482,22 @@ function PurchasesContent() {
           </div>
         </div>
       )}
-    </AccountLayout>
+    </>
   );
 }
 
 export default function PurchasesPage() {
   return (
-    <Suspense
-      fallback={
-        <AccountLayout activeItemOverride="payment">
-          <div className="w-full min-h-[calc(100vh-250px)] flex items-center justify-center">
+    <AccountLayout activeItemOverride="payment">
+      <Suspense
+        fallback={
+          <div className="w-full min-h-[480px] sm:min-h-[560px] flex flex-col items-center justify-center">
             <WineLoading size="md" />
           </div>
-        </AccountLayout>
-      }
-    >
-      <PurchasesContent />
-    </Suspense>
+        }
+      >
+        <PurchasesContent />
+      </Suspense>
+    </AccountLayout>
   );
 }

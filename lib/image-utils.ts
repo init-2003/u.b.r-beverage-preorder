@@ -50,7 +50,9 @@ export const DEFAULT_PRODUCT_IMAGE_PNG = '/images/ubr_beverage_logo.png';
 /**
  * Resolve product image path:
  * - If imagePath is null or empty -> fallback to /images/ubr_beverage_logo.png
- * - If imagePath is provided -> ensure clean root-relative or external URL path
+ * - If external URL (http://, https://, data:) -> return as-is
+ * - If image exists in public/ directory -> return clean root-relative path (e.g. /images/xxx.jpg)
+ * - If image does not exist on disk -> fallback to /images/ubr_beverage_logo.png to prevent 404 errors
  */
 export function resolveProductImageUrl(
   imagePath?: string | null,
@@ -61,10 +63,56 @@ export function resolveProductImageUrl(
   }
 
   const clean = imagePath.trim();
-  if (clean.startsWith('http://') || clean.startsWith('https://')) {
+  if (
+    clean.startsWith('http://') ||
+    clean.startsWith('https://') ||
+    clean.startsWith('data:')
+  ) {
     return clean;
   }
 
-  const normalized = clean.replace(/\\/g, '/');
-  return normalized.startsWith('/') ? normalized : `/${normalized}`;
+  const normalized = clean.replace(/\\/g, '/').replace(/^\/+/, '');
+  const filesSet = getPublicFilesSet();
+
+  // 1. Direct match in public directory (e.g. 'images/foo.jpg')
+  if (
+    filesSet.has(normalized.toLowerCase()) ||
+    filesSet.has(`/${normalized.toLowerCase()}`)
+  ) {
+    return `/${normalized}`;
+  }
+
+  // 2. Check with images/ prefix if not already present
+  if (!normalized.startsWith('images/') && !normalized.startsWith('uploads/')) {
+    const withImages = `images/${normalized}`;
+    if (
+      filesSet.has(withImages.toLowerCase()) ||
+      filesSet.has(`/${withImages.toLowerCase()}`)
+    ) {
+      return `/${withImages}`;
+    }
+  }
+
+  // 3. Direct filesystem check for any newly added runtime uploads or race conditions
+  try {
+    const directPath = path.join(process.cwd(), 'public', normalized);
+    if (fs.existsSync(directPath)) {
+      filesSet.add(normalized.toLowerCase());
+      filesSet.add(`/${normalized.toLowerCase()}`);
+      return `/${normalized}`;
+    }
+    if (!normalized.startsWith('images/') && !normalized.startsWith('uploads/')) {
+      const directWithImages = path.join(process.cwd(), 'public', 'images', normalized);
+      if (fs.existsSync(directWithImages)) {
+        filesSet.add(`images/${normalized.toLowerCase()}`);
+        filesSet.add(`/images/${normalized.toLowerCase()}`);
+        return `/images/${normalized}`;
+      }
+    }
+  } catch {
+    // ignore filesystem errors and fallback safely
+  }
+
+  // 4. File does not exist on disk -> fallback to official logo to avoid 404 network errors
+  return DEFAULT_PRODUCT_IMAGE_PNG;
 }

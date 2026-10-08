@@ -50,9 +50,9 @@ export function ProductImage({
   }, [normalizedSrc, fallbackSrc]);
 
   const handleError = () => {
-    if (src) {
-      failedImagesCache.add(src);
-    }
+    if (src) failedImagesCache.add(src);
+    if (normalizedSrc) failedImagesCache.add(normalizedSrc);
+    if (currentSrc) failedImagesCache.add(currentSrc);
     if (currentSrc !== fallbackSrc) {
       setCurrentSrc(fallbackSrc);
     } else if (currentSrc !== '/images/ubr_beverage_logo.png') {
@@ -83,7 +83,7 @@ export function ProductImage({
         onLoad={handleLoad}
         onError={handleError}
         className={`w-full h-full ${
-          objectFit === 'contain' ? 'object-contain p-2' : 'object-cover'
+          objectFit === 'contain' ? 'object-contain' : 'object-cover'
         } block`}
       />
     </div>

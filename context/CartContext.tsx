@@ -95,7 +95,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   }, [customer?.customerId]);
 
-  // ดึงข้อมูลตะกร้าจากฐานข้อมูลเมื่อลูกค้าล็อกอิน
+  // ดึงข้อมูลตะกร้าจากฐานข้อมูลเมื่อลูกค้าล็อกอิน (ระบบบังคับล็อกอิน 100% ยึดตามฐานข้อมูลของบัญชี)
   const syncCartWithDb = useCallback(async () => {
     if (!customer?.customerId) return;
 
@@ -106,63 +106,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       if (data.success && Array.isArray(data.items)) {
         const dbItems: CartItem[] = data.items;
 
-        // ตรวจสอบว่ามาจากการกดปุ่ม "สั่งซื้อ" ตอนยังไม่ล็อกอินหรือไม่
-        let isFromCheckoutIntent = false;
-        if (typeof window !== 'undefined') {
+        setItems(() => {
           try {
-            isFromCheckoutIntent = sessionStorage.getItem('ubr_pending_checkout_merge') === 'true';
-            sessionStorage.removeItem('ubr_pending_checkout_merge');
+            localStorage.setItem('ubr_cart_items', JSON.stringify(dbItems));
           } catch {}
-        }
-
-        setItems((currentItems) => {
-          // กรณีพิเศษเฉพาะ: ถ้ากด "สั่งซื้อ" ตอนยังไม่ล็อกอิน ให้ทำการ Merge สินค้าที่เพิ่งเลือก เข้ากับตะกร้าของบัญชี
-          if (isFromCheckoutIntent) {
-            if (dbItems.length > 0 && currentItems.length > 0) {
-              const mergedMap = new Map<string, CartItem>();
-              for (const it of dbItems) {
-                mergedMap.set(it.tradeId, it);
-              }
-              for (const it of currentItems) {
-                if (mergedMap.has(it.tradeId)) {
-                  const existing = mergedMap.get(it.tradeId)!;
-                  mergedMap.set(it.tradeId, {
-                    ...it,
-                    qty: Math.max(existing.qty, it.qty),
-                  });
-                } else {
-                  mergedMap.set(it.tradeId, it);
-                }
-              }
-              const merged = Array.from(mergedMap.values());
-              syncToDbServer(merged, true);
-              try {
-                localStorage.setItem('ubr_cart_items', JSON.stringify(merged));
-              } catch {}
-              return merged;
-            } else if (currentItems.length > 0) {
-              syncToDbServer(currentItems, true);
-              try {
-                localStorage.setItem('ubr_cart_items', JSON.stringify(currentItems));
-              } catch {}
-              return currentItems;
-            }
-          }
-
-          // กรณีเข้าสู่ระบบทั่วไป (เช่น กดล็อกอินที่ Navbar หรือเปิดเว็บใหม่): ไม่ต้อง Merge!
-          // ยึดตามฐานข้อมูลของบัญชีนั้นเป็นหลัก 100% (มี 3 ชิ้นในบัญชี ก็แสดง 3 ชิ้นตามจริง)
-          if (dbItems.length > 0) {
-            try {
-              localStorage.setItem('ubr_cart_items', JSON.stringify(dbItems));
-            } catch {}
-            return dbItems;
-          }
-
-          // ถ้าใน DB บัญชียังว่างเปล่า (0 ชิ้น) และไม่มีการกดสั่งซื้อ
-          try {
-            localStorage.setItem('ubr_cart_items', JSON.stringify([]));
-          } catch {}
-          return [];
+          return dbItems;
         });
       }
     } catch (e) {
@@ -170,7 +118,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     } finally {
       isServerSyncedRef.current = true;
     }
-  }, [customer?.customerId, syncToDbServer]);
+  }, [customer?.customerId]);
 
   // Multi-tab sync สำหรับตะกร้าสินค้าข้ามแท็บ
   useEffect(() => {

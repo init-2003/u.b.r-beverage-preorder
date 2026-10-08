@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import EditProfileModal, { CustomerProfileData } from '@/components/EditProfileModal';
 import AccountLayout from '@/components/AccountLayout';
-import { ExternalLink, AlertCircle } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 import { WineLoading } from '@/components/WineLoading';
 
 function AddressContent() {
@@ -54,17 +54,15 @@ function AddressContent() {
 
   if (authLoading || (loading && !profile)) {
     return (
-      <AccountLayout activeItemOverride="address">
-        <div className="w-full min-h-[calc(100vh-250px)] flex items-center justify-center">
-          <WineLoading size="md" />
-        </div>
-      </AccountLayout>
+      <div className="w-full min-h-[480px] sm:min-h-[560px] flex flex-col items-center justify-center">
+        <WineLoading size="md" />
+      </div>
     );
   }
 
   return (
-    <AccountLayout activeItemOverride="address">
-      <div className="space-y-6">
+    <>
+      <div className="space-y-6 animate-account-slide-up">
         {/* Page Title (Desktop only, mobile shows in mobile bar with hamburger button) */}
         <div className="hidden lg:flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-200/80">
           <div>
@@ -117,15 +115,7 @@ function AddressContent() {
                 </div>
               </div>
 
-              {/* ปุ่มจัดการที่อยู่ */}
-              <button
-                type="button"
-                onClick={() => openEdit('address')}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-slate-800 hover:bg-slate-900 text-white rounded-sm transition-colors cursor-pointer shadow-xs shrink-0"
-              >
-                <span>จัดการข้อมูลที่อยู่</span>
-                <ExternalLink className="w-3.5 h-3.5" />
-              </button>
+
             </div>
           </div>
         </div>
@@ -139,22 +129,22 @@ function AddressContent() {
         onProfileUpdated={fetchProfile}
         initialTab={editTab}
       />
-    </AccountLayout>
+    </>
   );
 }
 
 export default function CustomerAddressPage() {
   return (
-    <Suspense
-      fallback={
-        <AccountLayout activeItemOverride="address">
-          <div className="w-full min-h-[calc(100vh-250px)] flex items-center justify-center">
+    <AccountLayout activeItemOverride="address">
+      <Suspense
+        fallback={
+          <div className="w-full min-h-[480px] sm:min-h-[560px] flex flex-col items-center justify-center">
             <WineLoading size="md" />
           </div>
-        </AccountLayout>
-      }
-    >
-      <AddressContent />
-    </Suspense>
+        }
+      >
+        <AddressContent />
+      </Suspense>
+    </AccountLayout>
   );
 }

@@ -1,21 +1,8 @@
 'use client';
 
-import React from 'react';
-import { useAuth } from '@/context/AuthContext';
-import { Modal, LoginHeader, LoginForm } from '@/components/ui';
-
+/**
+ * @deprecated LoginModal is decommissioned. The application now strictly uses the standalone `/login` page via the Private B2B Store Gate.
+ */
 export default function LoginModal() {
-  const { isLoginModalOpen, closeLoginModal } = useAuth();
-
-  return (
-    <Modal
-      isOpen={isLoginModalOpen}
-      onClose={closeLoginModal}
-      maxWidth="max-w-[450px]"
-      titleId="login-modal-title"
-    >
-      <LoginHeader titleId="login-modal-title" />
-      <LoginForm onSuccess={closeLoginModal} />
-    </Modal>
-  );
+  return null;
 }

@@ -6,7 +6,6 @@ export default function CookiePolicyPage() {
   return (
     <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
       <div className="max-w-4xl mx-auto">
-
         {/* Main Document Container */}
         <div className="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
           {/* Top Brand Accent Stripe */}

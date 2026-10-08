@@ -4,9 +4,9 @@ import React, { useEffect, useState, use } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
-import { useAuth } from '@/context/AuthContext';
 import { useBreadcrumb } from '@/context/BreadcrumbContext';
 import ProductImageMagnifier from '@/components/ProductImageMagnifier';
+import { WineLoading } from '@/components/WineLoading';
 import {
   ArrowLeft,
   ShoppingBag,
@@ -45,7 +45,6 @@ export default function ProductDetailPage({
 }) {
   const resolvedParams = use(params);
   const router = useRouter();
-  const { customer, openLoginModal } = useAuth();
   const { addItem } = useCart();
   const { setCustomTitle } = useBreadcrumb();
 
@@ -108,44 +107,25 @@ export default function ProductDetailPage({
   const handleBuyNow = () => {
     if (!product) return;
     if (typeof window !== 'undefined') {
-      sessionStorage.setItem(
-        'ubr_direct_checkout',
-        JSON.stringify({
-          productId: product.id,
-          qty,
-          from: 'product',
-          productName: product.name,
-        })
-      );
-      if (!customer) {
-        sessionStorage.setItem('ubr_pending_checkout_merge', 'true');
-      }
+      try {
+        sessionStorage.setItem(
+          'ubr_direct_checkout',
+          JSON.stringify({
+            productId: product.id,
+            qty,
+            from: 'product',
+            productName: product.name,
+          })
+        );
+      } catch {}
     }
-    const target = `/checkout?from=product&productId=${encodeURIComponent(product.id)}&qty=${qty}`;
-    if (customer) {
-      router.push(target);
-    } else {
-      openLoginModal(() => router.push(target));
-    }
+    router.push(`/checkout?from=product&productId=${encodeURIComponent(product.id)}&qty=${qty}`);
   };
 
   if (loading) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center p-8 min-h-[calc(100vh+80px)] pb-48">
-        <div className="max-w-[1600px] mx-auto w-full px-4 sm:px-6 py-12 space-y-8 animate-pulse">
-          <div className="h-6 w-48 bg-slate-200 rounded-sm" />
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            <div className="lg:col-span-6 h-[460px] bg-white rounded-sm border border-slate-100/80 shadow-[0_1px_1px_0_rgba(0,0,0,0.05)]" />
-            <div className="lg:col-span-6 space-y-5">
-              <div className="h-4 w-28 bg-slate-200 rounded-sm" />
-              <div className="h-9 w-3/4 bg-slate-200 rounded-sm" />
-              <div className="h-6 w-1/2 bg-slate-200 rounded-sm" />
-              <div className="h-14 w-40 bg-slate-200 rounded-sm" />
-              <div className="h-12 w-full bg-slate-200 rounded-sm" />
-              <div className="h-20 bg-white rounded-sm border border-slate-100/80" />
-            </div>
-          </div>
-        </div>
+      <div className="flex-1 flex flex-col items-center justify-center p-8 min-h-[calc(100vh-200px)] min-h-[calc(100dvh-200px)] pb-32">
+        <WineLoading size="md" />
       </div>
     );
   }
@@ -188,20 +168,11 @@ export default function ProductDetailPage({
       <div className="max-w-[1600px] mx-auto w-full px-4 sm:px-6 lg:px-8 space-y-4">
 
         {/* Main Product Showcase Card (Shopee Style Clean Card) */}
-        <div className="bg-white rounded-sm border border-slate-100/80 shadow-[0_1px_1px_0_rgba(0,0,0,0.05)] p-6 sm:p-8 lg:p-10">
+        <div className="bg-white rounded-sm border border-slate-100/80 shadow-[0_1px_1px_0_rgba(0,0,0,0.05)] p-6 sm:p-8 lg:p-10 animate-product-detail-slide-up">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
 
             {/* Left Column: Product Image Showcase (No Card / Clean Float) */}
             <div className="lg:col-span-6 flex flex-col items-center justify-center relative min-h-[380px] lg:min-h-[480px]">
-
-              {/* Top Badges (Deposit % Tag if available) */}
-              {product.depositPercent > 0 && (
-                <div className="w-full flex items-center justify-end mb-3">
-                  <span className="px-2.5 py-1 text-xs font-black rounded-md bg-red-600 text-white shadow-xs">
-                    มัดจำ {product.depositPercent}%
-                  </span>
-                </div>
-              )}
 
               {/* Product Main Image (Interactive Magnifier Loupe Zoom) */}
               <div className="w-full flex-1 flex items-center justify-center p-2 sm:p-4">
@@ -282,7 +253,10 @@ export default function ProductDetailPage({
                     </span>
                   ) : null}
                   {product.depositPercent > 0 && (
-                    <span className="text-amber-800 font-bold text-[11px] bg-amber-100 px-1.5 py-0.5 rounded">
+                    <span
+                      className="inline-flex items-center justify-center bg-[#ffe01b] border border-amber-300 rounded-sm px-1.5 py-0.5 text-[11px] font-black text-blue-700 leading-none shadow-2xs select-none"
+                      title={`มัดจำ ${product.depositPercent}%`}
+                    >
                       {product.depositPercent}%
                     </span>
                   )}

@@ -90,7 +90,6 @@ function MobileSearchOverlay({
   const router = useRouter();
   const searchParams = useSearchParams();
   const [searchTerm, setSearchTerm] = useState('');
-  const [isFocused, setIsFocused] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -100,13 +99,24 @@ function MobileSearchOverlay({
 
   useEffect(() => {
     if (isOpen) {
-      setTimeout(() => {
+      const timer = setTimeout(() => {
         inputRef.current?.focus();
-      }, 60);
+      }, 100);
+      return () => clearTimeout(timer);
+    } else {
+      inputRef.current?.blur();
     }
   }, [isOpen]);
 
-  if (!isOpen) return null;
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isOpen) {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -129,64 +139,62 @@ function MobileSearchOverlay({
     onClose();
   };
 
-  const isActive = isFocused || searchTerm.length > 0;
-
   return (
-    <div className="flex sm:hidden items-center w-full h-16 animate-in fade-in duration-150">
-      <form onSubmit={handleSubmit} className="w-full flex items-center gap-2">
-        <div className="flex-1 h-10 bg-white rounded-full p-[3px] shadow-sm flex items-center">
-          <div className="relative flex-1 flex items-center h-full">
-            <input
-              ref={inputRef}
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="ค้นหาสินค้าที่ต้องการที่นี่....."
-              className="w-full h-full pl-4 pr-7 bg-transparent text-sm text-slate-800 placeholder:text-slate-400 outline-none border-none"
-            />
-            {searchTerm && (
-              <button
-                type="button"
-                onClick={() => setSearchTerm('')}
-                className="absolute right-1 text-slate-400 hover:text-slate-600 p-1 rounded-full cursor-pointer"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            )}
-          </div>
-          <button
-            type="submit"
-            className="h-full px-4 bg-[#800020] hover:bg-[#6b001b] active:bg-[#570016] text-white rounded-full flex items-center justify-center cursor-pointer shrink-0"
-            title="ค้นหา"
-          >
-            <Search className="w-4 h-4 text-white stroke-[2.5]" />
-          </button>
+    <form onSubmit={handleSubmit} className="w-full flex items-center gap-2">
+      <div className="flex-1 h-10 bg-white rounded-full p-[3px] shadow-sm flex items-center border border-white">
+        <div className="relative flex-1 flex items-center h-full">
+          <input
+            ref={inputRef}
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="ค้นหาสินค้าที่ต้องการที่นี่....."
+            className="w-full h-full pl-4 pr-7 bg-transparent text-sm text-slate-800 placeholder:text-slate-400 outline-none border-none"
+          />
+          {searchTerm && (
+            <button
+              type="button"
+              onClick={() => {
+                setSearchTerm('');
+                inputRef.current?.focus();
+              }}
+              className="absolute right-1 text-slate-400 hover:text-slate-600 p-1 rounded-full cursor-pointer active:scale-90 transition-transform"
+              title="ล้างคำค้นหา"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
         <button
-          type="button"
-          onClick={handleClearOrClose}
-          className="p-2 text-white hover:text-amber-200 transition-colors cursor-pointer shrink-0"
-          title="ปิดการค้นหา"
-          aria-label="ปิดการค้นหา"
+          type="submit"
+          className="h-full px-4 bg-[#800020] hover:bg-[#6b001b] active:bg-[#570016] text-white rounded-full flex items-center justify-center cursor-pointer shrink-0 transition-all active:scale-95"
+          title="ค้นหา"
         >
-          <X className="w-5 h-5 stroke-[2.5]" />
+          <Search className="w-4 h-4 text-white stroke-[2.5]" />
         </button>
-      </form>
-    </div>
+      </div>
+      <button
+        type="button"
+        onClick={handleClearOrClose}
+        className="p-2 text-white hover:text-amber-200 active:text-amber-300 transition-all duration-150 cursor-pointer shrink-0 rounded-full hover:bg-white/10 active:scale-90"
+        title="ปิดการค้นหา"
+        aria-label="ปิดการค้นหา"
+      >
+        <X className="w-5 h-5 stroke-[2.5]" />
+      </button>
+    </form>
   );
 }
 
 function UserAccountMenu({
   customer,
   logout,
-  openLoginModal,
   showUsername = true,
   avatarSize = 'w-6 h-6',
   iconSize = 'w-3.5 h-3.5',
 }: {
   customer: any;
   logout: () => void;
-  openLoginModal: () => void;
   showUsername?: boolean;
   avatarSize?: string;
   iconSize?: string;
@@ -248,23 +256,9 @@ function UserAccountMenu({
     };
   }, []);
 
+
   if (!customer) {
-    return (
-      <button
-        type="button"
-        onClick={() => openLoginModal()}
-        className="flex items-center gap-1.5 py-1 px-2 rounded-full text-xs font-medium text-white hover:text-white/80 transition-all duration-150 active:scale-95 cursor-pointer select-none"
-        title="เข้าสู่ระบบ"
-        aria-label="เข้าสู่ระบบ"
-      >
-        <div
-          className={`${avatarSize} rounded-full bg-white flex items-center justify-center overflow-hidden border border-white/30 shadow-2xs shrink-0`}
-        >
-          <User className={`${iconSize} text-slate-400 stroke-[1.8]`} />
-        </div>
-        {showUsername && <span>เข้าสู่ระบบ</span>}
-      </button>
-    );
+    return null;
   }
 
   const displayName = customer.customerName || customer.cusUser || customer.customerId;
@@ -350,25 +344,23 @@ function UserAccountMenu({
 export default function Navbar({ onRefreshData }: NavbarProps = {}) {
   const router = useRouter();
   const pathname = usePathname();
-  const { customer, logout, openLoginModal } = useAuth();
+  const { customer, logout } = useAuth();
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
 
-  // ซ่อน Navbar เมื่ออยู่ในหน้าเอกสารเดี่ยว (Standalone A4 Document)
-  if (pathname?.includes('/purchase-order') || pathname?.includes('/a4')) {
+  // ซ่อน Navbar ในหน้า Login, หน้านโยบายความเป็นส่วนตัว/คุกกี้ หรือหน้าเอกสารเดี่ยว (Standalone A4 Document)
+  if (
+    pathname === '/login' ||
+    pathname === '/cookie-policy' ||
+    pathname === '/privacy-policy' ||
+    pathname?.includes('/purchase-order') ||
+    pathname?.includes('/a4')
+  ) {
     return null;
   }
 
   return (
     <header className="sticky top-0 z-40 w-full bg-[#800020] border-b border-[#68001a] shadow-md print:hidden">
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Mobile Search Overlay Bar (Active when search icon clicked on mobile) */}
-        <Suspense fallback={null}>
-          <MobileSearchOverlay
-            isOpen={isMobileSearchOpen}
-            onClose={() => setIsMobileSearchOpen(false)}
-          />
-        </Suspense>
-
         {/* 1. Top Utility Bar (Shopee Style: Desktop only) */}
         <div className="hidden sm:flex items-center justify-between py-1 text-xs text-white/90">
           <div className="flex items-center gap-2.5 text-[11.5px] text-white/80 font-normal">
@@ -380,7 +372,6 @@ export default function Navbar({ onRefreshData }: NavbarProps = {}) {
             <UserAccountMenu
               customer={customer}
               logout={logout}
-              openLoginModal={openLoginModal}
               showUsername={true}
               avatarSize="w-5.5 h-5.5"
               iconSize="w-3.5 h-3.5"
@@ -388,50 +379,71 @@ export default function Navbar({ onRefreshData }: NavbarProps = {}) {
           </div>
         </div>
 
-        {/* 2. Main Navbar Row */}
-        <div
-          className={`items-center justify-between h-16 sm:h-20 ${isMobileSearchOpen ? 'hidden sm:flex' : 'flex'
+        {/* 2. Main Navbar Row & Animated Mobile Search Overlay */}
+        <div className="relative">
+          {/* Main Navbar Row */}
+          <div
+            className={`items-center justify-between h-16 sm:h-20 flex transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+              isMobileSearchOpen
+                ? 'sm:opacity-100 sm:translate-x-0 sm:pointer-events-auto opacity-0 -translate-x-3 pointer-events-none'
+                : 'opacity-100 translate-x-0 pointer-events-auto'
             }`}
-        >
-          {/* Company Logo */}
-          <Link href="/" className="flex items-center group shrink-0">
-            <CompanyLogo size="md" lightText={true} />
-          </Link>
+          >
+            {/* Company Logo */}
+            <Link href="/" className="flex items-center group shrink-0">
+              <CompanyLogo size="md" lightText={true} />
+            </Link>
 
-          {/* Search Bar - Center (Desktop & Tablet) */}
-          <div className="hidden sm:flex flex-1 max-w-md lg:max-w-2xl mx-6 lg:mx-12">
-            <Suspense fallback={<div className="w-full h-10" />}>
-              <NavbarSearch />
-            </Suspense>
-          </div>
-
-          {/* Right Actions: Mobile has [ 🔍 ] [ 👤 ] [ 🛒 ], Desktop has [ 🛒 ] */}
-          <div className="flex items-center gap-1.5 sm:gap-4 shrink-0">
-            {/* Mobile Search Trigger Button (Only on mobile < sm) */}
-            <button
-              type="button"
-              onClick={() => setIsMobileSearchOpen(true)}
-              className="sm:hidden relative p-2 text-white hover:bg-white/10 rounded-full transition-colors flex items-center justify-center cursor-pointer"
-              title="ค้นหาสินค้า"
-              aria-label="ค้นหาสินค้า"
-            >
-              <Search className="w-5 h-5" />
-            </button>
-
-            {/* Mobile User Dropdown Button (Only on mobile < sm) */}
-            <div className="sm:hidden">
-              <UserAccountMenu
-                customer={customer}
-                logout={logout}
-                openLoginModal={openLoginModal}
-                showUsername={false}
-                avatarSize="w-7 h-7"
-                iconSize="w-4 h-4"
-              />
+            {/* Search Bar - Center (Desktop & Tablet) */}
+            <div className="hidden sm:flex flex-1 max-w-md lg:max-w-2xl mx-6 lg:mx-12">
+              <Suspense fallback={<div className="w-full h-10" />}>
+                <NavbarSearch />
+              </Suspense>
             </div>
 
-            {/* Cart Dropdown Popover matching reference */}
-            <CartDropdown />
+            {/* Right Actions: Mobile has [ 🔍 ] [ 👤 ] [ 🛒 ], Desktop has [ 🛒 ] */}
+            <div className="flex items-center gap-1.5 sm:gap-4 shrink-0">
+              {/* Mobile Search Trigger Button (Only on mobile < sm) */}
+              <button
+                type="button"
+                onClick={() => setIsMobileSearchOpen(true)}
+                className="sm:hidden relative p-2 text-white hover:bg-white/10 active:bg-white/20 rounded-full transition-all duration-150 flex items-center justify-center cursor-pointer active:scale-90"
+                title="ค้นหาสินค้า"
+                aria-label="ค้นหาสินค้า"
+              >
+                <Search className="w-5 h-5 stroke-[2.2]" />
+              </button>
+
+              {/* Mobile User Dropdown Button (Only on mobile < sm) */}
+              <div className="sm:hidden">
+                <UserAccountMenu
+                  customer={customer}
+                  logout={logout}
+                  showUsername={false}
+                  avatarSize="w-7 h-7"
+                  iconSize="w-4 h-4"
+                />
+              </div>
+
+              {/* Cart Dropdown Popover matching reference */}
+              <CartDropdown />
+            </div>
+          </div>
+
+          {/* Mobile Search Overlay Bar with Smooth Slide/Morph Animation */}
+          <div
+            className={`sm:hidden absolute inset-0 h-16 flex items-center transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] z-20 ${
+              isMobileSearchOpen
+                ? 'opacity-100 translate-x-0 scale-100 pointer-events-auto'
+                : 'opacity-0 translate-x-4 scale-[0.98] pointer-events-none'
+            }`}
+          >
+            <Suspense fallback={null}>
+              <MobileSearchOverlay
+                isOpen={isMobileSearchOpen}
+                onClose={() => setIsMobileSearchOpen(false)}
+              />
+            </Suspense>
           </div>
         </div>
       </div>

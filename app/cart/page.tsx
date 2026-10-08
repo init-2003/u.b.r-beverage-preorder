@@ -4,19 +4,18 @@ import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCart, CartItem } from '@/context/CartContext';
-import { useAuth } from '@/context/AuthContext';
 import { 
   ShoppingCart, ArrowLeft, X
 } from 'lucide-react';
 import { EmptyCartIllustration } from '@/components/EmptyCartIllustration';
 import { CartIllustration } from '@/components/CartIllustration';
 import { ProductImage } from '@/components/ui/ProductImage';
+import { WineLoading } from '@/components/WineLoading';
 
 const CART_SELECTION_STORAGE_KEY = 'ubr_cart_selected_trade_ids';
 
 export default function CartPage() {
   const router = useRouter();
-  const { customer, openLoginModal } = useAuth();
   const { items, updateQty, removeItem, removeItems } = useCart();
 
   // Selection state
@@ -169,34 +168,24 @@ export default function CartPage() {
       try {
         sessionStorage.removeItem('ubr_direct_checkout');
         sessionStorage.setItem('ubr_cart_selected_ids', JSON.stringify(selectedArr));
-        if (!customer) {
-          sessionStorage.setItem('ubr_pending_checkout_merge', 'true');
-        }
       } catch {}
     }
-    const target = `/checkout?from=cart&items=${encodeURIComponent(selectedArr.join(','))}`;
-    if (customer) {
-      router.push(target);
-    } else {
-      openLoginModal(() => router.push(target));
-    }
+    router.push(`/checkout?from=cart&items=${encodeURIComponent(selectedArr.join(','))}`);
   };
 
   if (!isMounted) {
     return (
-      <div className="flex-1 flex flex-col bg-[#f5f5f5] py-8 sm:py-12">
-        <div className="max-w-[1600px] mx-auto w-full px-4 sm:px-6 lg:px-8">
-          <div className="bg-white rounded-lg border border-slate-100 p-8 min-h-[400px] animate-pulse" />
-        </div>
+      <div className="flex-1 flex flex-col items-center justify-center bg-[#f5f5f5] py-16 sm:py-24 min-h-[calc(100vh-200px)] min-h-[calc(100dvh-200px)] pb-32">
+        <WineLoading size="md" />
       </div>
     );
   }
 
   if (items.length === 0) {
     return (
-      <div className="flex-1 flex flex-col bg-[#f5f5f5] py-8 sm:py-12">
-        <div className="max-w-[1600px] mx-auto w-full px-4 sm:px-6 lg:px-8">
-          <div className="bg-white rounded-lg border border-slate-100 shadow-[0_1px_2px_0_rgba(0,0,0,0.04)] py-16 sm:py-24 px-4 text-center flex flex-col items-center justify-center space-y-4">
+      <div className="flex-1 flex flex-col bg-[#f5f5f5] py-8 sm:py-12 min-h-[calc(100vh+80px)] min-h-[calc(100dvh+80px)] pb-32">
+        <div className="max-w-[1600px] mx-auto w-full px-4 sm:px-6 lg:px-8 my-auto">
+          <div className="bg-white rounded-lg border border-slate-100 shadow-[0_1px_2px_0_rgba(0,0,0,0.04)] py-16 sm:py-24 px-4 text-center flex flex-col items-center justify-center space-y-4 animate-cart-slide-up">
             <div className="flex items-center justify-center">
               <EmptyCartIllustration className="w-36 h-36 sm:w-40 sm:h-40" />
             </div>
@@ -225,11 +214,11 @@ export default function CartPage() {
   }
 
   return (
-    <div className="flex-1 flex flex-col bg-[#f5f5f5] py-6 sm:py-8">
+    <div className="flex-1 flex flex-col bg-[#f5f5f5] py-6 sm:py-8 min-h-[calc(100vh+80px)] min-h-[calc(100dvh+80px)] pb-24 sm:pb-36">
       <div className="max-w-[1600px] mx-auto w-full px-4 sm:px-6 lg:px-8 space-y-4 sm:space-y-5 pb-16">
         
         {/* Page Title Header */}
-        <div className="pb-3 border-b border-slate-200/80">
+        <div className="pb-3 border-b border-slate-200/80 animate-cart-slide-up">
           <div className="flex items-center gap-3 sm:gap-3.5">
             <CartIllustration className="w-12 h-12 sm:w-14 sm:h-14 shrink-0 drop-shadow-xs" />
             <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
@@ -239,7 +228,10 @@ export default function CartPage() {
         </div>
 
         {/* 1. Top Table Header Card (Desktop only, matching Shopee screenshot) */}
-        <div className="hidden sm:flex items-center justify-between bg-white rounded-sm border border-slate-100/80 shadow-[0_1px_1px_0_rgba(0,0,0,0.05)] px-6 py-3.5">
+        <div 
+          className="hidden sm:flex items-center justify-between bg-white rounded-sm border border-slate-100/80 shadow-[0_1px_1px_0_rgba(0,0,0,0.05)] px-6 py-3.5 animate-cart-slide-up"
+          style={{ animationDelay: '40ms' }}
+        >
           {/* Left: Checkbox + สินค้า */}
           <div className="flex items-center gap-3 flex-1">
             <input
@@ -266,7 +258,10 @@ export default function CartPage() {
         </div>
 
         {/* 2. Product Items Container Card */}
-        <div className="bg-white rounded-sm border border-slate-100/80 shadow-[0_1px_1px_0_rgba(0,0,0,0.05)] overflow-hidden">
+        <div 
+          className="bg-white rounded-sm border border-slate-100/80 shadow-[0_1px_1px_0_rgba(0,0,0,0.05)] overflow-hidden animate-cart-slide-up"
+          style={{ animationDelay: '80ms' }}
+        >
           
 
 
@@ -299,12 +294,12 @@ export default function CartPage() {
                     {/* Product Image */}
                     <Link
                       href={`/products/${encodeURIComponent(item.tradeId)}`}
-                      className="w-20 h-20 bg-white border border-slate-100 rounded-sm shrink-0 p-1 flex items-center justify-center overflow-hidden shadow-2xs hover:border-slate-300 transition-colors"
+                      className="w-20 h-20 bg-white border border-slate-100 rounded shrink-0 flex items-center justify-center overflow-hidden shadow-2xs hover:border-slate-300 transition-colors"
                     >
                       <ProductImage
                         src={item.image || '/images/ubr_beverage_logo.png'}
                         alt={item.tradeName}
-                        objectFit="contain"
+                        objectFit="cover"
                         priority={true}
                         fallbackSrc="/images/ubr_beverage_logo.png"
                       />
@@ -442,7 +437,7 @@ export default function CartPage() {
                       className="w-4 h-4 rounded border-slate-300 text-black focus:ring-black accent-black cursor-pointer shrink-0"
                     />
 
-                    <div className="w-16 h-16 bg-white border border-slate-100 rounded-sm shrink-0 flex items-center justify-center p-1 overflow-hidden shadow-2xs">
+                    <div className="w-16 h-16 bg-white border border-slate-100 rounded shrink-0 flex items-center justify-center overflow-hidden shadow-2xs">
                       <img
                         src={
                           item.image
@@ -452,7 +447,7 @@ export default function CartPage() {
                             : '/images/ubr_beverage_logo.png'
                         }
                         alt={item.tradeName}
-                        className="max-h-full max-w-full object-contain"
+                        className="w-full h-full object-cover"
                         onError={(e) => {
                           (e.target as HTMLImageElement).src = '/images/ubr_beverage_logo.png';
                         }}
@@ -469,9 +464,9 @@ export default function CartPage() {
                         </p>
                       )}
                       <div className="flex items-center gap-2 flex-wrap text-[10px] text-slate-500">
-                        <span>หน่วย: <strong className="text-slate-700">{item.unitName || 'หน่วย'}</strong></span>
-                        <span>•</span>
                         <span>SKU: <span className="text-slate-600">{item.tradeId}</span></span>
+                        <span>•</span>
+                        <span>หน่วย: <strong className="text-slate-700">{item.unitName || 'หน่วย'}</strong></span>
                       </div>
                     </div>
                   </div>
@@ -520,9 +515,6 @@ export default function CartPage() {
                             </p>
                           )}
                         </div>
-                        <span className="text-[10px] text-slate-500 font-medium mt-1 select-none">
-                          {item.unitName || 'หน่วย'}
-                        </span>
                       </div>
                     </div>
 
@@ -595,7 +587,10 @@ export default function CartPage() {
         </div>
 
         {/* 3. Sticky Bottom Bar (Shopee Checkout Bar matching screenshot & /checkout) */}
-        <div className="sticky bottom-0 z-30 bg-white border border-slate-200/90 rounded-sm shadow-[0_-4px_16px_rgba(0,0,0,0.08)] mt-6 overflow-hidden">
+        <div 
+          className="sticky bottom-0 z-30 bg-white border border-slate-200/90 rounded-sm shadow-[0_-4px_16px_rgba(0,0,0,0.08)] mt-6 overflow-hidden animate-cart-slide-up"
+          style={{ animationDelay: '120ms' }}
+        >
           <div className="px-5 sm:px-8 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             
             {/* Left Actions: Checkbox All, Delete Selected, Continue Shopping */}

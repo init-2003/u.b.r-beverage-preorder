@@ -57,11 +57,11 @@ export default function AddToCartModal() {
       <div className="px-6 pb-3">
         <div className="flex items-center justify-between gap-3 p-3 rounded-sm bg-slate-50/80">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="w-16 h-16 rounded-sm bg-white border border-slate-200 p-1.5 flex items-center justify-center shrink-0 overflow-hidden shadow-2xs">
+            <div className="w-16 h-16 rounded bg-white border border-slate-200 flex items-center justify-center shrink-0 overflow-hidden shadow-2xs">
               <img
                 src={getProductImage(item.image)}
                 alt={item.tradeName}
-                className="max-h-full max-w-full object-contain"
+                className="w-full h-full object-cover"
                 onError={(e) => {
                   (e.target as HTMLImageElement).src = '/images/ubr_beverage_logo.png';
                 }}

@@ -330,7 +330,7 @@ export default function OrderDetailPage() {
   if (errorMsg || !order) {
     return (
       <div className="flex-1 bg-[#f5f5f5] py-16 px-4 flex items-center justify-center">
-        <div className="max-w-md w-full bg-white p-8 rounded-sm shadow-[0_1px_1px_0_rgba(0,0,0,0.05)] border border-slate-200 text-center space-y-4">
+        <div className="max-w-md w-full bg-white p-8 rounded-sm shadow-[0_1px_1px_0_rgba(0,0,0,0.05)] border border-slate-200 text-center space-y-4 animate-order-slide-up">
           <div className="w-14 h-14 bg-red-50 text-red-600 rounded-full flex items-center justify-center mx-auto">
             <AlertCircle className="w-7 h-7" />
           </div>
@@ -390,7 +390,7 @@ export default function OrderDetailPage() {
       <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 space-y-4">
 
         {/* ================= 1. SHOPEE STATUS & STEPPER HEADER BANNER ================= */}
-        <div className="bg-white rounded-sm shadow-[0_1px_1px_0_rgba(0,0,0,0.05)] border border-slate-100/80 overflow-hidden">
+        <div className="bg-white rounded-sm shadow-[0_1px_1px_0_rgba(0,0,0,0.05)] border border-slate-100/80 overflow-hidden animate-order-slide-up">
           {/* Header row: Doc No + Order Date + Status + PO Print Link */}
           <div className="p-4 sm:p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50/50">
             <div>
@@ -582,7 +582,10 @@ export default function OrderDetailPage() {
         </div>
 
         {/* ================= 2. SHOPEE DELIVERY ADDRESS CARD ================= */}
-        <div className="bg-white rounded-sm shadow-[0_1px_1px_0_rgba(0,0,0,0.05)] border border-slate-100/80 overflow-hidden">
+        <div 
+          className="bg-white rounded-sm shadow-[0_1px_1px_0_rgba(0,0,0,0.05)] border border-slate-100/80 overflow-hidden animate-order-slide-up"
+          style={{ animationDelay: '40ms' }}
+        >
           {/* Signature envelope ribbon strip */}
           <div className="h-[3px] w-full bg-[repeating-linear-gradient(45deg,#6fa6d6,#6fa6d6_33px,transparent_0,transparent_41px,#f18d9b_0,#f18d9b_74px,transparent_0,transparent_82px)]" />
 
@@ -604,7 +607,10 @@ export default function OrderDetailPage() {
         </div>
 
         {/* ================= 3. SHOPEE ORDERED ITEMS CARD ================= */}
-        <div className="bg-white rounded-sm shadow-[0_1px_1px_0_rgba(0,0,0,0.05)] border border-slate-100/80 overflow-hidden">
+        <div 
+          className="bg-white rounded-sm shadow-[0_1px_1px_0_rgba(0,0,0,0.05)] border border-slate-100/80 overflow-hidden animate-order-slide-up"
+          style={{ animationDelay: '80ms' }}
+        >
           {/* Seamless Card Header matching checkout style */}
           <div className="px-5 sm:px-6 pt-4 pb-2 flex items-center justify-between border-b border-slate-100/80">
             <div className="flex items-center gap-3">
@@ -642,11 +648,11 @@ export default function OrderDetailPage() {
                     <div key={item.Trade_Id || idx} className="p-4 space-y-3">
                       {/* Product Info Row: Image + Name */}
                       <div className="flex items-center gap-3.5">
-                        <div className="w-14 h-14 bg-white border border-slate-100 rounded shrink-0 flex items-center justify-center p-1 overflow-hidden shadow-2xs">
+                        <div className="w-14 h-14 bg-white border border-slate-100 rounded shrink-0 flex items-center justify-center overflow-hidden shadow-2xs">
                           <img
                             src={imageSrc}
                             alt={item.Trade_Name}
-                            className="max-h-full max-w-full object-contain"
+                            className="w-full h-full object-cover"
                             onError={(e) => {
                               (e.target as HTMLImageElement).src = '/images/ubr_beverage_logo.png';
                             }}
@@ -663,9 +669,9 @@ export default function OrderDetailPage() {
                             </p>
                           )}
                           <div className="flex items-center gap-2 flex-wrap text-[10px] text-slate-500">
-                            <span>หน่วย: <strong className="text-slate-700">{item.Unit_Name || 'หน่วย'}</strong></span>
-                            <span>•</span>
                             <span>SKU: <span className="text-slate-600">{item.Trade_Id}</span></span>
+                            <span>•</span>
+                            <span>หน่วย: <strong className="text-slate-700">{item.Unit_Name || 'หน่วย'}</strong></span>
                           </div>
                         </div>
                       </div>
@@ -766,11 +772,11 @@ export default function OrderDetailPage() {
                         <div className="flex items-center justify-between">
                           {/* Product Image & Info */}
                           <div className="flex items-center gap-3.5 min-w-0 flex-1 pr-4">
-                            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white border border-slate-100 rounded shrink-0 flex items-center justify-center p-1.5 overflow-hidden">
+                            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white border border-slate-100 rounded shrink-0 flex items-center justify-center overflow-hidden">
                               <img
                                 src={imageSrc}
                                 alt={item.Trade_Name}
-                                className="max-h-full max-w-full object-contain"
+                                className="w-full h-full object-cover"
                                 onError={(e) => {
                                   (e.target as HTMLImageElement).src = '/images/ubr_beverage_logo.png';
                                 }}
@@ -857,7 +863,10 @@ export default function OrderDetailPage() {
         </div>
 
         {/* ================= 4. PAYMENT METHOD & SLIP UPLOAD CARD ================= */}
-        <div className="bg-white rounded-sm shadow-[0_1px_1px_0_rgba(0,0,0,0.05)] border border-slate-100/80 p-4 sm:p-6 space-y-4">
+        <div 
+          className="bg-white rounded-sm shadow-[0_1px_1px_0_rgba(0,0,0,0.05)] border border-slate-100/80 p-4 sm:p-6 space-y-4 animate-order-slide-up"
+          style={{ animationDelay: '100ms' }}
+        >
           <div className="flex items-center justify-between border-b border-slate-100 pb-3">
             <div className="flex items-center gap-2 text-slate-900 font-bold text-sm sm:text-base">
               <CreditCard className="w-4 h-4 sm:w-5 sm:h-5 text-slate-700" />
@@ -938,7 +947,10 @@ export default function OrderDetailPage() {
         </div>
 
         {/* ================= 5. FINANCIAL SUMMARY CARD (SHOPEE STYLE) ================= */}
-        <div className="bg-white rounded-sm shadow-[0_1px_1px_0_rgba(0,0,0,0.05)] border border-slate-100/80 p-5 sm:p-6 space-y-3">
+        <div 
+          className="bg-white rounded-sm shadow-[0_1px_1px_0_rgba(0,0,0,0.05)] border border-slate-100/80 p-5 sm:p-6 space-y-3 animate-order-slide-up"
+          style={{ animationDelay: '120ms' }}
+        >
           <div className="border-b border-slate-100 pb-2.5">
             <h3 className="font-bold text-sm text-slate-900">
               สรุปยอดคำสั่งซื้อ
@@ -973,7 +985,10 @@ export default function OrderDetailPage() {
         </div>
 
         {/* ================= 6. ACTION TOOLBAR WITH PO DOWNLOAD BUTTON ================= */}
-        <div className="bg-white rounded-sm shadow-[0_1px_1px_0_rgba(0,0,0,0.05)] border border-slate-100/80 p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div 
+          className="bg-white rounded-sm shadow-[0_1px_1px_0_rgba(0,0,0,0.05)] border border-slate-100/80 p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-3 animate-order-slide-up"
+          style={{ animationDelay: '140ms' }}
+        >
           <Link
             href="/orders/history"
             className="text-xs font-bold text-[#800020] hover:text-[#6b001b] transition-colors"

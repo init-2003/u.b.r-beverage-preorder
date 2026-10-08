@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { X, Save, Loader2 } from 'lucide-react';
 
 export interface CustomerProfileData {
@@ -38,6 +38,10 @@ export default function EditProfileModal({
   profile,
   onProfileUpdated,
 }: EditProfileModalProps) {
+  const [mounted, setMounted] = useState(false);
+  const [visible, setVisible] = useState(false);
+  const closeTimerRef = useRef<NodeJS.Timeout | null>(null);
+
   const [formData, setFormData] = useState({
     customerName: '',
     customerContact: '',
@@ -51,6 +55,40 @@ export default function EditProfileModal({
 
   const [saving, setSaving] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+
+  // Handle open / close animation states
+  useEffect(() => {
+    if (isOpen) {
+      if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+      setMounted(true);
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          setVisible(true);
+        });
+      });
+    } else {
+      setVisible(false);
+      if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = setTimeout(() => {
+        setMounted(false);
+        closeTimerRef.current = null;
+      }, 220);
+    }
+    return () => {
+      if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+    };
+  }, [isOpen]);
+
+  const handleClose = () => {
+    if (!visible) return;
+    setVisible(false);
+    if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+    closeTimerRef.current = setTimeout(() => {
+      setMounted(false);
+      closeTimerRef.current = null;
+      onClose();
+    }, 220);
+  };
 
   useEffect(() => {
     if (profile) {
@@ -70,25 +108,25 @@ export default function EditProfileModal({
 
   // Prevent background scrolling when modal is open
   useEffect(() => {
-    if (!isOpen) return;
+    if (!mounted) return;
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     return () => {
       document.body.style.overflow = prevOverflow;
     };
-  }, [isOpen]);
+  }, [mounted]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) {
-        onClose();
+      if (e.key === 'Escape' && mounted) {
+        handleClose();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
+  }, [mounted, visible]);
 
-  if (!isOpen || !profile) return null;
+  if (!mounted || !profile) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -109,7 +147,7 @@ export default function EditProfileModal({
       }
 
       onProfileUpdated();
-      onClose();
+      handleClose();
     } catch {
       setErrorMsg('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์');
     } finally {
@@ -119,11 +157,17 @@ export default function EditProfileModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 animate-in fade-in duration-200"
-      onClick={onClose}
+      className={`fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-[2px] transition-opacity duration-200 ease-out ${
+        visible ? 'opacity-100' : 'opacity-0 pointer-events-none'
+      }`}
+      onClick={handleClose}
     >
       <div
-        className="relative w-full max-w-2xl bg-white rounded-sm shadow-2xl border border-slate-100/80 overflow-hidden flex flex-col max-h-[90vh]"
+        className={`relative w-full max-w-2xl bg-white rounded-sm shadow-2xl border border-slate-100/80 overflow-hidden flex flex-col max-h-[90vh] transform transition-all duration-200 ease-out ${
+          visible
+            ? 'opacity-100 scale-100 translate-y-0'
+            : 'opacity-0 scale-95 translate-y-3'
+        }`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
@@ -131,7 +175,7 @@ export default function EditProfileModal({
           <h2 className="text-lg font-black text-slate-900">ที่อยู่จัดส่งสินค้า</h2>
           <button
             type="button"
-            onClick={onClose}
+            onClick={handleClose}
             className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-full transition-colors cursor-pointer"
             title="ปิด"
           >
@@ -182,7 +226,7 @@ export default function EditProfileModal({
           <div className="flex items-center justify-end gap-3 pt-4">
             <button
               type="button"
-              onClick={onClose}
+              onClick={handleClose}
               disabled={saving}
               className="px-5 py-2 text-xs sm:text-sm font-semibold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-full transition-colors cursor-pointer disabled:opacity-50"
             >

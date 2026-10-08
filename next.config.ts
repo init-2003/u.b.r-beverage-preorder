@@ -14,11 +14,6 @@ const nextConfig: NextConfig = {
         destination: '/orders/history',
         permanent: false,
       },
-      {
-        source: '/login',
-        destination: '/',
-        permanent: false,
-      },
     ];
   },
 };

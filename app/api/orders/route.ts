@@ -3,6 +3,7 @@ import { getCurrentCustomer } from '@/lib/auth';
 import { getDbPool, sql } from '@/lib/db';
 import { createPreOrder } from '@/lib/order-service';
 import { validateOrderPayload, parseOrdersQuery, escapeSqlLike } from '@/lib/validation';
+import { resolveProductImageUrl } from '@/lib/image-utils';
 
 // GET /api/orders: รายการประวัติคำสั่งซื้อ
 export async function GET(req: NextRequest) {
@@ -109,7 +110,10 @@ export async function GET(req: NextRequest) {
         for (const row of detailResult.recordset) {
           const docNo = row.Fn_Doc_No;
           if (!itemsByDocNo[docNo]) itemsByDocNo[docNo] = [];
-          itemsByDocNo[docNo].push(row);
+          itemsByDocNo[docNo].push({
+            ...row,
+            Trade_Part_Image: resolveProductImageUrl(row.Trade_Part_Image),
+          });
         }
 
         for (const order of orders) {

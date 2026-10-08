@@ -4,15 +4,25 @@ import React, { useEffect, useState, useCallback, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Product } from '@/types/preorder';
 import ProductCatalog from '@/components/ProductCatalog';
+import { useAuth } from '@/context/AuthContext';
+import { HomeSkeleton } from '@/components/HomeSkeleton';
 
 function HomeAppPageContent() {
   const router = useRouter();
+  const { customer, loading: authLoading } = useAuth();
   const searchParams = useSearchParams();
   const urlSearch = searchParams.get('search') ?? '';
   const urlCategory = searchParams.get('category') ?? 'all';
 
   const [products, setProducts] = useState<Product[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
+
+  // ตรวจสอบสถานะการเข้าสู่ระบบ หากยังไม่ล็อกอิน ให้ redirect ไป /login
+  useEffect(() => {
+    if (!authLoading && !customer) {
+      router.replace('/login');
+    }
+  }, [authLoading, customer, router]);
 
   // โหลดรายการสินค้าตาม Category และ Search
   const fetchProducts = useCallback(async (cat: string, search: string) => {
@@ -51,7 +61,11 @@ function HomeAppPageContent() {
             origin: p.Trade_Province || '',
             alcoholPercent: 0,
             description: p.Trade_Note || '',
-            imageUrl: p.Trade_Part_Image ? p.Trade_Part_Image : '/images/ubr_beverage_logo.png',
+            imageUrl: p.Trade_Part_Image
+              ? p.Trade_Part_Image.startsWith('/') || p.Trade_Part_Image.startsWith('http')
+                ? p.Trade_Part_Image
+                : `/${p.Trade_Part_Image}`
+              : '/images/ubr_beverage_logo.png',
           };
         });
 
@@ -99,6 +113,10 @@ function HomeAppPageContent() {
     router.push('/');
   };
 
+  if (authLoading) {
+    return <HomeSkeleton />;
+  }
+
   return (
     <div className="max-w-[1600px] mx-auto w-full px-4 sm:px-6 lg:px-8 pt-3 pb-12 flex-1 flex flex-col space-y-4">
       <ProductCatalog
@@ -116,11 +134,7 @@ function HomeAppPageContent() {
 
 export default function HomeAppPage() {
   return (
-    <Suspense fallback={
-      <div className="max-w-[1600px] mx-auto w-full px-4 sm:px-6 lg:px-8 pt-3 pb-8">
-        <div className="h-64 rounded-lg bg-white border border-slate-200 animate-pulse" />
-      </div>
-    }>
+    <Suspense fallback={<HomeSkeleton />}>
       <HomeAppPageContent />
     </Suspense>
   );

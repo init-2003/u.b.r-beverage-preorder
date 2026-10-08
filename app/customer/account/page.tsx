@@ -47,17 +47,14 @@ function AccountContent() {
 
   if (authLoading || (loading && !profile)) {
     return (
-      <AccountLayout>
-        <div className="w-full min-h-[calc(100vh-250px)] flex items-center justify-center">
-          <WineLoading size="md" />
-        </div>
-      </AccountLayout>
+      <div className="w-full min-h-[480px] sm:min-h-[560px] flex flex-col items-center justify-center">
+        <WineLoading size="md" />
+      </div>
     );
   }
 
   return (
-    <AccountLayout>
-      <div className="space-y-6">
+    <div className="space-y-6 animate-account-slide-up">
         {/* Page Title (Desktop only, mobile shows in mobile bar with hamburger button) */}
         <div className="hidden lg:flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-200/80">
           <div>
@@ -170,23 +167,21 @@ function AccountContent() {
           </div>
         </div>
       </div>
-
-    </AccountLayout>
   );
 }
 
 export default function CustomerAccountPage() {
   return (
-    <Suspense
-      fallback={
-        <AccountLayout>
-          <div className="w-full min-h-[calc(100vh-250px)] flex items-center justify-center">
+    <AccountLayout activeItemOverride="account">
+      <Suspense
+        fallback={
+          <div className="w-full min-h-[480px] sm:min-h-[560px] flex flex-col items-center justify-center">
             <WineLoading size="md" />
           </div>
-        </AccountLayout>
-      }
-    >
-      <AccountContent />
-    </Suspense>
+        }
+      >
+        <AccountContent />
+      </Suspense>
+    </AccountLayout>
   );
 }

@@ -208,11 +208,11 @@ export default function CartDropdown() {
                     className="p-2.5 sm:p-3 flex items-center gap-3 hover:bg-slate-50/80 transition-colors cursor-pointer group select-none"
                   >
                     {/* Square Thumbnail */}
-                    <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-none bg-white shrink-0 overflow-hidden border border-slate-200/80 p-0.5 flex items-center justify-center">
+                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded bg-white shrink-0 overflow-hidden border border-slate-200/80 flex items-center justify-center shadow-2xs">
                       <ProductImage
                         src={item.image || '/images/ubr_beverage_logo.png'}
                         alt={item.tradeName}
-                        objectFit="contain"
+                        objectFit="cover"
                         priority={true}
                         fallbackSrc="/images/ubr_beverage_logo.png"
                       />

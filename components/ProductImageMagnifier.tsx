@@ -25,8 +25,14 @@ export default function ProductImageMagnifier({
   // Cursor point relative to the image itself (clamped to image bounds) — used for zoom math
   const [imgPos, setImgPos] = useState({ x: 0, y: 0 });
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+  const normalizeImgSrc = (s?: string) => {
+    if (!s || !s.trim()) return '/images/ubr_beverage_logo.png';
+    const clean = s.trim();
+    return clean.startsWith('/') || clean.startsWith('http') || clean.startsWith('data:') ? clean : `/${clean}`;
+  };
+
   const [isLoaded, setIsLoaded] = useState(true);
-  const [imgSrc, setImgSrc] = useState(src || '/images/ubr_beverage_logo.png');
+  const [imgSrc, setImgSrc] = useState(() => normalizeImgSrc(src));
   // Drives the cursor: normal arrow until the magnifier is armed, crosshair after that
   const [isArmed, setIsArmed] = useState(false);
 
@@ -46,7 +52,7 @@ export default function ProductImageMagnifier({
   }, []);
 
   useEffect(() => {
-    const target = src || '/images/ubr_beverage_logo.png';
+    const target = normalizeImgSrc(src);
     setImgSrc(target);
     if (imgRef.current && imgRef.current.complete) {
       setIsLoaded(true);
