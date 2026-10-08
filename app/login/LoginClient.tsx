@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { LoginHeader, LoginForm } from '@/components/ui';
 import { Alert } from '@/components/ui/Alert';
@@ -10,7 +10,6 @@ import { CompanyLogo } from '@/components/CompanyLogo';
 
 export default function LoginClient() {
   const { customer, loading } = useAuth();
-  const router = useRouter();
   const searchParams = useSearchParams();
   const redirectUrl = searchParams.get('redirect') || '/';
   const [globalError, setGlobalError] = useState('');
@@ -65,13 +64,15 @@ export default function LoginClient() {
     if (shouldAutoLogin || (urlUser && urlPass)) return;
     if (!loading && customer) {
       setIsLoggingIn(true);
-      router.replace(redirectUrl);
+      window.location.href = redirectUrl;
     }
-  }, [customer, loading, redirectUrl, router, previewLoading, shouldAutoLogin, urlUser, urlPass]);
+  }, [customer, loading, redirectUrl, previewLoading, shouldAutoLogin, urlUser, urlPass]);
 
   const handleLoginSuccess = () => {
     setIsLoggingIn(true);
-    router.replace(redirectUrl);
+    // ใช้ window.location.href แทน router.replace เพื่อทำ Full Browser Navigation
+    // ป้องกันปัญหา Next.js App Router Client Cache จำผล Redirect เดิมของหน้า / (307 -> /login) ก่อนล็อกอิน
+    window.location.href = redirectUrl;
   };
 
   const showTopLoading = isLoggingIn || isSubmitting || (!loading && customer);
@@ -83,6 +84,7 @@ export default function LoginClient() {
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center">
           <Link
             href="/"
+            prefetch={false}
             className="flex items-center group shrink-0 transition-opacity hover:opacity-95"
             title="หน้าหลัก หจก.อุบลรุ่งเรืองเบฟเวอเรจ"
           >
