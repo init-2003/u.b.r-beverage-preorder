@@ -14,8 +14,14 @@ export function proxy(request: NextRequest) {
 
   // 1. หน้า /login
   if (pathname === '/login') {
-    if (isAuthenticated) {
-      // ล็อกอินอยู่แล้ว พาไปหน้าหลัก หรือหน้าที่ต้องการ
+    const hasLoginParams =
+      request.nextUrl.searchParams.has('cususer') ||
+      request.nextUrl.searchParams.has('user') ||
+      request.nextUrl.searchParams.has('username') ||
+      request.nextUrl.search.includes('cususer=');
+
+    if (isAuthenticated && !hasLoginParams) {
+      // ล็อกอินอยู่แล้ว และไม่ได้ส่งพารามิเตอร์มาล็อกอินใหม่ พาไปหน้าหลัก หรือหน้าที่ต้องการ
       const redirectTarget = request.nextUrl.searchParams.get('redirect') || '/';
       return NextResponse.redirect(new URL(redirectTarget, request.url));
     }

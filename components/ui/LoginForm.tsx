@@ -15,6 +15,9 @@ export interface LoginFormProps {
   className?: string;
   onGlobalError?: (error: string) => void;
   onLoadingChange?: (loading: boolean) => void;
+  initialUsername?: string;
+  initialPassword?: string;
+  autoSubmit?: boolean;
 }
 
 const REMEMBER_ME_STORAGE_KEY = 'ubr_remember_me';
@@ -27,11 +30,14 @@ export function LoginForm({
   className = '',
   onGlobalError,
   onLoadingChange,
+  initialUsername = '',
+  initialPassword = '',
+  autoSubmit = false,
 }: LoginFormProps) {
   const { login } = useAuth();
 
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const [username, setUsername] = useState(initialUsername || '');
+  const [password, setPassword] = useState(initialPassword || '');
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   // Error แสดงเป็น placeholder ในช่องกรอกที่กรอกผิด (username/password)
@@ -41,6 +47,7 @@ export function LoginForm({
   const [formError, setFormError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showRememberTooltip, setShowRememberTooltip] = useState(false);
+  const autoSubmittedRef = React.useRef(false);
 
   React.useEffect(() => {
     try {
@@ -52,14 +59,14 @@ export function LoginForm({
       // ถ้าเคยกดติ๊กออก ('false'): จำว่าไม่ติ๊ก (false)
       if (savedRemember === 'true') {
         setRememberMe(true);
-        if (savedUser) {
+        if (savedUser && !initialUsername) {
           setUsername(savedUser);
         }
       } else {
         setRememberMe(false);
       }
     } catch {}
-  }, []);
+  }, [initialUsername]);
 
   const handleRememberMeChange = (checked: boolean) => {
     setRememberMe(checked);
@@ -104,16 +111,15 @@ export function LoginForm({
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const executeLogin = async (userToLogin: string, passToLogin: string) => {
     clearErrors();
 
-    if (!username.trim()) {
+    if (!userToLogin.trim()) {
       setUsernameError('กรุณากรอกรหัสลูกค้า');
       return;
     }
 
-    if (!password.trim()) {
+    if (!passToLogin.trim()) {
       setPasswordError('กรุณากรอกรหัสผ่าน');
       return;
     }
@@ -126,8 +132,8 @@ export function LoginForm({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          username: username.trim(),
-          password: password.trim(),
+          username: userToLogin.trim(),
+          password: passToLogin.trim(),
           rememberMe,
         }),
       });
@@ -143,7 +149,7 @@ export function LoginForm({
       try {
         if (rememberMe) {
           localStorage.setItem(REMEMBER_ME_STORAGE_KEY, 'true');
-          localStorage.setItem(SAVED_USERNAME_STORAGE_KEY, username.trim());
+          localStorage.setItem(SAVED_USERNAME_STORAGE_KEY, userToLogin.trim());
         } else {
           localStorage.setItem(REMEMBER_ME_STORAGE_KEY, 'false');
           localStorage.removeItem(SAVED_USERNAME_STORAGE_KEY);
@@ -165,6 +171,30 @@ export function LoginForm({
       setLoading(false);
       onLoadingChange?.(false);
     }
+  };
+
+  // ดำเนินการ Auto-Login ทันทีเมื่อระบุรหัสลูกค้าและรหัสผ่านผ่าน URL Parameter
+  React.useEffect(() => {
+    if (initialUsername) {
+      setUsername(initialUsername);
+    }
+    if (initialPassword) {
+      setPassword(initialPassword);
+    }
+    if (
+      initialUsername &&
+      initialPassword &&
+      autoSubmit &&
+      !autoSubmittedRef.current
+    ) {
+      autoSubmittedRef.current = true;
+      executeLogin(initialUsername, initialPassword);
+    }
+  }, [initialUsername, initialPassword, autoSubmit]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    executeLogin(username, password);
   };
 
   return (

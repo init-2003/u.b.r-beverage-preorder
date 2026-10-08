@@ -19,14 +19,55 @@ export default function LoginClient() {
   const previewLoading = searchParams.get('preview_loading') === 'true' || searchParams.get('loading') === 'true';
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // ถ้าล็อกอินอยู่แล้ว ให้ redirect ไปยังหน้าที่ต้องการทันที
+  // ดึงข้อมูลรหัสลูกค้าและรหัสผ่านจาก URL Search Params (รองรับทั้ง &cuspass= และแบบพิมพ์ติดกัน cususer=...cuspass=...)
+  const { urlUser, urlPass, shouldAutoLogin } = React.useMemo(() => {
+    let u =
+      searchParams.get('cususer') ||
+      searchParams.get('user') ||
+      searchParams.get('username') ||
+      searchParams.get('Cus_User') ||
+      searchParams.get('cus_user') ||
+      '';
+    let p =
+      searchParams.get('cuspass') ||
+      searchParams.get('pass') ||
+      searchParams.get('password') ||
+      searchParams.get('Cus_SPass') ||
+      searchParams.get('cus_spass') ||
+      '';
+
+    // กรณีส่งพารามิเตอร์แบบพิมพ์ติดกัน เช่น ?cususer=C6000004cuspass=C6000004
+    if (u && !p) {
+      if (u.includes('cuspass=')) {
+        const parts = u.split('cuspass=');
+        u = parts[0] || '';
+        p = parts[1] || '';
+      } else if (u.includes('pass=')) {
+        const parts = u.split('pass=');
+        u = parts[0] || '';
+        p = parts[1] || '';
+      }
+    }
+
+    const autoParam = searchParams.get('auto');
+    const auto = autoParam !== 'false' && Boolean(u && p);
+
+    return {
+      urlUser: u.trim(),
+      urlPass: p.trim(),
+      shouldAutoLogin: auto,
+    };
+  }, [searchParams]);
+
+  // ถ้าล็อกอินอยู่แล้ว ให้ redirect ไปยังหน้าที่ต้องการทันที (เว้นแต่กำลังส่งพารามิเตอร์มาล็อกอินใหม่)
   useEffect(() => {
     if (previewLoading) return;
+    if (shouldAutoLogin || (urlUser && urlPass)) return;
     if (!loading && customer) {
       setIsLoggingIn(true);
       router.replace(redirectUrl);
     }
-  }, [customer, loading, redirectUrl, router, previewLoading]);
+  }, [customer, loading, redirectUrl, router, previewLoading, shouldAutoLogin, urlUser, urlPass]);
 
   const handleLoginSuccess = () => {
     setIsLoggingIn(true);
@@ -86,9 +127,12 @@ export default function LoginClient() {
             {/* ฟอร์มเข้าสู่ระบบ (รหัสลูกค้า, รหัสผ่าน, Remember Me, ซัพพอร์ตโน้ต, ปุ่มแดงเบอร์กันดี) */}
             <LoginForm
               onSuccess={handleLoginSuccess}
-              autoFocus={true}
+              autoFocus={!urlUser}
               onGlobalError={setGlobalError}
               onLoadingChange={setIsSubmitting}
+              initialUsername={urlUser}
+              initialPassword={urlPass}
+              autoSubmit={shouldAutoLogin}
             />
           </div>
         </div>
