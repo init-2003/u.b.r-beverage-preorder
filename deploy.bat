@@ -98,6 +98,7 @@ xcopy /E /Y /I "%PROJECT_DIR%python-service\*" "%DEPLOY_DIR%\python-service\" > 
 REM OCR trained data
 if exist "%PROJECT_DIR%eng.traineddata" copy /Y "%PROJECT_DIR%eng.traineddata" "%DEPLOY_DIR%\" > nul
 if exist "%PROJECT_DIR%tha.traineddata" copy /Y "%PROJECT_DIR%tha.traineddata" "%DEPLOY_DIR%\" > nul
+if exist "%PROJECT_DIR%osd.traineddata" copy /Y "%PROJECT_DIR%osd.traineddata" "%DEPLOY_DIR%\" > nul
 echo.
 goto :start_pm2
 

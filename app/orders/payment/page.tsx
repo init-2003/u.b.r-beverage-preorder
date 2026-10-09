@@ -8,15 +8,8 @@ import PromptPayQrCard from '@/components/checkout/PromptPayQrCard';
 import PaymentSuccessModal from '@/components/payment/PaymentSuccessModal';
 import PaymentErrorModal from '@/components/payment/PaymentErrorModal';
 import {
-  Upload,
   CheckCircle2,
-  AlertCircle,
   RefreshCw,
-  ArrowRight,
-  UploadCloud,
-  FileImage,
-  Trash2,
-  Lock,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { UploadSlipIllustration } from '@/components/orders/UploadSlipIllustration';
@@ -55,7 +48,6 @@ function OrderPaymentContent() {
   const [slipFile, setSlipFile] = useState<File | null>(null);
   const [slipPreview, setSlipPreview] = useState<string | null>(null);
   const [uploadingSlip, setUploadingSlip] = useState(false);
-  const [uploadSuccessMsg, setUploadSuccessMsg] = useState('');
   const [uploadErrorMsg, setUploadErrorMsg] = useState('');
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showErrorModal, setShowErrorModal] = useState(false);
@@ -144,7 +136,6 @@ function OrderPaymentContent() {
     if (file) {
       setSlipFile(file);
       setSlipPreview(URL.createObjectURL(file));
-      setUploadSuccessMsg('');
       setUploadErrorMsg('');
     }
   };
@@ -152,7 +143,6 @@ function OrderPaymentContent() {
   const handleClearSlip = () => {
     setSlipFile(null);
     setSlipPreview(null);
-    setUploadSuccessMsg('');
     setUploadErrorMsg('');
   };
 
@@ -161,7 +151,6 @@ function OrderPaymentContent() {
     if (!slipFile || !docNo) return;
     setUploadingSlip(true);
     setUploadErrorMsg('');
-    setUploadSuccessMsg('');
 
     try {
       const formData = new FormData();

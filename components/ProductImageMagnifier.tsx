@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useCallback, useEffect } from 'react';
+import { isPlaceholderUrl } from '@/components/ui/ProductImage';
 
 interface ProductImageMagnifierProps {
   src: string;
@@ -33,11 +34,27 @@ export default function ProductImageMagnifier({
 
   const [isLoaded, setIsLoaded] = useState(true);
   const [imgSrc, setImgSrc] = useState(() => normalizeImgSrc(src));
+  const [isLogoDetected, setIsLogoDetected] = useState<boolean>(() => {
+    return isPlaceholderUrl(src) || isPlaceholderUrl(normalizeImgSrc(src));
+  });
   // Drives the cursor: normal arrow until the magnifier is armed, crosshair after that
   const [isArmed, setIsArmed] = useState(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
+
+  const checkLogoDims = (img: HTMLImageElement) => {
+    if (!img) return;
+    const isLogoDims =
+      (img.naturalWidth === 746 && img.naturalHeight === 660) ||
+      (img.naturalWidth === 1024 && img.naturalHeight === 1024) ||
+      (img.naturalWidth > 0 && Math.abs(img.naturalWidth / img.naturalHeight - 1.13) < 0.05) ||
+      (img.naturalWidth > 0 && Math.abs(img.naturalWidth / img.naturalHeight - 1.0) < 0.05 && img.naturalWidth >= 400);
+
+    if (isLogoDims) {
+      setIsLogoDetected(true);
+    }
+  };
 
   // The magnifier must NOT start working right after the page loads (or right after a
   // client-side navigation) when the pointer happens to already rest on the image.
@@ -54,7 +71,11 @@ export default function ProductImageMagnifier({
   useEffect(() => {
     const target = normalizeImgSrc(src);
     setImgSrc(target);
+    if (isPlaceholderUrl(target)) {
+      setIsLogoDetected(true);
+    }
     if (imgRef.current && imgRef.current.complete) {
+      checkLogoDims(imgRef.current);
       setIsLoaded(true);
     }
   }, [src]);
@@ -150,11 +171,22 @@ export default function ProductImageMagnifier({
         alt={alt}
         loading="eager"
         decoding="async"
-        onLoad={() => setIsLoaded(true)}
-        className={`max-h-[360px] sm:max-h-[440px] w-auto h-auto object-contain transition-opacity duration-200 ${isHovering ? 'opacity-40' : 'opacity-100'
-          }`}
+        onLoad={(e) => {
+          checkLogoDims(e.currentTarget);
+          setIsLoaded(true);
+        }}
+        className={
+          imgSrc.includes('ubr_beverage_logo') || isPlaceholderUrl(imgSrc) || isLogoDetected
+            ? `w-full max-w-[360px] sm:max-w-[420px] aspect-square object-cover rounded-sm shadow-xs transition-opacity duration-200 ${
+                isHovering ? 'opacity-40' : 'opacity-100'
+              }`
+            : `max-h-[360px] sm:max-h-[440px] w-auto h-auto object-contain transition-opacity duration-200 ${
+                isHovering ? 'opacity-40' : 'opacity-100'
+              }`
+        }
         onError={() => {
           setImgSrc('/images/ubr_beverage_logo.png');
+          setIsLogoDetected(true);
           setIsLoaded(true);
         }}
       />

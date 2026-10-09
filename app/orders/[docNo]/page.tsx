@@ -5,31 +5,15 @@ import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useBreadcrumb } from '@/context/BreadcrumbContext';
 import {
-  CheckCircle2,
-  Truck,
   QrCode,
-  Upload,
-  Printer,
-  Download,
   Loader2,
   MapPin,
-  FileText,
   Clock,
-  Package,
   CreditCard,
-  ChevronRight,
-  ShoppingBag,
   ArrowLeft,
   AlertCircle,
-  Eye,
   XCircle,
-  RefreshCw,
-  UploadCloud,
-  FileImage,
-  Trash2,
-  Lock,
 } from 'lucide-react';
-import PaymentErrorModal from '@/components/payment/PaymentErrorModal';
 import { useAuth } from '@/context/AuthContext';
 import PaidStamp from '@/components/orders/PaidStamp';
 import { CodIllustration } from '@/components/orders/CodIllustration';
@@ -39,6 +23,7 @@ import { StepPaymentIllustration } from '@/components/orders/StepPaymentIllustra
 import { StepProcessingIllustration } from '@/components/orders/StepProcessingIllustration';
 import { StepReceiptIllustration } from '@/components/orders/StepReceiptIllustration';
 import { WineLoading } from '@/components/WineLoading';
+import { ProductImage } from '@/components/ui/ProductImage';
 
 interface OrderDetail {
   Branch_Id: string;
@@ -111,16 +96,10 @@ export default function OrderDetailPage() {
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
 
-  // Slip upload states
-  const [slipFile, setSlipFile] = useState<File | null>(null);
-  const [slipPreview, setSlipPreview] = useState<string | null>(null);
-  const [uploadingSlip, setUploadingSlip] = useState(false);
-  const [uploadSuccessMsg, setUploadSuccessMsg] = useState('');
-  const [uploadErrorMsg, setUploadErrorMsg] = useState('');
+  // Slip viewer modal states
   const [showSlipModal, setShowSlipModal] = useState(false);
   const [slipModalVisible, setSlipModalVisible] = useState(false);
   const slipModalTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const [showErrorModal, setShowErrorModal] = useState(false);
 
   const openSlipModal = () => {
     if (slipModalTimerRef.current) {
@@ -175,76 +154,6 @@ export default function OrderDetailPage() {
     };
   }, []);
 
-  const handleSlipChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setSlipFile(file);
-      setSlipPreview(URL.createObjectURL(file));
-      setUploadSuccessMsg('');
-      setUploadErrorMsg('');
-    }
-  };
-
-  const handleClearSlip = () => {
-    setSlipFile(null);
-    setSlipPreview(null);
-    setUploadSuccessMsg('');
-    setUploadErrorMsg('');
-  };
-
-  const handleUploadSlip = async () => {
-    if (!slipFile || !docNo) return;
-    setUploadingSlip(true);
-    setUploadErrorMsg('');
-    setUploadSuccessMsg('');
-
-    try {
-      const formData = new FormData();
-      formData.append('file', slipFile);
-      formData.append('docNo', docNo);
-      formData.append('expectedAmount', String(deposit));
-
-      const uploadRes = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData,
-      });
-      const uploadData = await uploadRes.json();
-      if (!uploadRes.ok || !uploadData.success) {
-        throw new Error(
-          uploadData.message ||
-          'สลิปไม่ถูกต้อง! กรุณาอัปโหลดสลิปที่ถูกต้อง'
-        );
-      }
-
-      const filename = uploadData.filename;
-
-      // อัปเดต state ทันที เนื่องจาก /api/upload ได้ปรับปรุงฐานข้อมูลเป็น Doc_Sts = '0' เรียบร้อยแล้ว
-      setOrder((prev) =>
-        prev
-          ? {
-            ...prev,
-            FILE_NAME_PIC: filename,
-            Doc_Sts: '0',
-            Doc_Sts_Name: 'กำลังดำเนินการ',
-          }
-          : prev
-      );
-      setUploadSuccessMsg(
-        uploadData.message ||
-        '✓ ตรวจสอบ QR Code และยอดเงินในสลิปถูกต้องเรียบร้อยแล้ว สถานะเปลี่ยนเป็นกำลังดำเนินการ'
-      );
-      setSlipFile(null);
-      setSlipPreview(null);
-    } catch (err: any) {
-      const msg = err.message || 'สลิปไม่ถูกต้อง! กรุณาอัปโหลดสลิปที่ถูกต้อง';
-      setUploadErrorMsg(msg);
-      setShowErrorModal(true);
-    } finally {
-      setUploadingSlip(false);
-    }
-  };
-
-  const [refreshing, setRefreshing] = useState(false);
   const [downloadingPdf, setDownloadingPdf] = useState(false);
 
   const handleDownloadPdf = async () => {
@@ -280,7 +189,7 @@ export default function OrderDetailPage() {
     }
   }, [authLoading, customer, router]);
 
-  const fetchOrder = async (isManual = false) => {
+  const fetchOrder = async () => {
     if (!docNo) return;
     if (authLoading) return;
     if (!customer) {
@@ -288,7 +197,6 @@ export default function OrderDetailPage() {
       router.replace('/');
       return;
     }
-    if (isManual) setRefreshing(true);
     try {
       const res = await fetch(`/api/orders/${encodeURIComponent(docNo)}`);
       const data = await res.json();
@@ -305,7 +213,6 @@ export default function OrderDetailPage() {
       setErrorMsg('เกิดข้อผิดพลาดในการโหลดข้อมูลคำสั่งซื้อ');
     } finally {
       setLoading(false);
-      if (isManual) setRefreshing(false);
     }
   };
 
@@ -639,7 +546,7 @@ export default function OrderDetailPage() {
                   const lineDeposit = unitDeposit * Number(item.Qty || 0);
 
                   const imageSrc = item.Trade_Part_Image
-                    ? item.Trade_Part_Image.startsWith('/')
+                    ? item.Trade_Part_Image.startsWith('/') || item.Trade_Part_Image.startsWith('http')
                       ? item.Trade_Part_Image
                       : `/${item.Trade_Part_Image}`
                     : '/images/ubr_beverage_logo.png';
@@ -649,13 +556,12 @@ export default function OrderDetailPage() {
                       {/* Product Info Row: Image + Name */}
                       <div className="flex items-center gap-3.5">
                         <div className="w-14 h-14 bg-white border border-slate-100 rounded shrink-0 flex items-center justify-center overflow-hidden shadow-2xs">
-                          <img
+                          <ProductImage
                             src={imageSrc}
                             alt={item.Trade_Name}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).src = '/images/ubr_beverage_logo.png';
-                            }}
+                            objectFit="auto"
+                            priority={true}
+                            fallbackSrc="/images/ubr_beverage_logo.png"
                           />
                         </div>
 
@@ -762,7 +668,7 @@ export default function OrderDetailPage() {
                     const lineDeposit = unitDeposit * Number(item.Qty || 0);
 
                     const imageSrc = item.Trade_Part_Image
-                      ? item.Trade_Part_Image.startsWith('/')
+                      ? item.Trade_Part_Image.startsWith('/') || item.Trade_Part_Image.startsWith('http')
                         ? item.Trade_Part_Image
                         : `/${item.Trade_Part_Image}`
                       : '/images/ubr_beverage_logo.png';
@@ -773,13 +679,12 @@ export default function OrderDetailPage() {
                           {/* Product Image & Info */}
                           <div className="flex items-center gap-3.5 min-w-0 flex-1 pr-4">
                             <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white border border-slate-100 rounded shrink-0 flex items-center justify-center overflow-hidden">
-                              <img
+                              <ProductImage
                                 src={imageSrc}
                                 alt={item.Trade_Name}
-                                className="w-full h-full object-cover"
-                                onError={(e) => {
-                                  (e.target as HTMLImageElement).src = '/images/ubr_beverage_logo.png';
-                                }}
+                                objectFit="auto"
+                                priority={true}
+                                fallbackSrc="/images/ubr_beverage_logo.png"
                               />
                             </div>
 
@@ -1061,13 +966,6 @@ export default function OrderDetailPage() {
         </div>
       )}
 
-      {/* Error Modal */}
-      {showErrorModal && (
-        <PaymentErrorModal
-          message={uploadErrorMsg}
-          onClose={() => setShowErrorModal(false)}
-        />
-      )}
     </div>
   );
 }

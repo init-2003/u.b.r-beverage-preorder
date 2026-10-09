@@ -3,7 +3,7 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
-import { Modal, Button } from '@/components/ui';
+import { Modal, Button, ProductImage } from '@/components/ui';
 import { Check } from 'lucide-react';
 
 export default function AddToCartModal() {
@@ -21,10 +21,7 @@ export default function AddToCartModal() {
     router.push('/cart');
   };
 
-  const getProductImage = (img?: string) => {
-    if (!img) return '/images/ubr_beverage_logo.png';
-    return img.startsWith('/') ? img : `/${img}`;
-  };
+
 
   return (
     <Modal
@@ -58,13 +55,12 @@ export default function AddToCartModal() {
         <div className="flex items-center justify-between gap-3 p-3 rounded-sm bg-slate-50/80">
           <div className="flex items-center gap-3 min-w-0">
             <div className="w-16 h-16 rounded bg-white border border-slate-200 flex items-center justify-center shrink-0 overflow-hidden shadow-2xs">
-              <img
-                src={getProductImage(item.image)}
+              <ProductImage
+                src={item.image || '/images/ubr_beverage_logo.png'}
                 alt={item.tradeName}
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = '/images/ubr_beverage_logo.png';
-                }}
+                objectFit="auto"
+                priority={true}
+                fallbackSrc="/images/ubr_beverage_logo.png"
               />
             </div>
             <div className="min-w-0 flex-1">

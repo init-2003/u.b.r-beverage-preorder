@@ -13,6 +13,7 @@ import {
   ShoppingCart,
   Check,
   AlertCircle,
+  Clock,
 } from 'lucide-react';
 
 interface ProductDetail {
@@ -157,8 +158,6 @@ export default function ProductDetailPage({
 
   const unitDeposit = product.depositPrice && product.depositPrice > 0 ? product.depositPrice : 0;
   const lineTotal = product.price * qty;
-  const depositAmt = unitDeposit * qty;
-  const remainingAmt = Math.max(0, lineTotal - depositAmt);
 
   // Original price for strikethrough comparison (if cost/salePrice is higher than display price)
   const originalPrice = product.salePrice1 && product.salePrice1 > product.price ? product.salePrice1 : 0;
@@ -179,7 +178,7 @@ export default function ProductDetailPage({
                 <ProductImageMagnifier
                   src={
                     product.imageUrl
-                      ? product.imageUrl.startsWith('/')
+                      ? product.imageUrl.startsWith('/') || product.imageUrl.startsWith('http')
                         ? product.imageUrl
                         : `/${product.imageUrl}`
                       : '/images/ubr_beverage_logo.png'
@@ -211,13 +210,13 @@ export default function ProductDetailPage({
                 )}
               </div>
 
-              {/* 3. Status Badge */}
+              {/* 3. Status Badge: Pre-order with clock icon matching reference */}
               <div className="flex items-center text-xs pt-1 pb-1">
-                <div className="flex items-center gap-1.5 font-bold text-emerald-700">
-                  <div className="w-4 h-4 rounded-full bg-emerald-600 flex items-center justify-center text-white">
-                    <Check className="w-2.5 h-2.5 stroke-[3]" />
+                <div className="flex items-center gap-1.5 font-bold text-[#e59f19]">
+                  <div className="w-4 h-4 rounded-full bg-[#ffb930] flex items-center justify-center text-white shadow-2xs">
+                    <Clock className="w-2.5 h-2.5 stroke-[2.5]" />
                   </div>
-                  <span>สินค้าพร้อม Pre Order</span>
+                  <span className="font-semibold text-sm text-[#e59f19]">Pre-order</span>
                 </div>
               </div>
 
@@ -252,14 +251,6 @@ export default function ProductDetailPage({
                       / {product.unitName}
                     </span>
                   ) : null}
-                  {product.depositPercent > 0 && (
-                    <span
-                      className="inline-flex items-center justify-center bg-[#ffe01b] border border-amber-300 rounded-sm px-1.5 py-0.5 text-[11px] font-black text-blue-700 leading-none shadow-2xs select-none"
-                      title={`มัดจำ ${product.depositPercent}%`}
-                    >
-                      {product.depositPercent}%
-                    </span>
-                  )}
                 </div>
               </div>
 
@@ -274,7 +265,7 @@ export default function ProductDetailPage({
                       type="button"
                       onClick={() => setQty(Math.max(1, qty - 1))}
                       disabled={qty <= 1}
-                      className="w-9 h-9 flex items-center justify-center text-slate-600 hover:bg-slate-100 disabled:opacity-30 disabled:hover:bg-white text-base font-bold transition-colors cursor-pointer"
+                      className="w-9 h-9 flex items-center justify-center text-slate-700 hover:bg-black hover:text-white active:bg-slate-800 disabled:opacity-30 disabled:hover:bg-white disabled:hover:text-slate-700 disabled:cursor-not-allowed text-base font-bold transition-colors cursor-pointer select-none"
                       aria-label="ลดจำนวน"
                     >
                       -
@@ -285,7 +276,7 @@ export default function ProductDetailPage({
                     <button
                       type="button"
                       onClick={() => setQty(qty + 1)}
-                      className="w-9 h-9 flex items-center justify-center text-slate-600 hover:bg-slate-100 text-base font-bold transition-colors cursor-pointer"
+                      className="w-9 h-9 flex items-center justify-center text-slate-700 hover:bg-black hover:text-white active:bg-slate-800 text-base font-bold transition-colors cursor-pointer select-none"
                       aria-label="เพิ่มจำนวน"
                     >
                       +

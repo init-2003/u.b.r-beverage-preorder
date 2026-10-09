@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDbPool, sql } from '@/lib/db';
+import { getDbPool } from '@/lib/db';
 import { getCurrentCustomer } from '@/lib/auth';
 import { resolveProductImageUrl } from '@/lib/image-utils';
 import { escapeSqlLike, parseProductsQuery } from '@/lib/validation';

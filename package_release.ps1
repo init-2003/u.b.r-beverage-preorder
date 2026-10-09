@@ -67,8 +67,10 @@ if (Test-Path $pythonSrc) {
 # OCR Data
 $engOcr = Join-Path $projectDir "eng.traineddata"
 $thaOcr = Join-Path $projectDir "tha.traineddata"
+$osdOcr = Join-Path $projectDir "osd.traineddata"
 if (Test-Path $engOcr) { Copy-Item -Path $engOcr -Destination $distDir -Force }
 if (Test-Path $thaOcr) { Copy-Item -Path $thaOcr -Destination $distDir -Force }
+if (Test-Path $osdOcr) { Copy-Item -Path $osdOcr -Destination $distDir -Force }
 
 # Configs & Environments
 Copy-Item -Path (Join-Path $projectDir ".env.production") -Destination (Join-Path $distDir ".env.production") -Force

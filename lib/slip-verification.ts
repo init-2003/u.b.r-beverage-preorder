@@ -1,3 +1,5 @@
+import path from 'path';
+import fs from 'fs';
 import sharp from 'sharp';
 import jsQR from 'jsqr';
 import { createWorker, OEM, PSM, type Worker } from 'tesseract.js';
@@ -209,6 +211,32 @@ export async function verifySlipQr(imageBuffer: Buffer): Promise<SlipVerificatio
       // Ignored
     }
 
+    // Pass สำรอง: หากยังไม่พบ QR Code และภาพอาจเอียง/กลับหัว ใช้โมเดล OSD ประเมินและหมุนภาพให้ตรง
+    try {
+      const { buffer: orientedBuf, rotatedDegrees } = await autoOrientSlipWithOsd(imageBuffer);
+      if (rotatedDegrees > 0) {
+        const { data, info } = await sharp(orientedBuf)
+          .resize({ width: 800, withoutEnlargement: true })
+          .ensureAlpha()
+          .raw()
+          .toBuffer({ resolveWithObject: true });
+
+        const clampedArray = new Uint8ClampedArray(data);
+        const code = jsQR(clampedArray, info.width, info.height, {
+          inversionAttempts: 'attemptBoth',
+        });
+
+        if (code && code.data && code.data.trim().length > 0) {
+          return {
+            hasQr: true,
+            qrData: code.data.trim(),
+          };
+        }
+      }
+    } catch {
+      // Ignored
+    }
+
     return {
       hasQr: false,
       error: 'สลิปไม่ถูกต้อง! กรุณาอัปโหลดสลิปที่ถูกต้อง',
@@ -303,14 +331,28 @@ export function extractAmountFromOcrText(
   return { detectedAmount: null, matchesExpected: false };
 }
 
+// หาโฟลเดอร์ที่เก็บไฟล์ *.traineddata เพื่อให้ Tesseract รันแบบ Offline 100% ไม่ต้องดาวน์โหลดผ่านเน็ต
+function getTessdataPath(): string {
+  if (fs.existsSync(path.join(process.cwd(), 'osd.traineddata'))) {
+    return process.cwd();
+  }
+  const parentProject = path.resolve(process.cwd(), '..', '..');
+  if (fs.existsSync(path.join(parentProject, 'osd.traineddata'))) {
+    return parentProject;
+  }
+  return process.cwd();
+}
+
 // ตัวแปรแคช Worker ของ Tesseract เพื่อไม่ต้องโหลดใหม่ทุกครั้ง (Warm Worker Optimization)
 let cachedTesseractWorkerPromise: Promise<Worker> | null = null;
 let cachedOsdWorkerPromise: Promise<Worker | null> | null = null;
 
 async function getWarmOsdWorker() {
   if (!cachedOsdWorkerPromise) {
+    const langPath = getTessdataPath();
     cachedOsdWorkerPromise = createWorker('osd', OEM.TESSERACT_ONLY, {
-      legacyCore: true,
+      langPath,
+      gzip: false,
     }).catch((err) => {
       console.warn('Failed to initialize Tesseract OSD worker:', err);
       cachedOsdWorkerPromise = null;
@@ -323,7 +365,11 @@ async function getWarmOsdWorker() {
 async function getWarmTesseractWorker() {
   if (!cachedTesseractWorkerPromise) {
     cachedTesseractWorkerPromise = (async () => {
-      const worker = await createWorker('tha+eng');
+      const langPath = getTessdataPath();
+      const worker = await createWorker('tha+eng', OEM.DEFAULT, {
+        langPath,
+        gzip: false,
+      });
       // กำหนดค่าเริ่มต้นเป็น PSM.AUTO_OSD เพื่อรองรับการประเมินทิศทางหน้าเอกสาร
       await worker.setParameters({
         tessedit_pageseg_mode: PSM.AUTO_OSD,

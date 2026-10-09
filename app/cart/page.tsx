@@ -4,9 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCart, CartItem } from '@/context/CartContext';
-import { 
-  ShoppingCart, ArrowLeft, X
-} from 'lucide-react';
+import { X } from 'lucide-react';
 import { EmptyCartIllustration } from '@/components/EmptyCartIllustration';
 import { CartIllustration } from '@/components/CartIllustration';
 import { ProductImage } from '@/components/ui/ProductImage';
@@ -150,13 +148,11 @@ export default function CartPage() {
   // Calculations for only the selected items
   const selectedItems = items.filter((item) => selectedIds.has(item.tradeId));
   const validSelectedItems = selectedItems.filter((item) => item.qty > 0);
-  const selectedTotalQty = validSelectedItems.reduce((sum, item) => sum + item.qty, 0);
   const selectedTotalAmount = validSelectedItems.reduce((sum, item) => sum + item.qty * item.salePrice, 0);
   const selectedTotalDeposit = validSelectedItems.reduce((sum, item) => {
     const unitDeposit = item.depositPrice && item.depositPrice > 0 ? item.depositPrice : 0;
     return sum + unitDeposit * item.qty;
   }, 0);
-  const selectedRemainingAmount = selectedTotalAmount - selectedTotalDeposit;
   const isAllSelectedZero = selectedItems.length > 0 && validSelectedItems.length === 0;
 
   // Handle proceed to checkout (checkout only valid items with qty > 0)
@@ -183,17 +179,28 @@ export default function CartPage() {
 
   if (items.length === 0) {
     return (
-      <div className="flex-1 flex flex-col bg-[#f5f5f5] py-8 sm:py-12 min-h-[calc(100vh+80px)] min-h-[calc(100dvh+80px)] pb-32">
-        <div className="max-w-[1600px] mx-auto w-full px-4 sm:px-6 lg:px-8 my-auto">
-          <div className="bg-white rounded-lg border border-slate-100 shadow-[0_1px_2px_0_rgba(0,0,0,0.04)] py-16 sm:py-24 px-4 text-center flex flex-col items-center justify-center space-y-4 animate-cart-slide-up">
+      <div className="flex-1 flex flex-col bg-[#f5f5f5] py-6 sm:py-8 min-h-[calc(100vh-120px)] min-h-[calc(100dvh-120px)] pb-24 sm:pb-36">
+        <div className="max-w-[1600px] mx-auto w-full px-4 sm:px-6 lg:px-8 space-y-4 sm:space-y-5">
+          {/* Page Title Header */}
+          <div className="pb-3 border-b border-slate-200/80 animate-cart-slide-up">
+            <div className="flex items-center gap-3 sm:gap-3.5">
+              <CartIllustration className="w-12 h-12 sm:w-14 sm:h-14 shrink-0 drop-shadow-xs" />
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+                ตะกร้าสินค้า
+              </h1>
+            </div>
+          </div>
+
+          {/* Empty Cart Card */}
+          <div className="bg-white rounded-lg border border-slate-100 shadow-[0_1px_2px_0_rgba(0,0,0,0.04)] py-14 sm:py-20 px-4 text-center flex flex-col items-center justify-center space-y-4 animate-cart-slide-up">
             <div className="flex items-center justify-center">
               <EmptyCartIllustration className="w-36 h-36 sm:w-40 sm:h-40" />
             </div>
             
             <div className="space-y-1.5 max-w-sm mx-auto">
-              <h1 className="text-lg sm:text-xl font-bold text-slate-800">
+              <h2 className="text-lg sm:text-xl font-bold text-slate-800">
                 ยังไม่มีสินค้าในตะกร้า
-              </h1>
+              </h2>
               <p className="text-xs sm:text-sm text-slate-500 leading-relaxed">
                 คุณยังไม่ได้เพิ่มสินค้าลงในตะกร้า
               </p>
@@ -299,7 +306,8 @@ export default function CartPage() {
                       <ProductImage
                         src={item.image || '/images/ubr_beverage_logo.png'}
                         alt={item.tradeName}
-                        objectFit="cover"
+                        objectFit="auto"
+                        className="w-full h-full"
                         priority={true}
                         fallbackSrc="/images/ubr_beverage_logo.png"
                       />
@@ -333,7 +341,7 @@ export default function CartPage() {
                           <button
                             type="button"
                             onClick={() => updateQty(item.tradeId, Math.max(0, item.qty - 1))}
-                            className="w-7 h-full flex items-center justify-center text-slate-600 hover:bg-slate-100 active:bg-slate-200 font-bold text-xs cursor-pointer select-none transition-colors rounded-none"
+                            className="w-7 h-full flex items-center justify-center text-slate-700 hover:bg-black hover:text-white active:bg-slate-800 font-bold text-xs cursor-pointer select-none transition-colors rounded-none"
                             aria-label="ลดจำนวน"
                           >
                             -
@@ -350,7 +358,7 @@ export default function CartPage() {
                           <button
                             type="button"
                             onClick={() => updateQty(item.tradeId, item.qty + 1)}
-                            className="w-7 h-full flex items-center justify-center text-slate-600 hover:bg-slate-100 active:bg-slate-200 font-bold text-xs cursor-pointer select-none transition-colors rounded-none"
+                            className="w-7 h-full flex items-center justify-center text-slate-700 hover:bg-black hover:text-white active:bg-slate-800 font-bold text-xs cursor-pointer select-none transition-colors rounded-none"
                             aria-label="เพิ่มจำนวน"
                           >
                             +
@@ -441,15 +449,21 @@ export default function CartPage() {
                       <img
                         src={
                           item.image
-                            ? item.image.startsWith('/')
+                            ? item.image.startsWith('/') || item.image.startsWith('http')
                               ? item.image
                               : `/${item.image}`
                             : '/images/ubr_beverage_logo.png'
                         }
                         alt={item.tradeName}
-                        className="w-full h-full object-cover"
+                        className={`w-full h-full ${
+                          !item.image || item.image.includes('ubr_beverage_logo')
+                            ? 'object-cover'
+                            : 'object-contain p-1'
+                        }`}
                         onError={(e) => {
-                          (e.target as HTMLImageElement).src = '/images/ubr_beverage_logo.png';
+                          const el = e.target as HTMLImageElement;
+                          el.src = '/images/ubr_beverage_logo.png';
+                          el.className = 'w-full h-full object-cover';
                         }}
                       />
                     </div>
@@ -486,7 +500,7 @@ export default function CartPage() {
                             <button
                               type="button"
                               onClick={() => updateQty(item.tradeId, Math.max(0, item.qty - 1))}
-                              className="w-6 h-full flex items-center justify-center text-slate-600 hover:bg-slate-100 font-bold text-xs cursor-pointer active:bg-slate-200 select-none rounded-none"
+                              className="w-6 h-full flex items-center justify-center text-slate-700 hover:bg-black hover:text-white active:bg-slate-800 font-bold text-xs cursor-pointer select-none transition-colors rounded-none"
                               aria-label="ลดจำนวน"
                             >
                               -
@@ -503,7 +517,7 @@ export default function CartPage() {
                             <button
                               type="button"
                               onClick={() => updateQty(item.tradeId, item.qty + 1)}
-                              className="w-6 h-full flex items-center justify-center text-slate-600 hover:bg-slate-100 font-bold text-xs cursor-pointer active:bg-slate-200 select-none rounded-none"
+                              className="w-6 h-full flex items-center justify-center text-slate-700 hover:bg-black hover:text-white active:bg-slate-800 font-bold text-xs cursor-pointer select-none transition-colors rounded-none"
                               aria-label="เพิ่มจำนวน"
                             >
                               +

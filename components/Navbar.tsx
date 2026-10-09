@@ -8,15 +8,12 @@ import CartDropdown from './CartDropdown';
 import { useAuth } from '@/context/AuthContext';
 import { User, LogOut, Search, X, Package } from 'lucide-react';
 
-interface NavbarProps {
-  onRefreshData?: () => void;
-}
+
 
 function NavbarSearch() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [searchTerm, setSearchTerm] = useState('');
-  const [isFocused, setIsFocused] = useState(false);
 
   // Sync state with URL search param
   useEffect(() => {
@@ -41,8 +38,6 @@ function NavbarSearch() {
     }
   };
 
-  const isActive = isFocused || searchTerm.length > 0;
-
   return (
     <form
       onSubmit={handleSearchSubmit}
@@ -53,8 +48,6 @@ function NavbarSearch() {
           type="text"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          onFocus={() => setIsFocused(true)}
-          onBlur={() => setIsFocused(false)}
           placeholder="ค้นหาสินค้าที่ต้องการที่นี่....."
           className="w-full h-full pl-4 sm:pl-5 pr-8 bg-transparent text-sm sm:text-[14.5px] text-slate-800 placeholder:text-slate-400 outline-none border-none"
         />
@@ -341,8 +334,7 @@ function UserAccountMenu({
   );
 }
 
-export default function Navbar({ onRefreshData }: NavbarProps = {}) {
-  const router = useRouter();
+export default function Navbar() {
   const pathname = usePathname();
   const { customer, logout } = useAuth();
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
@@ -390,7 +382,15 @@ export default function Navbar({ onRefreshData }: NavbarProps = {}) {
             }`}
           >
             {/* Company Logo */}
-            <Link href="/" className="flex items-center group shrink-0">
+            <Link
+              href="/"
+              onClick={() => {
+                try {
+                  sessionStorage.setItem('ubr_home_scroll_y', '0');
+                } catch {}
+              }}
+              className="flex items-center group shrink-0"
+            >
               <CompanyLogo size="md" lightText={true} />
             </Link>
 

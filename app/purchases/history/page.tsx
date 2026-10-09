@@ -12,7 +12,6 @@ import {
   Search,
   X,
   Clock,
-  CheckCircle2,
 } from 'lucide-react';
 import { WineLoading } from '@/components/WineLoading';
 import { EmptyPaymentIllustration } from '@/components/EmptyPaymentIllustration';

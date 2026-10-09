@@ -79,6 +79,7 @@
    ├── web.config
    ├── eng.traineddata
    ├── tha.traineddata
+   ├── osd.traineddata
    ├── setup_target_server.ps1
    ├── setup_iis_site.ps1
    ├── start_server.bat

@@ -9,17 +9,16 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
-  ShoppingBag,
   Search,
   X,
   Truck,
   Clock,
   AlertCircle,
-  CheckCircle2,
 } from 'lucide-react';
 import { EmptyOrdersIllustration } from '@/components/EmptyOrdersIllustration';
 import PaidStamp from '@/components/orders/PaidStamp';
 import { WineLoading } from '@/components/WineLoading';
+import { ProductImage } from '@/components/ui/ProductImage';
 
 
 interface OrderItem {
@@ -60,16 +59,7 @@ interface OrderSummary {
   items?: OrderItem[];
 }
 
-// ฟังก์ชันแปลงวันที่เป็นรูปแบบ d/M/yy (เช่น 6/5/25, 20/7/24)
-function formatOrderDate(dateVal?: string): string {
-  if (!dateVal) return '-';
-  const d = new Date(dateVal);
-  if (isNaN(d.getTime())) return String(dateVal);
-  const day = d.getDate();
-  const month = d.getMonth() + 1;
-  const year = String(d.getFullYear()).slice(-2);
-  return `${day}/${month}/${year}`;
-}
+
 
 // ฟังก์ชันแปลงวันที่และเวลาเป็นรูปแบบ DD/MM/YYYY HH:mm:ss
 function formatOrderDateTime(dateVal?: string): string {
@@ -590,19 +580,12 @@ function OrdersContent({
                         >
                           {/* Thumbnail Image */}
                           <div className="w-20 h-20 sm:w-22 sm:h-22 rounded border border-slate-100 bg-white shrink-0 flex items-center justify-center overflow-hidden">
-                            <img
-                              src={
-                                item.Trade_Part_Image && item.Trade_Part_Image.trim()
-                                  ? item.Trade_Part_Image.startsWith('/') || item.Trade_Part_Image.startsWith('http')
-                                    ? item.Trade_Part_Image
-                                    : `/${item.Trade_Part_Image}`
-                                  : '/images/ubr_beverage_logo.png'
-                              }
+                            <ProductImage
+                              src={item.Trade_Part_Image || '/images/ubr_beverage_logo.png'}
                               alt={item.Trade_Name}
-                              className="w-full h-full object-cover"
-                              onError={(e) => {
-                                (e.currentTarget as HTMLImageElement).src = '/images/ubr_beverage_logo.png';
-                              }}
+                              objectFit="auto"
+                              priority={true}
+                              fallbackSrc="/images/ubr_beverage_logo.png"
                             />
                           </div>
 
@@ -636,7 +619,13 @@ function OrdersContent({
                         className="p-4 sm:px-6 flex items-center gap-3 hover:bg-slate-50 transition-colors"
                       >
                         <div className="w-16 h-16 rounded border border-slate-100 bg-white shrink-0 flex items-center justify-center overflow-hidden">
-                          <img src="/images/ubr_beverage_logo.png" alt="UBR" className="w-full h-full object-cover" />
+                          <ProductImage
+                            src="/images/ubr_beverage_logo.png"
+                            alt="UBR"
+                            objectFit="auto"
+                            priority={true}
+                            fallbackSrc="/images/ubr_beverage_logo.png"
+                          />
                         </div>
                         <div className="flex-1">
                           <h4 className="text-sm font-medium text-slate-900">

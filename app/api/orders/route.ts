@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentCustomer } from '@/lib/auth';
-import { getDbPool, sql } from '@/lib/db';
+import { getDbPool } from '@/lib/db';
 import { createPreOrder } from '@/lib/order-service';
 import { validateOrderPayload, parseOrdersQuery, escapeSqlLike } from '@/lib/validation';
 import { resolveProductImageUrl } from '@/lib/image-utils';

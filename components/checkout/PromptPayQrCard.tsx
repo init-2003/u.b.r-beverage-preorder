@@ -73,7 +73,7 @@ export default function PromptPayQrCard({
           files: [file],
         });
         return;
-      } catch (err) {
+      } catch {
         // Fallback to clipboard
       }
     }

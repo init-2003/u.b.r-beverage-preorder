@@ -46,6 +46,8 @@ export function getPublicFilesSet(): Set<string> {
 export const DEFAULT_PRODUCT_IMAGE = '/images/ubr_beverage_logo.png';
 export const DEFAULT_PRODUCT_IMAGE_HIGHRES = '/images/ubr_beverage_logo.png';
 export const DEFAULT_PRODUCT_IMAGE_PNG = '/images/ubr_beverage_logo.png';
+export const UBONRR_PRODUCT_IMAGE_ENDPOINT =
+  'https://ubonrr.com/services/getinfo/getproductdetail.php?Trade_ID=';
 
 /**
  * Resolve product image path:
@@ -55,8 +57,7 @@ export const DEFAULT_PRODUCT_IMAGE_PNG = '/images/ubr_beverage_logo.png';
  * - If image does not exist on disk -> fallback to /images/ubr_beverage_logo.png to prevent 404 errors
  */
 export function resolveProductImageUrl(
-  imagePath?: string | null,
-  _highRes = false
+  imagePath?: string | null
 ): string {
   if (!imagePath || !imagePath.trim()) {
     return DEFAULT_PRODUCT_IMAGE_PNG;
@@ -113,6 +114,8 @@ export function resolveProductImageUrl(
     // ignore filesystem errors and fallback safely
   }
 
-  // 4. File does not exist on disk -> fallback to official logo to avoid 404 network errors
-  return DEFAULT_PRODUCT_IMAGE_PNG;
+  // 4. Remote image resolution from ubonrr.com service
+  // Example: 'images/885710416304.png' -> 'https://ubonrr.com/services/getinfo/getproductdetail.php?Trade_ID=images/885710416304.png'
+  const tradeParam = normalized.startsWith('images/') ? normalized : `images/${normalized}`;
+  return `${UBONRR_PRODUCT_IMAGE_ENDPOINT}${encodeURIComponent(tradeParam).replace(/%2F/g, '/')}`;
 }

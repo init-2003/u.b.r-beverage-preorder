@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect, Suspense } from 'react';
-import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import EditProfileModal, { CustomerProfileData } from '@/components/EditProfileModal';
 import AccountLayout from '@/components/AccountLayout';
@@ -9,7 +8,6 @@ import { AlertCircle } from 'lucide-react';
 import { WineLoading } from '@/components/WineLoading';
 
 function AddressContent() {
-  const router = useRouter();
   const { customer, loading: authLoading } = useAuth();
 
   const [profile, setProfile] = useState<CustomerProfileData | null>(null);

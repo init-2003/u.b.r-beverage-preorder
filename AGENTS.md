@@ -79,7 +79,7 @@ This document provides developer and AI agent instructions, system architecture,
 - Slip upload endpoint: `/api/upload` (validates that image contains a readable QR code and matches the order amount before saving payment slips to `/public/uploads/slips/[docNo]/[originalFilename]` retaining original file name and storing `[originalFilename]` in `Fnt_Header_online.FILE_NAME_PIC`).
   - **ทน build (durable path)**: standalone `server.js` ทำ `process.chdir(__dirname)` → `process.cwd()` = `.next/standalone` ซึ่งถูกลบทุกครั้งที่ `next build` — `/api/upload` จึงเขียนไฟล์สลิปทั้งที่ `public/uploads/slips` ของรูทโปรเจกต์ (รอด rebuild) และที่ public ที่ server กำลังเสิร์ฟ (เปิดดูได้ทันที) ถ้าทั้งสองที่เป็นที่เดียวกันจะเขียนแค่รอบเดียว
   - **High-Speed Python Microservice**: FastAPI service (`python-service/`) runs on `http://127.0.0.1:8000` with `zxing-cpp` QR detection and `RapidOCR` ONNX engine (< 0.5s response).
-  - **Graceful Fallback**: If Python microservice is offline or times out (> 3.5s), `lib/slip-verification.ts` automatically and seamlessly falls back to the in-process Node.js engine (`sharp` + `jsQR` + `tesseract.js`).
+  - **Graceful Fallback**: If Python microservice is offline or times out (> 3.5s), `lib/slip-verification.ts` automatically and seamlessly falls back to the in-process Node.js engine (`sharp` + `jsQR` + `tesseract.js` using local offline `osd.traineddata`, `tha.traineddata`, and `eng.traineddata` for automatic orientation detection and slip rotation).
   - **Start Command**: Run `run_slip_service.bat` or `npm run slip-service` (ทั้งคู่อ่านพอร์ตจาก `SLIP_SERVICE_PORT` ใน `.env` — เปลี่ยนพอร์ต = แก้ `.env` ที่เดียว แล้ว restart ทุก service)
 
 ### Customer Authentication & Login

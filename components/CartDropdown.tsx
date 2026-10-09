@@ -212,7 +212,7 @@ export default function CartDropdown() {
                       <ProductImage
                         src={item.image || '/images/ubr_beverage_logo.png'}
                         alt={item.tradeName}
-                        objectFit="cover"
+                        objectFit="auto"
                         priority={true}
                         fallbackSrc="/images/ubr_beverage_logo.png"
                       />

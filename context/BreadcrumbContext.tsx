@@ -14,11 +14,21 @@ export function BreadcrumbProvider({ children }: { children: React.ReactNode }) 
   const [customTitle, setCustomTitle] = useState<string | null>(null);
   const pathname = usePathname();
 
-  // Reset custom title and scroll to top on route change
+  const isFirstMountRef = React.useRef(true);
+  const prevPathnameRef = React.useRef(pathname);
+
+  // Reset custom title and scroll to top on route change (skip initial mount / reload)
   useEffect(() => {
-    setCustomTitle(null);
-    if (typeof window !== 'undefined') {
-      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    if (isFirstMountRef.current) {
+      isFirstMountRef.current = false;
+      return;
+    }
+    if (prevPathnameRef.current !== pathname) {
+      prevPathnameRef.current = pathname;
+      setCustomTitle(null);
+      if (typeof window !== 'undefined') {
+        window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+      }
     }
   }, [pathname]);
 

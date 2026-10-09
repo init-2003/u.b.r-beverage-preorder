@@ -61,6 +61,17 @@ function copyStandaloneAssets(projectRoot, opts = {}) {
     copied.push(`${label} -> ${countFiles(dest)} ไฟล์`)
   }
 
+  // คัดลอกโมเดล OCR (*.traineddata) เข้า standalone เพื่อให้ Tesseract รันแบบ Offline ใน Production ได้
+  const trainedDataFiles = ['eng.traineddata', 'tha.traineddata', 'osd.traineddata']
+  for (const f of trainedDataFiles) {
+    const srcFile = path.join(projectRoot, f)
+    const destFile = path.join(standalone, f)
+    if (fs.existsSync(srcFile)) {
+      fs.copyFileSync(srcFile, destFile)
+      copied.push(`${f} -> standalone`)
+    }
+  }
+
   if (log) console.log(`[standalone-assets] OK: ${copied.join(' | ') || 'ไม่มีอะไรต้องคัดลอก'}`)
   return { ok: true, copied }
 }

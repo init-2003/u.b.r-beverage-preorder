@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDbPool, sql } from '@/lib/db';
+import { getDbPool } from '@/lib/db';
 import { getCurrentCustomer } from '@/lib/auth';
 import { resolveProductImageUrl } from '@/lib/image-utils';
 import { sanitizeTradeId } from '@/lib/validation';
@@ -86,7 +86,7 @@ export async function GET(
       leadTimeDays: 0,
       origin,
       description: (p.Detail_Trade || p.Trade_Note || '').trim(),
-      imageUrl: resolveProductImageUrl(p.Trade_Part_Image, true),
+      imageUrl: resolveProductImageUrl(p.Trade_Part_Image),
       isPreorderOnly: (p.Type_Name || '').trim().toLowerCase() === 'pre order',
     };
 

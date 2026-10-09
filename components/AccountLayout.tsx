@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback, useRef, Suspense } from 'react
 import Link from 'next/link';
 import { usePathname, useSearchParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import { LogOut, User, Menu, X } from 'lucide-react';
+import { LogOut, Menu, X } from 'lucide-react';
 import { WineLoading } from '@/components/WineLoading';
 
 interface AccountLayoutProps {
@@ -64,6 +64,10 @@ let globalNavState: CachedNavState = {
   indicatorHeight: ITEM_HEIGHT_ESTIMATE,
   hasMeasured: false,
 };
+
+function updateGlobalNavState(state: CachedNavState) {
+  globalNavState = state;
+}
 
 function AccountSidebar({ activeItemOverride }: { activeItemOverride?: string }) {
   const pathname = usePathname();
@@ -163,21 +167,21 @@ function AccountSidebar({ activeItemOverride }: { activeItemOverride?: string })
       const top = el.offsetTop;
       const height = el.offsetHeight;
       setIndicatorStyle({ top, height });
-      globalNavState = {
+      updateGlobalNavState({
         activeKey: key,
         indicatorTop: top,
         indicatorHeight: height,
         hasMeasured: true,
-      };
+      });
     } else {
       const estTop = getEstimatedTop(key);
       setIndicatorStyle({ top: estTop, height: ITEM_HEIGHT_ESTIMATE });
-      globalNavState = {
+      updateGlobalNavState({
         activeKey: key,
         indicatorTop: estTop,
         indicatorHeight: ITEM_HEIGHT_ESTIMATE,
         hasMeasured: true,
-      };
+      });
     }
   };
 

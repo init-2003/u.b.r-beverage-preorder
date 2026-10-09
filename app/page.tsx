@@ -7,6 +7,8 @@ import ProductCatalog from '@/components/ProductCatalog';
 import { useAuth } from '@/context/AuthContext';
 import { HomeSkeleton } from '@/components/HomeSkeleton';
 
+const SCROLL_STORAGE_KEY = 'ubr_home_scroll_y';
+
 function HomeAppPageContent() {
   const router = useRouter();
   const { customer, loading: authLoading } = useAuth();
@@ -16,16 +18,70 @@ function HomeAppPageContent() {
 
   const [products, setProducts] = useState<Product[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
+  const hasRestoredScrollRef = React.useRef(false);
 
-  // ป้องกันเบราว์เซอร์จำตำแหน่ง Scroll เดิมตอนกด Refresh เพื่อให้หน้าหลักเริ่มที่บนสุด (เห็น Banner) เสมอ
+  // 1. จัดการ Scroll Restoration: บันทึกตำแหน่ง scroll ขณะเลื่อนหน้าจอ และก่อน Reload
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      if ('scrollRestoration' in window.history) {
-        window.history.scrollRestoration = 'manual';
-      }
-      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    if (typeof window === 'undefined') return;
+
+    if ('scrollRestoration' in window.history) {
+      window.history.scrollRestoration = 'manual';
     }
+
+    let ticking = false;
+    const handleScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          try {
+            sessionStorage.setItem(SCROLL_STORAGE_KEY, String(window.scrollY));
+          } catch {}
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    const handleBeforeUnload = () => {
+      try {
+        sessionStorage.setItem(SCROLL_STORAGE_KEY, String(window.scrollY));
+      } catch {}
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
   }, []);
+
+  // 2. คืนค่าตำแหน่ง Scroll เดิม (ที่เคยเลื่อนลงมา) เมื่อโหลดสินค้าเสร็จสมบูรณ์
+  useEffect(() => {
+    if (!loadingProducts && products.length > 0 && !hasRestoredScrollRef.current) {
+      hasRestoredScrollRef.current = true;
+      try {
+        const savedYStr = sessionStorage.getItem(SCROLL_STORAGE_KEY);
+        if (savedYStr) {
+          const targetY = parseInt(savedYStr, 10);
+          if (!isNaN(targetY) && targetY > 0) {
+            const rafId = requestAnimationFrame(() => {
+              window.scrollTo({ top: targetY, left: 0, behavior: 'instant' });
+            });
+            const timeoutId = setTimeout(() => {
+              if (Math.abs(window.scrollY - targetY) > 50) {
+                window.scrollTo({ top: targetY, left: 0, behavior: 'instant' });
+              }
+            }, 60);
+            return () => {
+              cancelAnimationFrame(rafId);
+              clearTimeout(timeoutId);
+            };
+          }
+        }
+      } catch {}
+    }
+  }, [loadingProducts, products.length]);
 
   // ตรวจสอบสถานะการเข้าสู่ระบบ หากยังไม่ล็อกอิน ให้ redirect ไป /login
   useEffect(() => {
@@ -94,6 +150,10 @@ function HomeAppPageContent() {
   }, [urlCategory, urlSearch, fetchProducts]);
 
   const handleSelectCategory = (cat: string) => {
+    try {
+      sessionStorage.setItem(SCROLL_STORAGE_KEY, '0');
+    } catch {}
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
     const params = new URLSearchParams(searchParams.toString());
     if (cat && cat !== 'all') {
       params.set('category', cat);
@@ -105,6 +165,10 @@ function HomeAppPageContent() {
   };
 
   const handleSearchChange = (q: string) => {
+    try {
+      sessionStorage.setItem(SCROLL_STORAGE_KEY, '0');
+    } catch {}
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
     const params = new URLSearchParams(searchParams.toString());
     if (q && q.trim()) {
       params.set('search', q.trim());
@@ -120,6 +184,10 @@ function HomeAppPageContent() {
   //  เพราะทั้งคู่สร้าง URL จาก searchParams snapshot เดียวกัน → push หลังทับ push แรก
   //   ทำให้ search ยังอยู่ใน URL → หน้า Empty ไม่ยอมเปลี่ยน)
   const handleResetFilters = () => {
+    try {
+      sessionStorage.setItem(SCROLL_STORAGE_KEY, '0');
+    } catch {}
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
     router.push('/');
   };
 

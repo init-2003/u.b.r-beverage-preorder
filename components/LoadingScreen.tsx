@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import { CompanyLogo } from '@/components/CompanyLogo';
 import { BouncingDots } from '@/components/loading-ui/bouncing-dots';
 
 interface LoadingScreenProps {

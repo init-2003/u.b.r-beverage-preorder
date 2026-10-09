@@ -6,16 +6,11 @@ import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { useCart } from '@/context/CartContext';
 import { useBreadcrumb } from '@/context/BreadcrumbContext';
-import {
-  ArrowLeft, ArrowRight, ShoppingBag, MapPin, Phone, User,
-  CreditCard, Banknote, Upload, CheckCircle2,
-  AlertCircle, Building2, Truck,
-  ChevronRight, Sparkles, Clock, Wine, Plus, Minus, Trash2,
-  ShoppingCart, X, QrCode, FileText
-} from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 import { EmptyCheckoutIllustration } from '@/components/EmptyCheckoutIllustration';
 import { CheckoutIllustration } from '@/components/CheckoutIllustration';
 import { WineLoading } from '@/components/WineLoading';
+import { ProductImage } from '@/components/ui/ProductImage';
 
 interface PreOrderItem {
   tradeId: string;
@@ -139,11 +134,11 @@ function PreOrderContent() {
   const fromSource = rawFrom || directCheckout?.from || (productId ? 'product' : 'cart');
 
   const { customer, loading: authLoading } = useAuth();
-  const { items: cartItems, clearCart, updateQty, removeItem, removeItems } = useCart();
+  const { items: cartItems, clearCart, updateQty, removeItems } = useCart();
   const { setCustomTitle } = useBreadcrumb();
 
   // Selected trade IDs parsed from query parameter or sessionStorage
-  const [selectedTradeIds, setSelectedTradeIds] = useState<string[] | null>(() => {
+  const [selectedTradeIds] = useState<string[] | null>(() => {
     if (itemsParam) {
       const parsed = itemsParam.split(',').map((s) => s.trim()).filter(Boolean);
       if (typeof window !== 'undefined') {
@@ -228,22 +223,13 @@ function PreOrderContent() {
 
   // Compute dynamic back navigation based on actual source origin
   let backHref = '/';
-  let backLabel = 'กลับไปหน้าหลัก';
 
-  if (orderItems.length === 0) {
+  if (orderItems.length === 0 || fromSource === 'catalog') {
     backHref = '/';
-    backLabel = 'กลับไปหน้าหลัก';
-  } else if (fromSource === 'catalog') {
-    backHref = '/';
-    backLabel = 'กลับไปหน้าหลัก';
   } else if (fromSource === 'cart') {
     backHref = '/cart';
-    backLabel = 'กลับไปตะกร้าสินค้า';
   } else if (productId) {
     backHref = `/products/${encodeURIComponent(productId)}`;
-    backLabel = orderItems.length > 0 && orderItems[0].tradeName
-      ? `กลับไปหน้ารายละเอียด (${orderItems[0].tradeName.slice(0, 20)}...)`
-      : 'กลับไปหน้ารายละเอียดสินค้า';
   }
 
   // Form states
@@ -613,7 +599,7 @@ function PreOrderContent() {
           } else {
             setErrorMsg('ไม่พบข้อมูลสินค้าที่เลือกสั่งจอง');
           }
-        } catch (e) {
+        } catch {
           if (isMounted) setErrorMsg('เกิดข้อผิดพลาดในการโหลดข้อมูลสินค้า');
         } finally {
           if (isMounted) setLoadingProduct(false);
@@ -651,42 +637,6 @@ function PreOrderContent() {
           window.history.replaceState(null, '', url.toString());
         } catch { }
       }
-    }
-  };
-
-  const handleRemoveItem = (tradeId: string) => {
-    setOrderItems((prev) => {
-      const next = prev.filter((i) => i.tradeId !== tradeId);
-      if (typeof window !== 'undefined') {
-        try {
-          if (next.length === 0) {
-            sessionStorage.removeItem('ubr_direct_checkout');
-            sessionStorage.removeItem('ubr_cart_selected_ids');
-            window.history.replaceState(null, '', '/checkout');
-          } else {
-            const nextIds = next.map((i) => i.tradeId);
-            sessionStorage.setItem('ubr_cart_selected_ids', JSON.stringify(nextIds));
-            if (itemsParam) {
-              const url = new URL(window.location.href);
-              url.searchParams.set('items', nextIds.join(','));
-              window.history.replaceState(null, '', url.toString());
-            }
-          }
-        } catch { }
-      }
-      return next;
-    });
-
-    if (!productId) {
-      removeItem(tradeId);
-    } else {
-      if (typeof window !== 'undefined') {
-        try {
-          sessionStorage.removeItem('ubr_direct_checkout');
-          window.history.replaceState(null, '', '/checkout');
-        } catch { }
-      }
-      setDirectCheckout(null);
     }
   };
 
@@ -1092,19 +1042,12 @@ function PreOrderContent() {
                           {/* Product Info Row: Image + Name */}
                           <div className="flex items-center gap-3.5">
                             <div className="w-14 h-14 bg-white border border-slate-100 rounded shrink-0 flex items-center justify-center overflow-hidden shadow-2xs">
-                              <img
-                                src={
-                                  item.image
-                                    ? item.image.startsWith('/')
-                                      ? item.image
-                                      : `/${item.image}`
-                                    : '/images/ubr_beverage_logo.png'
-                                }
+                              <ProductImage
+                                src={item.image || '/images/ubr_beverage_logo.png'}
                                 alt={item.tradeName}
-                                className="w-full h-full object-cover"
-                                onError={(e) => {
-                                  (e.target as HTMLImageElement).src = '/images/ubr_beverage_logo.png';
-                                }}
+                                objectFit="auto"
+                                priority={true}
+                                fallbackSrc="/images/ubr_beverage_logo.png"
                               />
                             </div>
 
@@ -1140,7 +1083,7 @@ function PreOrderContent() {
                                     <button
                                       type="button"
                                       onClick={() => handleUpdateItemQty(item.tradeId, Math.max(0, item.qty - 1))}
-                                      className="w-6 h-full flex items-center justify-center text-slate-600 hover:bg-slate-100 font-bold text-xs cursor-pointer active:bg-slate-200 select-none rounded-none"
+                                      className="w-6 h-full flex items-center justify-center text-slate-700 hover:bg-black hover:text-white active:bg-slate-800 font-bold text-xs cursor-pointer select-none transition-colors rounded-none"
                                       aria-label="ลดจำนวน"
                                     >
                                       -
@@ -1151,7 +1094,7 @@ function PreOrderContent() {
                                     <button
                                       type="button"
                                       onClick={() => handleUpdateItemQty(item.tradeId, item.qty + 1)}
-                                      className="w-6 h-full flex items-center justify-center text-slate-600 hover:bg-slate-100 font-bold text-xs cursor-pointer active:bg-slate-200 select-none rounded-none"
+                                      className="w-6 h-full flex items-center justify-center text-slate-700 hover:bg-black hover:text-white active:bg-slate-800 font-bold text-xs cursor-pointer select-none transition-colors rounded-none"
                                       aria-label="เพิ่มจำนวน"
                                     >
                                       +
@@ -1237,19 +1180,12 @@ function PreOrderContent() {
                               {/* Product Image & Info */}
                               <div className="flex items-center gap-3.5 min-w-0 flex-1 pr-4">
                                 <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white border border-slate-100 rounded shrink-0 flex items-center justify-center overflow-hidden">
-                                  <img
-                                    src={
-                                      item.image
-                                        ? item.image.startsWith('/')
-                                          ? item.image
-                                          : `/${item.image}`
-                                        : '/images/ubr_beverage_logo.png'
-                                    }
+                                  <ProductImage
+                                    src={item.image || '/images/ubr_beverage_logo.png'}
                                     alt={item.tradeName}
-                                    className="w-full h-full object-cover"
-                                    onError={(e) => {
-                                      (e.target as HTMLImageElement).src = '/images/ubr_beverage_logo.png';
-                                    }}
+                                    objectFit="auto"
+                                    priority={true}
+                                    fallbackSrc="/images/ubr_beverage_logo.png"
                                   />
                                 </div>
 
@@ -1277,7 +1213,7 @@ function PreOrderContent() {
                                       <button
                                         type="button"
                                         onClick={() => handleUpdateItemQty(item.tradeId, Math.max(0, item.qty - 1))}
-                                        className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-slate-600 hover:bg-slate-100 font-bold text-xs sm:text-sm cursor-pointer select-none rounded-none"
+                                        className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-slate-700 hover:bg-black hover:text-white active:bg-slate-800 font-bold text-xs sm:text-sm cursor-pointer select-none transition-colors rounded-none"
                                         aria-label="ลดจำนวน"
                                       >
                                         -
@@ -1288,7 +1224,7 @@ function PreOrderContent() {
                                       <button
                                         type="button"
                                         onClick={() => handleUpdateItemQty(item.tradeId, item.qty + 1)}
-                                        className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-slate-600 hover:bg-slate-100 font-bold text-xs sm:text-sm cursor-pointer select-none rounded-none"
+                                        className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-slate-700 hover:bg-black hover:text-white active:bg-slate-800 font-bold text-xs sm:text-sm cursor-pointer select-none transition-colors rounded-none"
                                         aria-label="เพิ่มจำนวน"
                                       >
                                         +

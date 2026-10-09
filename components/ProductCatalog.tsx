@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Product } from '@/types/preorder';
-import { Package, Check, ShoppingCart } from 'lucide-react';
+import { Check, ShoppingCart } from 'lucide-react';
 import { EmptySearchIllustration } from './EmptySearchIllustration';
 import { useCart } from '@/context/CartContext';
 import DraggableCartButton from './DraggableCartButton';
@@ -188,27 +188,31 @@ export default function ProductCatalog({
                   onClick={() => router.push(`/products/${product.id}`)}
                   className="rounded-sm bg-white border border-slate-100/80 shadow-[0_1px_1px_0_rgba(0,0,0,0.05)] hover:shadow-xl hover:shadow-slate-300/50 hover:border-slate-300 hover:scale-[1.03] hover:-translate-y-1 hover:z-20 flex flex-col justify-between group transition-all duration-300 ease-out relative cursor-pointer overflow-hidden will-change-transform h-full"
                 >
-                  {/* Product Image Box (Full Bleed: เต็ม Card บน ซ้าย ขวา - นิ่งไม่ขยับเมื่อ hover) */}
+                  {/* Product Image Box (เต็ม Card บน ซ้าย ขวา) */}
                   <Link
                     href={`/products/${product.id}`}
-                    className="w-full aspect-square relative overflow-hidden group/img block cursor-pointer bg-slate-50 shrink-0"
+                    className="w-full aspect-square relative overflow-hidden group/img block cursor-pointer bg-white shrink-0"
                   >
-                    {/* Yellow Sticker Badge (Advice Style) */}
-                    {product.depositPercent > 0 && (
-                      <div
-                        className="absolute top-1.5 right-1.5 z-10 flex flex-col items-center justify-center bg-[#ffe01b] border border-amber-300 rounded-sm px-1.5 py-0.5 shadow-2xs shrink-0 select-none"
-                        title={`มัดจำ ${product.depositPercent}%`}
-                      >
-                        <span className="text-[9px] font-bold text-slate-800 leading-tight">มัดจำ</span>
-                        <span className="text-[11px] font-black text-blue-700 leading-none mt-0.5">{product.depositPercent}%</span>
+                    {/* PRE-ORDER Badge at Top-Left Corner (Non-bold, slightly larger) */}
+                    <div
+                      className="absolute top-2.5 left-2.5 sm:top-3 sm:left-3 z-10 flex items-center gap-1.5 bg-[#ffb930] rounded-[4px] px-2 py-0.5 sm:px-2.5 sm:py-1 shadow-2xs select-none pointer-events-none"
+                      title="Pre-Order"
+                    >
+                      <div className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-white flex items-center justify-center shrink-0">
+                        <span className="text-[#ffb930] font-bold text-[9px] sm:text-[10px] leading-none select-none">
+                          !
+                        </span>
                       </div>
-                    )}
+                      <span className="text-white text-[10.5px] sm:text-[11px] font-medium tracking-wide uppercase leading-none select-none">
+                        PRE-ORDER
+                      </span>
+                    </div>
 
                     <ProductImage
                       src={product.imageUrl}
                       alt={product.name}
                       priority={index < 5}
-                      objectFit="cover"
+                      objectFit="auto"
                       fallbackSrc="/images/ubr_beverage_logo.png"
                     />
                   </Link>
@@ -235,7 +239,7 @@ export default function ProductCatalog({
                         </div>
 
                         <p className="text-[11px] sm:text-xs text-slate-500 font-medium mt-0.5">
-                          มัดจำล่วงหน้า ฿{depositAmt.toLocaleString()}
+                          มัดจำ ฿{depositAmt.toLocaleString()}
                         </p>
                       </div>
 
