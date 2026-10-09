@@ -42,11 +42,11 @@ This document provides developer and AI agent instructions, system architecture,
   - If `Sale_Price1 <= 0` or null, display price is numeric `฿0` (or `฿0.00`).
   - **CRITICAL**: Do **NOT** fallback to `t.Cost_Price` (it is confidential internal cost price and must never be shown to customers).
 - **Deposit Calculation & Rules**:
-  - Primary source is `Trade.Trade_deposit` (money column in database).
-  - Unit deposit price: `Trade.Trade_deposit` (฿/unit).
-  - Deposit % is calculated dynamically: `(Trade_deposit / Active_Price) * 100`.
+  - Primary source is `Trade.Trade_deposit` storing the deposit percentage `%` (e.g. `20` = 20%).
+  - Deposit %: `Trade.Trade_deposit` (0 - 100%).
+  - Unit deposit price: `(Active_Price * Trade_deposit) / 100` (฿/unit).
   - **CRITICAL**: If `Trade_deposit <= 0` or null, deposit % is 0 and the `%` badge/label is completely omitted from the UI (no hardcoded category percentage fallback).
-  - Pre-order orders save total deposit to `Fnt_Header_online.fn_deposit_H` and item line deposit to `Fnt_Detail_online.fn_deposit_D`.
+  - Pre-order orders save total deposit in Baht to `Fnt_Header_online.fn_deposit_H` and item line total deposit in Baht to `Fnt_Detail_online.fn_deposit_D` (`Qty * unitDepositPrice`).
 - **Default Product Image**:
   - Whenever a product has no image in the database (`Trade_Part_Image` is null/empty) or the image URL fails to load (error/404), fallback to `/images/ubr_beverage_logo.png` (the official U.B.R. Beverage logo).
 - **Lead Time Badge**:

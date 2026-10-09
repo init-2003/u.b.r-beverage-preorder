@@ -11,6 +11,7 @@ import DraggableCartButton from './DraggableCartButton';
 import { BannerCarousel } from './BannerCarousel';
 import { ProductImage } from '@/components/ui';
 import { ProductGridSkeleton } from './HomeSkeleton';
+import { formatDepositPrice } from '@/lib/deposit';
 
 interface ProductCatalogProps {
   products: Product[];
@@ -172,6 +173,9 @@ export default function ProductCatalog({
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3.5 sm:gap-4 lg:gap-5">
           {filteredProducts.map((product, index) => {
+            const depositPercent = (product.depositPercent && product.depositPercent > 0)
+              ? product.depositPercent
+              : 0;
             const depositAmt = (product.depositPrice && product.depositPrice > 0)
               ? product.depositPrice
               : 0;
@@ -208,6 +212,21 @@ export default function ProductCatalog({
                       </span>
                     </div>
 
+                    {/* Yellow Sticker Badge at Top-Right Corner */}
+                    {depositPercent > 0 && (
+                      <div
+                        className="absolute top-2.5 right-2.5 sm:top-3 sm:right-3 z-10 flex flex-col items-center justify-center bg-[#ffe01b] border border-amber-300 rounded-[5px] px-2 py-1 shadow-2xs select-none pointer-events-none min-w-[38px]"
+                        title={`มัดจำ ${depositPercent}%`}
+                      >
+                        <span className="text-[9.5px] sm:text-[10px] font-bold text-blue-700 leading-tight">
+                          มัดจำ
+                        </span>
+                        <span className="text-[12px] sm:text-[13px] font-black text-blue-700 leading-none mt-0.5">
+                          {depositPercent}%
+                        </span>
+                      </div>
+                    )}
+
                     <ProductImage
                       src={product.imageUrl}
                       alt={product.name}
@@ -238,9 +257,11 @@ export default function ProductCatalog({
                           </span>
                         </div>
 
-                        <p className="text-[11px] sm:text-xs text-slate-500 font-medium mt-0.5">
-                          มัดจำ ฿{depositAmt.toLocaleString()}
-                        </p>
+                        {depositAmt > 0 ? (
+                          <p className="text-[11px] sm:text-xs text-blue-600 font-medium mt-0.5">
+                            มัดจำ ฿{formatDepositPrice(depositAmt)}
+                          </p>
+                        ) : null}
                       </div>
 
                       {/* Action Buttons: Add to Cart (Icon only) + กดสั่ง */}

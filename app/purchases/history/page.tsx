@@ -293,9 +293,14 @@ function PurchasesContent() {
                     </div>
                     {/* Right: Amount */}
                     <div className="text-right shrink-0">
-                      <span className="text-base sm:text-lg font-bold text-[#FF6B00]">
+                      <span className={`text-base sm:text-lg font-bold ${order.fn_deposit_H && Number(order.fn_deposit_H) > 0 ? 'text-blue-600' : 'text-[#FF6B00]'}`}>
                         {formatCurrency(payableAmount)}
                       </span>
+                      {order.fn_deposit_H && Number(order.fn_deposit_H) > 0 ? (
+                        <p className="text-[10px] text-blue-600 font-medium leading-none mt-0.5">
+                          (ยอดมัดจำ)
+                        </p>
+                      ) : null}
                     </div>
                   </div>
 

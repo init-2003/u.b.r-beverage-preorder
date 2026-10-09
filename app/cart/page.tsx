@@ -9,6 +9,7 @@ import { EmptyCartIllustration } from '@/components/EmptyCartIllustration';
 import { CartIllustration } from '@/components/CartIllustration';
 import { ProductImage } from '@/components/ui/ProductImage';
 import { WineLoading } from '@/components/WineLoading';
+import { formatDepositPrice } from '@/lib/deposit';
 
 const CART_SELECTION_STORAGE_KEY = 'ubr_cart_selected_trade_ids';
 
@@ -258,8 +259,8 @@ export default function CartPage() {
             <span className="text-center">จำนวน</span>
             <span className="text-center">หน่วย</span>
             <span className="text-center">ราคาต่อหน่วย</span>
-            <span className="text-center">ราคารวม</span>
-            <span className="text-center">ยอดมัดจำ</span>
+            <span className="text-center text-[#FF6B00] font-semibold">ราคารวม</span>
+            <span className="text-center text-blue-600 font-semibold">ยอดมัดจำ</span>
             <span className="text-center">แอคชั่น</span>
           </div>
         </div>
@@ -388,19 +389,19 @@ export default function CartPage() {
 
                     {/* 4. ราคารวม */}
                     <div className="text-center space-y-0.5">
-                      <span className="text-xs sm:text-sm font-bold text-slate-900 tabular-nums block">
+                      <span className="text-xs sm:text-sm font-bold text-[#FF6B00] tabular-nums block">
                         ฿{lineTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </span>
                     </div>
 
                     {/* 4. ยอดมัดจำ */}
                     <div className="text-center space-y-0.5">
-                      <span className="text-sm font-bold text-[#FF6B00] tabular-nums block">
+                      <span className="text-sm font-bold text-blue-600 tabular-nums block">
                         ฿{lineDeposit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </span>
                       {unitDeposit > 0 && item.qty > 1 && (
-                        <span className="text-xs sm:text-[13px] text-slate-500 font-medium block">
-                          (฿{unitDeposit.toLocaleString()}/{item.unitName || 'หน่วย'})
+                        <span className="text-xs sm:text-[13px] text-blue-600 font-medium block">
+                          (฿{formatDepositPrice(unitDeposit)}/{item.unitName || 'หน่วย'})
                         </span>
                       )}
                     </div>
@@ -549,12 +550,12 @@ export default function CartPage() {
                     {/* Col 3: ราคารวม: */}
                     <div className="flex flex-col items-center justify-start">
                       <div className="h-5 flex items-center justify-center">
-                        <span className="text-[11px] font-bold text-slate-800 leading-none">
+                        <span className="text-[11px] font-bold text-[#FF6B00] leading-none">
                           ราคารวม:
                         </span>
                       </div>
                       <div className="h-7 flex items-center justify-center mt-1">
-                        <span className="block text-xs font-bold text-slate-900 tabular-nums">
+                        <span className="block text-xs font-bold text-[#FF6B00] tabular-nums">
                           ฿{lineTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </span>
                       </div>
@@ -563,17 +564,17 @@ export default function CartPage() {
                     {/* Col 4: รวมมัดจำ: */}
                     <div className="flex flex-col items-center justify-start">
                       <div className="h-5 flex items-center justify-center">
-                        <span className="text-[11px] font-bold text-slate-800 leading-none">
+                        <span className="text-[11px] font-bold text-blue-600 leading-none">
                           รวมมัดจำ:
                         </span>
                       </div>
                       <div className="h-7 flex flex-col items-center justify-center mt-1">
-                        <span className="block text-xs font-bold text-[#FF6B00] tabular-nums leading-tight">
+                        <span className="block text-xs font-bold text-blue-600 tabular-nums leading-tight">
                           ฿{lineDeposit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </span>
                         {unitDeposit > 0 && item.qty > 1 && (
-                          <span className="text-[11px] sm:text-xs text-slate-500 font-medium leading-none mt-0.5">
-                            (฿{unitDeposit.toLocaleString()}/{item.unitName || 'หน่วย'})
+                          <span className="text-[11px] sm:text-xs text-blue-600 font-medium leading-none mt-0.5">
+                            (฿{formatDepositPrice(unitDeposit)}/{item.unitName || 'หน่วย'})
                           </span>
                         )}
                       </div>
@@ -641,7 +642,7 @@ export default function CartPage() {
             <div className="flex items-center justify-between sm:justify-end gap-4 sm:gap-6 w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100">
               <div className="text-right space-y-1">
                 {/* 1. ยอดรวมทั้งสิ้น (Grand Total) */}
-                <div className="flex items-center gap-3 justify-end text-xs sm:text-sm font-bold text-slate-900">
+                <div className="flex items-center gap-3 justify-end text-xs sm:text-sm font-bold text-[#FF6B00]">
                   <span>ยอดรวมทั้งสิ้น (Grand Total)</span>
                   <span className="tabular-nums">
                     ฿{selectedTotalAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -653,10 +654,10 @@ export default function CartPage() {
 
                 {/* 2. ยอดมัดจำที่ต้องชำระ (Deposit) */}
                 <div className="flex items-baseline gap-3 justify-end">
-                  <span className="text-xs sm:text-sm font-bold text-[#FF6B00]">
+                  <span className="text-xs sm:text-sm font-bold text-blue-600">
                     ยอดมัดจำที่ต้องชำระ (Deposit)
                   </span>
-                  <span className="text-xl sm:text-2xl font-black text-[#FF6B00] tabular-nums">
+                  <span className="text-xl sm:text-2xl font-black text-blue-600 tabular-nums">
                     ฿{selectedTotalDeposit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
                 </div>

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
 import { Modal, Button, ProductImage } from '@/components/ui';
 import { Check } from 'lucide-react';
+import { formatDepositPrice } from '@/lib/deposit';
 
 export default function AddToCartModal() {
   const router = useRouter();
@@ -77,8 +78,8 @@ export default function AddToCartModal() {
             <p className="text-base font-bold text-[#FF6B00]">
               ฿{(item.salePrice * qty).toLocaleString()}
             </p>
-            <p className="text-[11px] text-slate-500 mt-0.5">
-              มัดจำ ฿{((item.depositPrice || 0) * qty).toLocaleString()}
+            <p className="text-[11px] text-blue-600 font-medium mt-0.5">
+              มัดจำ ฿{formatDepositPrice(((item.depositPrice || 0) * qty))}
             </p>
           </div>
         </div>

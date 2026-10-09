@@ -11,6 +11,7 @@ import { EmptyCheckoutIllustration } from '@/components/EmptyCheckoutIllustratio
 import { CheckoutIllustration } from '@/components/CheckoutIllustration';
 import { WineLoading } from '@/components/WineLoading';
 import { ProductImage } from '@/components/ui/ProductImage';
+import { formatDepositPrice } from '@/lib/deposit';
 
 interface PreOrderItem {
   tradeId: string;
@@ -1024,8 +1025,8 @@ function PreOrderContent() {
                     <span className="text-center">จำนวน</span>
                     <span className="text-center">หน่วย</span>
                     <span className="text-center">ราคาต่อหน่วย</span>
-                    <span className="text-center">ราคารวม</span>
-                    <span className="text-right pr-2">ยอดมัดจำ</span>
+                    <span className="text-center text-[#FF6B00] font-semibold">ราคารวม</span>
+                    <span className="text-right pr-2 text-blue-600 font-semibold">ยอดมัดจำ</span>
                   </div>
                 </div>
                   {/* MOBILE VIEW (< 640px) */}
@@ -1126,12 +1127,12 @@ function PreOrderContent() {
                             {/* Col 3: ราคารวม: */}
                             <div className="flex flex-col items-center justify-start">
                               <div className="h-5 flex items-center justify-center">
-                                <span className="text-[11px] font-bold text-slate-800 leading-none">
+                                <span className="text-[11px] font-bold text-[#FF6B00] leading-none">
                                   ราคารวม:
                                 </span>
                               </div>
                               <div className="h-7 flex items-center justify-center mt-1">
-                                <span className="block text-xs font-bold text-slate-900 tabular-nums">
+                                <span className="block text-xs font-bold text-[#FF6B00] tabular-nums">
                                   ฿{itemLineTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                 </span>
                               </div>
@@ -1140,17 +1141,17 @@ function PreOrderContent() {
                             {/* Col 4: ยอดมัดจำ: */}
                             <div className="flex flex-col items-center justify-start">
                               <div className="h-5 flex items-center justify-center">
-                                <span className="text-[11px] font-bold text-slate-800 leading-none">
+                                <span className="text-[11px] font-bold text-blue-600 leading-none">
                                   ยอดมัดจำ:
                                 </span>
                               </div>
                               <div className="h-7 flex flex-col items-center justify-center mt-1">
-                                <span className="block text-xs font-bold text-[#FF6B00] tabular-nums leading-tight">
+                                <span className="block text-xs font-bold text-blue-600 tabular-nums leading-tight">
                                   ฿{lineDeposit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                 </span>
                                 {unitDeposit > 0 && item.qty > 1 && (
-                                  <span className="text-[11px] sm:text-xs text-slate-500 font-medium leading-none mt-0.5">
-                                    (฿{unitDeposit.toLocaleString()}/{item.unitName || 'หน่วย'})
+                                  <span className="text-[11px] sm:text-xs text-blue-600 font-medium leading-none mt-0.5">
+                                    (฿{formatDepositPrice(unitDeposit)}/{item.unitName || 'หน่วย'})
                                   </span>
                                 )}
                               </div>
@@ -1254,19 +1255,19 @@ function PreOrderContent() {
 
                                 {/* 4. ราคารวม */}
                                 <div className="text-center">
-                                  <div className="font-bold text-slate-900 text-xs sm:text-sm tabular-nums">
+                                  <div className="font-bold text-[#FF6B00] text-xs sm:text-sm tabular-nums">
                                     ฿{itemLineTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                   </div>
                                 </div>
 
                                 {/* 5. รวมมัดจำ */}
                                 <div className="text-right pr-2">
-                                  <div className="font-bold text-[#FF6B00] text-xs sm:text-base tabular-nums">
+                                  <div className="font-bold text-blue-600 text-xs sm:text-base tabular-nums">
                                     ฿{lineDeposit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                   </div>
                                   {unitDeposit > 0 && item.qty > 1 && (
-                                    <div className="text-xs sm:text-[13px] text-slate-500 font-medium">
-                                      (฿{unitDeposit.toLocaleString()}/{item.unitName || 'หน่วย'})
+                                    <div className="text-xs sm:text-[13px] text-blue-600 font-medium">
+                                      (฿{formatDepositPrice(unitDeposit)}/{item.unitName || 'หน่วย'})
                                     </div>
                                   )}
                                 </div>
@@ -1297,12 +1298,9 @@ function PreOrderContent() {
                     />
                   </div>
 
-                  <div className="flex items-baseline justify-end gap-3 text-right shrink-0">
+                  <div className="flex items-center justify-end text-right shrink-0">
                     <span className="text-xs sm:text-sm text-slate-600">
-                      คำสั่งซื้อทั้งหมด ({totalItemsCount} ชิ้น):
-                    </span>
-                    <span className="text-lg sm:text-xl font-bold text-[#FF6B00] tabular-nums">
-                      ฿{totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      คำสั่งซื้อทั้งหมด ({totalItemsCount} ชิ้น)
                     </span>
                   </div>
                 </div>
@@ -1412,9 +1410,9 @@ function PreOrderContent() {
 
                   <div className="space-y-2.5 text-xs sm:text-sm">
                     {/* 1. ยอดรวมทั้งสิ้น (Grand Total) */}
-                    <div className="flex justify-between items-center font-bold text-slate-900">
+                    <div className="flex justify-between items-center font-bold text-[#FF6B00]">
                       <span>ยอดรวมทั้งสิ้น (Grand Total)</span>
-                      <span className="text-slate-900 font-bold tabular-nums">
+                      <span className="text-[#FF6B00] font-bold tabular-nums">
                         ฿{totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </span>
                     </div>
@@ -1424,8 +1422,8 @@ function PreOrderContent() {
 
                     {/* 2. ยอดมัดจำที่ต้องชำระ (Deposit) */}
                     <div className="flex justify-between items-center">
-                      <span className="font-bold text-[#FF6B00]">ยอดมัดจำที่ต้องชำระ (Deposit)</span>
-                      <span className="text-xl sm:text-2xl font-bold text-[#FF6B00] tabular-nums">
+                      <span className="font-bold text-blue-600">ยอดมัดจำที่ต้องชำระ (Deposit)</span>
+                      <span className="text-xl sm:text-2xl font-bold text-blue-600 tabular-nums">
                         ฿{totalDepositAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </span>
                     </div>

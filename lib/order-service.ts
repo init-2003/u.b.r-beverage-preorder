@@ -1,4 +1,5 @@
 import { getDbPool, sql } from '@/lib/db';
+import { calcDeposit } from '@/lib/deposit';
 
 export interface OrderItemInput {
   tradeId: string;
@@ -78,16 +79,52 @@ export async function createPreOrder(params: CreateOrderParams) {
     const docNo = await generateNextDocNo(transaction, branchId);
     const now = new Date();
 
+    // ดึงราคาและ % มัดจำจริงจากตาราง Trade เพื่อความถูกต้องและความปลอดภัย
+    const tradeIds = Array.from(new Set(params.items.map((it) => it.tradeId.trim()))).filter(Boolean);
+    const tradeMap = new Map<string, { salePrice: number; depositPct: number }>();
+    if (tradeIds.length > 0) {
+      const tradeReq = new sql.Request(transaction);
+      tradeIds.forEach((id, idx) => tradeReq.input(`t${idx}`, sql.NVarChar, id));
+      const tradeResult = await tradeReq.query(`
+        SELECT 
+          RTRIM(LTRIM(Trade_Id)) AS Trade_Id,
+          ISNULL(Sale_Price1, 0) AS Sale_Price1,
+          ISNULL(Trade_deposit, 0) AS Trade_deposit
+        FROM Trade
+        WHERE Trade_Id IN (${tradeIds.map((_, idx) => `@t${idx}`).join(',')})
+      `);
+      for (const row of tradeResult.recordset || []) {
+        tradeMap.set(row.Trade_Id, {
+          salePrice: Number(row.Sale_Price1) || 0,
+          depositPct: Number(row.Trade_deposit) || 0,
+        });
+      }
+    }
+
     // คำนวณยอดเงินรวมและยอดมัดจำรวม
     let totalAmount = 0;
     let totalDeposit = 0;
-    for (const item of params.items) {
-      totalAmount += item.qty * item.salePrice;
-      const unitDeposit = (item.depositPrice && item.depositPrice > 0)
-        ? item.depositPrice
-        : 0;
-      totalDeposit += unitDeposit * item.qty;
-    }
+    const computedItems = params.items.map((item) => {
+      const dbInfo = tradeMap.get(item.tradeId.trim());
+      const salePrice = (dbInfo && dbInfo.salePrice > 0)
+        ? dbInfo.salePrice
+        : (Number(item.salePrice) || 0);
+      const depositPct = dbInfo ? dbInfo.depositPct : null;
+      const { depositPrice } = calcDeposit(salePrice, depositPct);
+      const lineTotal = item.qty * salePrice;
+      const lineDeposit = Math.round((depositPrice * item.qty) * 100) / 100;
+
+      totalAmount += lineTotal;
+      totalDeposit = Math.round((totalDeposit + lineDeposit) * 100) / 100;
+
+      return {
+        ...item,
+        salePrice,
+        depositPrice,
+        lineTotal,
+        lineDeposit,
+      };
+    });
 
     const moneySts = params.paymentMethod;
     const moneyStsName = moneySts === 'M' ? 'เก็บเงินปลายทาง' : 'โอนผ่านบัญชี';
@@ -145,10 +182,8 @@ export async function createPreOrder(params: CreateOrderParams) {
     `);
 
     // 2. บันทึกลงตาราง Fnt_Detail_online พร้อม fn_deposit_D
-    for (const item of params.items) {
-      const lineDeposit = (item.depositPrice && item.depositPrice > 0)
-        ? item.depositPrice * item.qty
-        : 0;
+    for (const item of computedItems) {
+      const lineDeposit = item.lineDeposit;
 
       const finalTradeName = item.tradeName.trim();
 

@@ -157,7 +157,7 @@ export default function CartDropdown() {
       {isOpen && (
         <div
           onAnimationEnd={handleAnimationEnd}
-          className={`absolute right-0 top-full mt-2.5 w-[350px] sm:w-[380px] z-50 ${
+          className={`absolute right-0 top-full mt-2.5 w-[360px] sm:w-[390px] max-w-[calc(100vw-24px)] z-50 ${
             isClosing ? 'animate-popover-out' : 'animate-popover'
           }`}
         >
@@ -218,13 +218,18 @@ export default function CartDropdown() {
                       />
                     </div>
 
-                    {/* Product Name (Single line truncate) */}
-                    <span
-                      className="text-xs sm:text-[13px] text-slate-800 font-normal truncate flex-1 min-w-0 group-hover:text-[#800020] transition-colors"
-                      title={item.tradeName}
-                    >
-                      {item.tradeName}
-                    </span>
+                    {/* Product Name & Quantity (matching image 2) */}
+                    <div className="flex-1 min-w-0 flex flex-col justify-center">
+                      <span
+                        className="text-xs sm:text-[13px] text-slate-800 font-normal truncate group-hover:text-[#800020] transition-colors leading-snug"
+                        title={item.tradeName}
+                      >
+                        {item.tradeName}
+                      </span>
+                      <span className="text-[11px] sm:text-xs text-slate-400 font-normal mt-0.5">
+                        x{item.qty}
+                      </span>
+                    </div>
 
                     {/* Price in Orange */}
                     <span className="text-xs sm:text-[13px] font-bold text-[#FF6B00] shrink-0 tabular-nums ml-2">
@@ -237,7 +242,7 @@ export default function CartDropdown() {
               {/* Footer Actions (Clean seamless white, no border line) */}
               <div className="p-3 sm:p-3.5 bg-white flex items-center justify-between gap-3">
                 <span className="text-xs text-slate-500 font-normal truncate">
-                  มีสินค้า {totalQty} ชิ้นในตะกร้า
+                  มีสินค้าในตะกร้า ({totalQty} ชิ้น)
                 </span>
 
                 <button

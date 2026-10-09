@@ -487,8 +487,10 @@ function OrdersContent({
                         </p>
                       </div>
                       <div className="text-right shrink-0">
-                        <p className="text-[11px] text-slate-400">ยอดชำระ</p>
-                        <p className="text-lg sm:text-xl font-bold text-[#FF6B00]">
+                        <p className={`text-[11px] ${order.fn_deposit_H && Number(order.fn_deposit_H) > 0 ? 'text-blue-600 font-semibold' : 'text-slate-400'}`}>
+                          {order.fn_deposit_H && Number(order.fn_deposit_H) > 0 ? 'ยอดมัดจำที่ต้องชำระ' : 'ยอดชำระ'}
+                        </p>
+                        <p className={`text-lg sm:text-xl font-bold ${order.fn_deposit_H && Number(order.fn_deposit_H) > 0 ? 'text-blue-600' : 'text-[#FF6B00]'}`}>
                           {formatCurrency(payableAmount)}
                         </p>
                       </div>
@@ -572,46 +574,53 @@ function OrdersContent({
                   {/* Card Body: Order Items */}
                   <div className="divide-y divide-slate-100/80">
                     {order.items && order.items.length > 0 ? (
-                      order.items.map((item, idx) => (
-                        <Link
-                          key={`${item.Trade_Id}-${idx}`}
-                          href={`/orders/${encodeURIComponent(order.Fn_Doc_No)}`}
-                          className="p-3.5 sm:px-6 sm:py-4 flex items-center gap-3 sm:gap-4 hover:bg-slate-50/70 transition-colors group cursor-pointer block"
-                        >
-                          {/* Thumbnail Image */}
-                          <div className="w-20 h-20 sm:w-22 sm:h-22 rounded border border-slate-100 bg-white shrink-0 flex items-center justify-center overflow-hidden">
-                            <ProductImage
-                              src={item.Trade_Part_Image || '/images/ubr_beverage_logo.png'}
-                              alt={item.Trade_Name}
-                              objectFit="auto"
-                              priority={true}
-                              fallbackSrc="/images/ubr_beverage_logo.png"
-                            />
-                          </div>
+                      order.items.map((item, idx) => {
+                        const itemQty = Number(item.Qty || 1);
+                        const unitPrice = Number(item.Sale_Price != null && item.Sale_Price > 0 ? item.Sale_Price : item.Sale_Price1 || 0);
+                        const lineTotal = Number(item.Line_Total) > 0 ? Number(item.Line_Total) : (unitPrice * itemQty);
+                        const originalLineTotal = Number(item.Sale_Price1 || 0) * itemQty;
 
-                          {/* Product Details */}
-                          <div className="flex-1 min-w-0 pr-2">
-                            <h4 className="text-xs sm:text-sm font-medium text-slate-900 line-clamp-2 leading-relaxed">
-                              {item.Trade_Name}
-                            </h4>
-                            <div className="text-xs text-slate-600 mt-1">
-                              x{item.Qty}
+                        return (
+                          <Link
+                            key={`${item.Trade_Id}-${idx}`}
+                            href={`/orders/${encodeURIComponent(order.Fn_Doc_No)}`}
+                            className="p-3.5 sm:px-6 sm:py-4 flex items-center gap-3 sm:gap-4 hover:bg-slate-50/70 transition-colors group cursor-pointer block"
+                          >
+                            {/* Thumbnail Image */}
+                            <div className="w-20 h-20 sm:w-22 sm:h-22 rounded border border-slate-100 bg-white shrink-0 flex items-center justify-center overflow-hidden">
+                              <ProductImage
+                                src={item.Trade_Part_Image || '/images/ubr_beverage_logo.png'}
+                                alt={item.Trade_Name}
+                                objectFit="auto"
+                                priority={true}
+                                fallbackSrc="/images/ubr_beverage_logo.png"
+                              />
                             </div>
-                          </div>
 
-                          {/* Pricing */}
-                          <div className="text-right shrink-0">
-                            {item.Sale_Price1 && item.Sale_Price1 > item.Sale_Price ? (
-                              <div className="text-xs text-slate-400 line-through">
-                                ฿{Number(item.Sale_Price1).toLocaleString('en-US', { minimumFractionDigits: 0 })}
+                            {/* Product Details */}
+                            <div className="flex-1 min-w-0 pr-2">
+                              <h4 className="text-xs sm:text-sm font-medium text-slate-900 line-clamp-2 leading-relaxed">
+                                {item.Trade_Name}
+                              </h4>
+                              <div className="text-xs text-slate-600 mt-1">
+                                x{item.Qty}
                               </div>
-                            ) : null}
-                            <div className="text-xs sm:text-sm font-semibold text-[#FF6B00]">
-                              ฿{Number(item.Sale_Price || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </div>
-                          </div>
-                        </Link>
-                      ))
+
+                            {/* Pricing: ราคารวมของสินค้ารายการนั้นๆ (Line Total) */}
+                            <div className="text-right shrink-0">
+                              {item.Sale_Price1 && item.Sale_Price1 > (item.Sale_Price || 0) ? (
+                                <div className="text-xs text-slate-400 line-through">
+                                  ฿{originalLineTotal.toLocaleString('en-US', { minimumFractionDigits: 0 })}
+                                </div>
+                              ) : null}
+                              <div className="text-xs sm:text-sm font-semibold text-[#FF6B00]">
+                                ฿{lineTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                              </div>
+                            </div>
+                          </Link>
+                        );
+                      })
                     ) : (
                       /* Fallback when line items are not loaded */
                       <Link
@@ -654,7 +663,7 @@ function OrdersContent({
                       return (
                         <div className="w-full sm:w-80 space-y-2 text-xs sm:text-sm">
                           {/* ยอดรวมทั้งสิ้น (Grand Total) */}
-                          <div className="flex justify-between items-center font-bold text-slate-900">
+                          <div className="flex justify-between items-center font-bold text-[#FF6B00]">
                             <span>ยอดรวมทั้งสิ้น (Grand Total)</span>
                             <span className="font-bold tabular-nums">
                               {formatCurrency(totalOrderAmount)}
@@ -665,7 +674,7 @@ function OrdersContent({
                           <div className="border-t border-dashed border-slate-200 my-1.5" />
 
                           {/* ยอดมัดจำที่ต้องชำระ (Deposit) */}
-                          <div className="flex justify-between items-center font-bold text-[#FF6B00]">
+                          <div className="flex justify-between items-center font-bold text-blue-600">
                             <span>
                               {docStsCode === '1' ? 'ยอดมัดจำที่ต้องชำระ (Deposit)' : 'ยอดมัดจำที่ชำระ (Deposit)'}
                             </span>

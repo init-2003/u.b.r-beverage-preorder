@@ -15,6 +15,7 @@ import {
   AlertCircle,
   Clock,
 } from 'lucide-react';
+import { formatDepositPrice } from '@/lib/deposit';
 
 interface ProductDetail {
   id: string;
@@ -157,6 +158,7 @@ export default function ProductDetailPage({
   }
 
   const unitDeposit = product.depositPrice && product.depositPrice > 0 ? product.depositPrice : 0;
+  const depositPercent = product.depositPercent && product.depositPercent > 0 ? product.depositPercent : 0;
   const lineTotal = product.price * qty;
 
   // Original price for strikethrough comparison (if cost/salePrice is higher than display price)
@@ -239,19 +241,26 @@ export default function ProductDetailPage({
                 </div>
 
                 {/* Pre-order Deposit Callout (No background box) */}
-                <div className="flex items-center gap-1.5 text-xs flex-wrap pt-0.5">
-                  <span className="text-slate-700 font-bold">
-                    มัดจำ:
-                  </span>
-                  <span className="text-[#FF6B00] font-black text-sm">
-                    ฿{(unitDeposit || 0).toLocaleString()}
-                  </span>
-                  {product.unitName ? (
-                    <span className="text-xs text-slate-500 font-medium">
-                      / {product.unitName}
+                {unitDeposit > 0 && (
+                  <div className="flex items-center gap-1.5 text-xs flex-wrap pt-0.5">
+                    <span className="text-blue-600 font-bold">
+                      มัดจำ:
                     </span>
-                  ) : null}
-                </div>
+                    <span className="text-blue-600 font-black text-sm">
+                      ฿{formatDepositPrice(unitDeposit)}
+                    </span>
+                    {depositPercent > 0 && (
+                      <span className="text-blue-600 font-medium text-xs">
+                        ({depositPercent}%)
+                      </span>
+                    )}
+                    {product.unitName ? (
+                      <span className="text-xs text-slate-500 font-medium">
+                        / {product.unitName}
+                      </span>
+                    ) : null}
+                  </div>
+                )}
               </div>
 
               {/* 5. Quantity Stepper matching reference layout */}
@@ -285,7 +294,7 @@ export default function ProductDetailPage({
                   <span className="text-xs text-slate-500 font-medium">
                     {product.unitName || ''}
                     {qty > 1 && (
-                      <span className="ml-2 font-bold text-slate-700">
+                      <span className="ml-2 font-bold text-[#FF6B00]">
                         (รวม ฿{lineTotal.toLocaleString()})
                       </span>
                     )}

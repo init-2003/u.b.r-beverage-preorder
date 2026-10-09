@@ -286,7 +286,7 @@ function OrderPaymentContent() {
               {/* Expected Payable Amount */}
               <div className="mt-2.5 pt-2 border-t border-slate-200/70 flex items-center justify-between text-xs">
                 <span className="text-slate-500">ยอดที่ต้องตรงกับสลิป:</span>
-                <span className="font-bold text-[#FF6B00] text-sm">
+                <span className="font-bold text-blue-600 text-sm">
                   ฿{payableAmount.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} บาท
                 </span>
               </div>

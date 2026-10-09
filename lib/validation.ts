@@ -102,11 +102,11 @@ export function sanitizePrice(val: unknown, max = 1000000000): number {
 }
 
 /**
- * เบอร์โทร: เก็บเฉพาะตัวเลข + - และเว้นวรรค
+ * เบอร์โทร: เก็บเฉพาะตัวเลข + - , / และเว้นวรรค
  */
 export function sanitizePhone(val: unknown): string {
   if (typeof val !== 'string') return '';
-  return val.replace(/[^\d+\-\s]/g, '').trim().slice(0, 30);
+  return val.replace(/[^\d+\-\s,\/]/g, '').trim().slice(0, 50);
 }
 
 const EmailSchema = z.email();

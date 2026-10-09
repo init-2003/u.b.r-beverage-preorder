@@ -3,6 +3,7 @@ import { getDbPool } from '@/lib/db';
 import { getCurrentCustomer } from '@/lib/auth';
 import { resolveProductImageUrl } from '@/lib/image-utils';
 import { sanitizeTradeId } from '@/lib/validation';
+import { calcDeposit } from '@/lib/deposit';
 
 export async function GET(
   req: NextRequest,
@@ -59,12 +60,8 @@ export async function GET(
     }
 
     const p = result.recordset[0];
-    const depositPrice = Number(p.Trade_deposit) || 0;
     const activePrice = Number(p.Sale_Price1) || 0;
-
-    const depositPercent = (depositPrice > 0 && activePrice > 0)
-      ? Math.round((depositPrice / activePrice) * 100)
-      : 0;
+    const { depositPercent, depositPrice } = calcDeposit(activePrice, p.Trade_deposit);
 
     const origin = (p.Trade_Province || '').trim();
 

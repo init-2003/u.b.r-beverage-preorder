@@ -35,7 +35,7 @@ export default function Footer() {
             นโยบายความเป็นส่วนตัว
           </Link>
         </div>
-        <div className="flex justify-center gap-4 text-slate-400 pt-3 border-t border-slate-500/30 max-w-xl mx-auto text-[10px] sm:text-[11px] whitespace-nowrap overflow-x-auto">
+        <div className="flex justify-center gap-4 text-slate-400 pt-3 border-t border-slate-500/30 max-w-xl mx-auto text-[10px] sm:text-[11px] whitespace-normal sm:whitespace-nowrap px-2 text-center">
           <span>© 2026 Ubon Rung Rueang Beverage Limited Partnership. All Rights Reserved</span>
         </div>
       </div>

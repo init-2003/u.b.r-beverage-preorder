@@ -87,7 +87,7 @@ function AddressContent() {
                   ที่อยู่สำหรับจัดส่งสินค้า
                 </h2>
                 <p className="font-medium text-slate-800 pt-0.5">
-                  {profile?.customerContact || profile?.customerName || '-'}
+                  {profile?.customerName || profile?.customerContact || '-'}
                 </p>
                 <p className="text-slate-600 text-xs sm:text-sm">
                   {profile?.customerAddress || 'ยังไม่ได้ระบุที่อยู่จัดส่ง'}

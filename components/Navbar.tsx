@@ -283,7 +283,7 @@ function UserAccountMenu({
       {isOpen && (
         <div
           onAnimationEnd={handleAnimationEnd}
-          className={`absolute right-0 mt-2.5 w-52 sm:w-56 z-50 text-slate-800 ${isClosing ? 'animate-popover-out' : 'animate-popover'
+          className={`absolute right-0 mt-2.5 w-52 sm:w-56 max-w-[calc(100vw-24px)] z-50 text-slate-800 ${isClosing ? 'animate-popover-out' : 'animate-popover'
             }`}
         >
           {/* Arrow Pointer */}
@@ -352,7 +352,7 @@ export default function Navbar() {
 
   return (
     <header className="sticky top-0 z-40 w-full bg-[#800020] border-b border-[#68001a] shadow-md print:hidden">
-      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-8">
         {/* 1. Top Utility Bar (Shopee Style: Desktop only) */}
         <div className="hidden sm:flex items-center justify-between py-1 text-xs text-white/90">
           <div className="flex items-center gap-2.5 text-[11.5px] text-white/80 font-normal">
@@ -389,7 +389,7 @@ export default function Navbar() {
                   sessionStorage.setItem('ubr_home_scroll_y', '0');
                 } catch {}
               }}
-              className="flex items-center group shrink-0"
+              className="flex items-center group min-w-0 mr-2 sm:mr-0"
             >
               <CompanyLogo size="md" lightText={true} />
             </Link>
@@ -402,7 +402,7 @@ export default function Navbar() {
             </div>
 
             {/* Right Actions: Mobile has [ 🔍 ] [ 👤 ] [ 🛒 ], Desktop has [ 🛒 ] */}
-            <div className="flex items-center gap-1.5 sm:gap-4 shrink-0">
+            <div className="flex items-center gap-1 sm:gap-4 shrink-0">
               {/* Mobile Search Trigger Button (Only on mobile < sm) */}
               <button
                 type="button"

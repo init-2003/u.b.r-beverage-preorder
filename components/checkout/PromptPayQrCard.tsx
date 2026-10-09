@@ -151,7 +151,7 @@ export default function PromptPayQrCard({
         {/* Amount Row matching reference */}
         <div className="text-center pt-0.5">
           <span className="text-base sm:text-lg font-bold text-slate-900">ยอดชำระ </span>
-          <span className="text-2xl sm:text-3xl font-extrabold text-[#FF6B00] tabular-nums mx-1 font-sans">
+          <span className="text-2xl sm:text-3xl font-extrabold text-red-600 tabular-nums mx-1 font-sans">
             {formattedAmount}
           </span>
           <span className="text-base sm:text-lg font-bold text-slate-900"> บาท</span>

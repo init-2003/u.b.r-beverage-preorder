@@ -3,6 +3,7 @@ import { getDbPool } from '@/lib/db';
 import { getCurrentCustomer } from '@/lib/auth';
 import { resolveProductImageUrl } from '@/lib/image-utils';
 import { escapeSqlLike, parseProductsQuery } from '@/lib/validation';
+import { calcDeposit } from '@/lib/deposit';
 
 export async function GET(req: NextRequest) {
   try {
@@ -83,10 +84,16 @@ export async function GET(req: NextRequest) {
     request.input('limit', limit);
 
     const dataResult = await request.query(dataQuery);
-    const products = (dataResult.recordset || []).map((p: any) => ({
-      ...p,
-      Trade_Part_Image: resolveProductImageUrl(p.Trade_Part_Image),
-    }));
+    const products = (dataResult.recordset || []).map((p: any) => {
+      const activePrice = Number(p.Active_Price ?? p.Sale_Price1 ?? 0);
+      const { depositPercent, depositPrice } = calcDeposit(activePrice, p.Trade_deposit);
+      return {
+        ...p,
+        Trade_Part_Image: resolveProductImageUrl(p.Trade_Part_Image),
+        Deposit_Percent: depositPercent,
+        Deposit_Price: depositPrice,
+      };
+    });
 
     return NextResponse.json({
       success: true,

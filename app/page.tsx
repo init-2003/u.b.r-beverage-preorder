@@ -6,6 +6,7 @@ import { Product } from '@/types/preorder';
 import ProductCatalog from '@/components/ProductCatalog';
 import { useAuth } from '@/context/AuthContext';
 import { HomeSkeleton } from '@/components/HomeSkeleton';
+import { calcDeposit } from '@/lib/deposit';
 
 const SCROLL_STORAGE_KEY = 'ubr_home_scroll_y';
 
@@ -107,11 +108,10 @@ function HomeAppPageContent() {
       const data = await res.json();
       if (data.success && Array.isArray(data.products)) {
         const mapped: Product[] = data.products.map((p: any) => {
-          const price = Number(p.Sale_Price1 ?? 0);
-          const depositPrice = Number(p.Trade_deposit) || 0;
-          const depositPercent = (depositPrice > 0 && price > 0)
-            ? Math.round((depositPrice / price) * 100)
-            : 0;
+          const price = Number(p.Active_Price ?? p.Sale_Price1 ?? 0);
+          const dep = (p.Deposit_Percent != null && p.Deposit_Price != null)
+            ? { depositPercent: Number(p.Deposit_Percent), depositPrice: Number(p.Deposit_Price) }
+            : calcDeposit(price, p.Trade_deposit);
 
           return {
             id: p.Trade_Id,
@@ -121,8 +121,8 @@ function HomeAppPageContent() {
             unitName: (p.Unit_Name || '').trim(),
             price,
             salePrice1: price,
-            depositPrice,
-            depositPercent,
+            depositPrice: dep.depositPrice,
+            depositPercent: dep.depositPercent,
             leadTimeDays: 0,
             origin: p.Trade_Province || '',
             alcoholPercent: 0,

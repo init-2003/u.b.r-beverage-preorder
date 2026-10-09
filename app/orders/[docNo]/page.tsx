@@ -24,6 +24,7 @@ import { StepProcessingIllustration } from '@/components/orders/StepProcessingIl
 import { StepReceiptIllustration } from '@/components/orders/StepReceiptIllustration';
 import { WineLoading } from '@/components/WineLoading';
 import { ProductImage } from '@/components/ui/ProductImage';
+import { formatDepositPrice } from '@/lib/deposit';
 
 interface OrderDetail {
   Branch_Id: string;
@@ -530,8 +531,8 @@ export default function OrderDetailPage() {
               <span className="text-center">จำนวน</span>
               <span className="text-center">หน่วย</span>
               <span className="text-center">ราคาต่อหน่วย</span>
-              <span className="text-center">ราคารวม</span>
-              <span className="text-right pr-2">ยอดมัดจำ</span>
+              <span className="text-center text-[#FF6B00] font-semibold">ราคารวม</span>
+              <span className="text-right pr-2 text-blue-600 font-semibold">ยอดมัดจำ</span>
             </div>
           </div>
 
@@ -542,8 +543,9 @@ export default function OrderDetailPage() {
                 order.items.map((item, idx) => {
                   const unitPrice = Number(item.Sale_Price != null && item.Sale_Price > 0 ? item.Sale_Price : item.Sale_Price1 || 0);
                   const lineTotal = Number(item.Line_Total) > 0 ? Number(item.Line_Total) : (unitPrice * Number(item.Qty || 0));
-                  const unitDeposit = Number(item.fn_deposit_D) || 0;
-                  const lineDeposit = unitDeposit * Number(item.Qty || 0);
+                  const itemQty = Number(item.Qty || 0) || 1;
+                  const lineDeposit = Number(item.fn_deposit_D) || 0;
+                  const unitDeposit = lineDeposit / itemQty;
 
                   const imageSrc = item.Trade_Part_Image
                     ? item.Trade_Part_Image.startsWith('/') || item.Trade_Part_Image.startsWith('http')
@@ -615,12 +617,12 @@ export default function OrderDetailPage() {
                         {/* Col 3: ราคารวม: */}
                         <div className="flex flex-col items-center justify-start">
                           <div className="h-5 flex items-center justify-center">
-                            <span className="text-[11px] font-bold text-slate-800 leading-none">
+                            <span className="text-[11px] font-bold text-[#FF6B00] leading-none">
                               ราคารวม:
                             </span>
                           </div>
                           <div className="h-7 flex items-center justify-center mt-1">
-                            <span className="block text-xs font-bold text-slate-900 tabular-nums">
+                            <span className="block text-xs font-bold text-[#FF6B00] tabular-nums">
                               ฿{lineTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </span>
                           </div>
@@ -629,17 +631,17 @@ export default function OrderDetailPage() {
                         {/* Col 4: ยอดมัดจำ: */}
                         <div className="flex flex-col items-center justify-start">
                           <div className="h-5 flex items-center justify-center">
-                            <span className="text-[11px] font-bold text-slate-800 leading-none">
+                            <span className="text-[11px] font-bold text-blue-600 leading-none">
                               ยอดมัดจำ:
                             </span>
                           </div>
                           <div className="h-7 flex flex-col items-center justify-center mt-1">
-                            <span className="block text-xs font-bold text-[#FF6B00] tabular-nums leading-tight">
+                            <span className="block text-xs font-bold text-blue-600 tabular-nums leading-tight">
                               ฿{lineDeposit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </span>
                             {unitDeposit > 0 && item.Qty > 1 && (
-                              <span className="text-[11px] sm:text-xs text-slate-500 font-medium leading-none mt-0.5">
-                                (฿{unitDeposit.toLocaleString()}/{item.Unit_Name || 'หน่วย'})
+                              <span className="text-[11px] sm:text-xs text-blue-600 font-medium leading-none mt-0.5">
+                                (฿{formatDepositPrice(unitDeposit)}/{item.Unit_Name || 'หน่วย'})
                               </span>
                             )}
                           </div>
@@ -664,8 +666,9 @@ export default function OrderDetailPage() {
                   order.items.map((item, idx) => {
                     const unitPrice = Number(item.Sale_Price != null && item.Sale_Price > 0 ? item.Sale_Price : item.Sale_Price1 || 0);
                     const lineTotal = Number(item.Line_Total) > 0 ? Number(item.Line_Total) : (unitPrice * Number(item.Qty || 0));
-                    const unitDeposit = Number(item.fn_deposit_D) || 0;
-                    const lineDeposit = unitDeposit * Number(item.Qty || 0);
+                    const itemQty = Number(item.Qty || 0) || 1;
+                    const lineDeposit = Number(item.fn_deposit_D) || 0;
+                    const unitDeposit = lineDeposit / itemQty;
 
                     const imageSrc = item.Trade_Part_Image
                       ? item.Trade_Part_Image.startsWith('/') || item.Trade_Part_Image.startsWith('http')
@@ -726,19 +729,19 @@ export default function OrderDetailPage() {
 
                             {/* 4. ราคารวม */}
                             <div className="text-center">
-                              <div className="font-bold text-slate-900 text-xs sm:text-sm tabular-nums">
+                              <div className="font-bold text-[#FF6B00] text-xs sm:text-sm tabular-nums">
                                 ฿{lineTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                               </div>
                             </div>
 
                             {/* 5. ยอดมัดจำ */}
                             <div className="text-right pr-2">
-                              <div className="font-bold text-[#FF6B00] text-xs sm:text-base tabular-nums">
+                              <div className="font-bold text-blue-600 text-xs sm:text-base tabular-nums">
                                 ฿{lineDeposit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                               </div>
                               {unitDeposit > 0 && item.Qty > 1 && (
-                                <div className="text-xs sm:text-[13px] text-slate-500 font-medium">
-                                  (฿{unitDeposit.toLocaleString()}/{item.Unit_Name || 'หน่วย'})
+                                <div className="text-xs sm:text-[13px] text-blue-600 font-medium">
+                                  (฿{formatDepositPrice(unitDeposit)}/{item.Unit_Name || 'หน่วย'})
                                 </div>
                               )}
                             </div>
@@ -822,7 +825,7 @@ export default function OrderDetailPage() {
                         <span>ชำระผ่าน QR PromptPay</span>
                       </div>
                       <p className="text-[11px] sm:text-xs text-slate-600 mt-0.5">
-                        ยอดมัดจำ: <strong className="text-[#FF6B00] font-bold">฿{deposit.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} บาท</strong> กรุณาสแกน QR Code เพื่อชำระเงิน
+                        <strong className="text-blue-600 font-bold">ยอดมัดจำ: ฿{deposit.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} บาท</strong> กรุณาสแกน QR Code เพื่อชำระเงิน
                       </p>
                     </div>
                   </div>
@@ -865,16 +868,16 @@ export default function OrderDetailPage() {
           <div className="space-y-2.5 text-xs sm:text-sm text-slate-600">
             {/* ยอดรวมทั้งสิ้น */}
             <div className="flex justify-between items-center">
-              <span className="font-bold text-slate-900">ยอดรวมทั้งสิ้น (Grand Total)</span>
-              <span className="text-base sm:text-lg font-black text-slate-900 tabular-nums">
+              <span className="font-bold text-[#FF6B00]">ยอดรวมทั้งสิ้น (Grand Total)</span>
+              <span className="text-base sm:text-lg font-black text-[#FF6B00] tabular-nums">
                 ฿{totalAmount.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </span>
             </div>
 
             {/* ข้อมูลมัดจำ / คงเหลือ */}
             <div className="flex justify-between items-center pt-2 border-t border-dashed border-slate-200">
-              <span className="font-bold text-[#FF6B00]">ยอดมัดจำที่ต้องชำระ (Deposit)</span>
-              <span className="text-base sm:text-xl font-black text-[#FF6B00] tabular-nums">
+              <span className="font-bold text-blue-600">ยอดมัดจำที่ต้องชำระ (Deposit)</span>
+              <span className="text-base sm:text-xl font-black text-blue-600 tabular-nums">
                 ฿{deposit.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </span>
             </div>

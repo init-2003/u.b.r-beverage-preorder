@@ -81,11 +81,11 @@ export default function LoginClient() {
     <div className="flex-1 flex flex-col bg-white w-full min-h-screen min-h-[100dvh]">
       {/* Top Header Row — แถบด้าน Logo สี #800020 พร้อมแถบโหลดด้านบน */}
       <header className="w-full bg-[#800020] shadow-sm relative overflow-hidden">
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center">
+        <div className="max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center">
           <Link
             href="/"
             prefetch={false}
-            className="flex items-center group shrink-0 transition-opacity hover:opacity-95"
+            className="flex items-center group min-w-0 transition-opacity hover:opacity-95"
             title="หน้าหลัก หจก.อุบลรุ่งเรืองเบฟเวอเรจ"
           >
             <CompanyLogo size="md" lightText={true} />

@@ -1,5 +1,6 @@
 import { getDbPool, sql } from '@/lib/db';
 import { resolveProductImageUrl } from '@/lib/image-utils';
+import { calcDeposit } from '@/lib/deposit';
 
 export interface CartItemSyncInput {
   tradeId: string;
@@ -61,16 +62,50 @@ export async function syncCartToDb(customerId: string, items: CartItemSyncInput[
       return { success: true, count: 0 };
     }
 
+    // ดึงราคาและ % มัดจำจากตาราง Trade เพื่อความถูกต้อง
+    const tradeIds = Array.from(new Set(items.map((i) => i.tradeId.trim()))).filter(Boolean);
+    const tradeMap = new Map<string, { salePrice: number; depositPct: number }>();
+    if (tradeIds.length > 0) {
+      const tradeReq = new sql.Request(transaction);
+      tradeIds.forEach((id, idx) => tradeReq.input(`t${idx}`, sql.NVarChar, id));
+      const tradeResult = await tradeReq.query(`
+        SELECT 
+          RTRIM(LTRIM(Trade_Id)) AS Trade_Id,
+          ISNULL(Sale_Price1, 0) AS Sale_Price1,
+          ISNULL(Trade_deposit, 0) AS Trade_deposit
+        FROM Trade
+        WHERE Trade_Id IN (${tradeIds.map((_, idx) => `@t${idx}`).join(',')})
+      `);
+      for (const row of tradeResult.recordset || []) {
+        tradeMap.set(row.Trade_Id, {
+          salePrice: Number(row.Sale_Price1) || 0,
+          depositPct: Number(row.Trade_deposit) || 0,
+        });
+      }
+    }
+
     // คำนวณยอดเงินรวมและยอดมัดจำรวม
     let totalAmount = 0;
     let totalDeposit = 0;
-    for (const item of items) {
-      const p = Number(item.salePrice) || 0;
+    const computedItems = items.map((item) => {
+      const dbInfo = tradeMap.get(item.tradeId.trim());
+      const p = (dbInfo && dbInfo.salePrice > 0) ? dbInfo.salePrice : (Number(item.salePrice) || 0);
       const q = Number(item.qty) || 0;
-      const dep = Number(item.depositPrice) || 0;
+      const depositPct = dbInfo ? dbInfo.depositPct : null;
+      const { depositPrice: unitDep } = calcDeposit(p, depositPct);
+      const lineDep = Math.round((unitDep * q) * 100) / 100;
+
       totalAmount += p * q;
-      totalDeposit += dep * q;
-    }
+      totalDeposit = Math.round((totalDeposit + lineDep) * 100) / 100;
+
+      return {
+        ...item,
+        salePrice: p,
+        depositPrice: unitDep,
+        qty: q,
+        lineDep,
+      };
+    });
 
     // 2. ลบรายการเก่าใน Fnt_Detail_online แล้วบันทึกรายการสินค้าปัจจุบันลงไป
     const clearDetailReq = new sql.Request(transaction);
@@ -83,11 +118,10 @@ export async function syncCartToDb(customerId: string, items: CartItemSyncInput[
         AND RTRIM(LTRIM(Customer_Id)) = @customerId
     `);
 
-    for (const item of items) {
-      const p = Number(item.salePrice) || 0;
-      const q = Number(item.qty) || 0;
-      const unitDep = Number(item.depositPrice) || 0;
-      const lineDep = unitDep * q;
+    for (const item of computedItems) {
+      const p = item.salePrice;
+      const q = item.qty;
+      const lineDep = item.lineDep;
 
       const detailReq = new sql.Request(transaction);
       detailReq.input('Branch_Id', branchId);
@@ -156,6 +190,7 @@ export async function getCartFromDb(customerId: string): Promise<CartDbItem[]> {
       d.Sale_Price,
       d.fn_deposit_D,
       t.Trade_NameEN,
+      t.Sale_Price1,
       t.Trade_deposit,
       t.Trade_Part_Image
     FROM Fnt_Detail_online d
@@ -168,8 +203,10 @@ export async function getCartFromDb(customerId: string): Promise<CartDbItem[]> {
 
   return (result.recordset || []).map((row) => {
     const qty = Number(row.Qty) || 1;
-    const unitDep = row.Trade_deposit != null && Number(row.Trade_deposit) > 0
-      ? Number(row.Trade_deposit)
+    const salePrice = Number(row.Sale_Price) > 0 ? Number(row.Sale_Price) : Number(row.Sale_Price1) || 0;
+    const { depositPrice } = calcDeposit(salePrice, row.Trade_deposit);
+    const unitDep = (row.Trade_deposit != null && Number(row.Trade_deposit) > 0)
+      ? depositPrice
       : (Number(row.fn_deposit_D) || 0) / (qty || 1);
 
     const image = resolveProductImageUrl(row.Trade_Part_Image);
@@ -180,7 +217,7 @@ export async function getCartFromDb(customerId: string): Promise<CartDbItem[]> {
       tradeNameEN: row.Trade_NameEN ? row.Trade_NameEN.trim() : undefined,
       unitName: (row.Unit_Name || 'หน่วย').trim(),
       typeName: row.Type_Name ? row.Type_Name.trim() : undefined,
-      salePrice: Number(row.Sale_Price) || 0,
+      salePrice,
       depositPrice: unitDep,
       qty,
       image,

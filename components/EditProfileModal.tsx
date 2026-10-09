@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Save, Loader2 } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
 
 export interface CustomerProfileData {
   customerId: string;
@@ -38,6 +39,7 @@ export default function EditProfileModal({
   profile,
   onProfileUpdated,
 }: EditProfileModalProps) {
+  const { refreshAuth } = useAuth();
   const [mounted, setMounted] = useState(false);
   const [visible, setVisible] = useState(false);
   const closeTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -53,6 +55,7 @@ export default function EditProfileModal({
     customerBranch: '',
   });
 
+  const [saveAsDefault, setSaveAsDefault] = useState(true);
   const [saving, setSaving] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
@@ -92,9 +95,10 @@ export default function EditProfileModal({
 
   useEffect(() => {
     if (profile) {
+      const initialName = profile.customerName || profile.customerContact || '';
       setFormData({
-        customerName: profile.customerName || '',
-        customerContact: profile.customerContact || '',
+        customerName: initialName,
+        customerContact: profile.customerContact || initialName,
         customerTel: profile.customerTel || '',
         customerEmail: profile.customerEmail || '',
         customerAddress: profile.customerAddress || '',
@@ -102,6 +106,7 @@ export default function EditProfileModal({
         customerTax: profile.customerTax || '',
         customerBranch: profile.customerBranch || '',
       });
+      setSaveAsDefault(true);
     }
     setErrorMsg('');
   }, [profile, isOpen]);
@@ -130,6 +135,10 @@ export default function EditProfileModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formData.customerName.trim() || !formData.customerTel.trim() || !formData.customerAddress.trim()) {
+      setErrorMsg('กรุณากรอกชื่อผู้รับ เบอร์โทรศัพท์ติดต่อ และที่อยู่จัดส่งสินค้าโดยละเอียดให้ครบถ้วน');
+      return;
+    }
     setSaving(true);
     setErrorMsg('');
 
@@ -137,7 +146,14 @@ export default function EditProfileModal({
       const res = await fetch('/api/customer/account', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          customerName: formData.customerName.trim(),
+          customerContact: formData.customerContact.trim() || formData.customerName.trim(),
+          customerTel: formData.customerTel.trim(),
+          customerAddress: formData.customerAddress.trim(),
+          customerZip: formData.customerZip.trim(),
+        }),
       });
 
       const data = await res.json();
@@ -145,6 +161,12 @@ export default function EditProfileModal({
         setErrorMsg(data.message || 'บันทึกข้อมูลไม่สำเร็จ');
         return;
       }
+
+      try {
+        if (refreshAuth) {
+          await refreshAuth();
+        }
+      } catch {}
 
       onProfileUpdated();
       handleClose();
@@ -163,7 +185,7 @@ export default function EditProfileModal({
       onClick={handleClose}
     >
       <div
-        className={`relative w-full max-w-2xl bg-white rounded-sm shadow-2xl border border-slate-100/80 overflow-hidden flex flex-col max-h-[90vh] transform transition-all duration-200 ease-out ${
+        className={`relative w-full max-w-2xl bg-white rounded-xl shadow-2xl border border-slate-100 overflow-hidden flex flex-col max-h-[90vh] transform transition-all duration-200 ease-out ${
           visible
             ? 'opacity-100 scale-100 translate-y-0'
             : 'opacity-0 scale-95 translate-y-3'
@@ -171,20 +193,20 @@ export default function EditProfileModal({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
-        <div className="flex items-center justify-between px-6 pt-6 pb-3">
+        <div className="flex items-center justify-between px-6 pt-6 pb-2">
           <h2 className="text-lg font-black text-slate-900">ที่อยู่จัดส่งสินค้า</h2>
           <button
             type="button"
             onClick={handleClose}
-            className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-full transition-colors cursor-pointer"
+            className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-full transition-colors cursor-pointer"
             title="ปิด"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Form Body - Only Shipping Address */}
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-5">
+        {/* Form Body matching Image 2 */}
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
           {errorMsg && (
             <div className="p-3 text-xs bg-red-50 border border-red-200 text-red-700 rounded-lg">
               {errorMsg}
@@ -192,38 +214,96 @@ export default function EditProfileModal({
           )}
 
           <div className="space-y-4">
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                ที่อยู่จัดส่งสินค้า
-              </label>
-              <div className="relative">
-                <textarea
-                  rows={3}
-                  value={formData.customerAddress}
-                  onChange={(e) => setFormData({ ...formData, customerAddress: e.target.value })}
-                  className="w-full p-3 text-sm bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-red-500 focus:bg-white transition-all"
-                  placeholder="บ้านเลขที่, ถนน, ตำบล, อำเภอ, จังหวัด"
+            {/* Row 1: Name and Tel */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                  ชื่อ-นามสกุล / ชื่อร้านค้า <span className="text-red-600">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={formData.customerName}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      customerName: e.target.value,
+                      customerContact: e.target.value,
+                    }))
+                  }
+                  placeholder="เช่น สมชาย ใจดี หรือ ร้านต้นมะกรูด"
+                  className="w-full px-3.5 py-2 rounded-lg bg-slate-50 border border-slate-300 text-slate-900 text-xs sm:text-sm focus:bg-white focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-colors"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                  เบอร์โทรศัพท์ติดต่อ <span className="text-red-600">*</span>
+                </label>
+                <input
+                  type="tel"
+                  value={formData.customerTel}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, customerTel: e.target.value }))
+                  }
+                  placeholder="เช่น 081-2345678"
+                  className="w-full px-3.5 py-2 rounded-lg bg-slate-50 border border-slate-300 text-slate-900 text-xs sm:text-sm focus:bg-white focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-colors"
+                  required
                 />
               </div>
             </div>
 
-            <div className="w-full sm:w-1/2">
+            {/* Row 2: Detailed Address */}
+            <div>
               <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                รหัสไปรษณีย์
+                ที่อยู่จัดส่งสินค้าโดยละเอียด <span className="text-red-600">*</span>
               </label>
-              <input
-                type="text"
-                maxLength={5}
-                value={formData.customerZip}
-                onChange={(e) => setFormData({ ...formData, customerZip: e.target.value })}
-                className="w-full h-10 px-3 text-sm bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-red-500 focus:bg-white transition-all"
-                placeholder="รหัสไปรษณีย์"
+              <textarea
+                rows={2}
+                value={formData.customerAddress}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, customerAddress: e.target.value }))
+                }
+                placeholder="ระบุบ้านเลขที่, ซอย, ถนน, ตำบล, อำเภอ, จังหวัด"
+                className="w-full p-3 rounded-lg bg-slate-50 border border-slate-300 text-slate-900 text-xs sm:text-sm focus:bg-white focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-colors"
+                required
               />
+            </div>
+
+            {/* Row 3: Zip code & Default Address Checkbox */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                  รหัสไปรษณีย์
+                </label>
+                <input
+                  type="text"
+                  maxLength={5}
+                  value={formData.customerZip}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, customerZip: e.target.value }))
+                  }
+                  placeholder="รหัสไปรษณีย์ 5 หลัก"
+                  className="w-full px-3.5 py-2 rounded-lg bg-slate-50 border border-slate-300 text-slate-900 text-xs sm:text-sm focus:bg-white focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-colors"
+                />
+              </div>
+
+              <div className="sm:pt-5">
+                <label className="inline-flex items-center gap-2 cursor-pointer select-none text-xs text-slate-600">
+                  <input
+                    type="checkbox"
+                    checked={saveAsDefault}
+                    onChange={(e) => setSaveAsDefault(e.target.checked)}
+                    className="w-4 h-4 rounded border-slate-300 text-black focus:ring-black accent-black cursor-pointer"
+                  />
+                  <span>บันทึกเป็นที่อยู่เริ่มต้นในบัญชีของฉัน</span>
+                </label>
+              </div>
             </div>
           </div>
 
           {/* Modal Actions */}
-          <div className="flex items-center justify-end gap-3 pt-4">
+          <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-100">
             <button
               type="button"
               onClick={handleClose}

@@ -71,8 +71,8 @@ export interface Product {
   unitName: string;        // Unit_Name (หน่วยนับ เช่น ขวด, ลัง, แพ็ค)
   price: number;           // Sale_Price1 (ราคาขายหลัก)
   salePrice1: number;      // Sale_Price1
-  depositPrice?: number;   // Trade.Trade_deposit (ราคามัดจำต่อหน่วย ฿)
-  depositPercent: number;  // % คำนวณไดนามิก: (depositPrice / price) * 100 (0 ถ้าไม่มี)
+  depositPrice?: number;   // ยอดมัดจำต่อหน่วย ฿ คำนวณจาก (price * depositPercent / 100)
+  depositPercent: number;  // % มัดจำจาก Trade.Trade_deposit (0 ถ้าไม่มี)
   origin?: string;         // Trade_Province หรือประเทศต้นทาง
   description?: string;    // Trade_Note
   imageUrl: string;        // Trade_Part_Image (fallback: /images/ubr_beverage_logo.png)

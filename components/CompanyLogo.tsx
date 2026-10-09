@@ -17,13 +17,13 @@ export const CompanyLogo: React.FC<CompanyLogoProps> = ({
 }) => {
   const sizeClasses = {
     sm: 'h-9 w-auto',
-    md: 'h-12 w-auto',
+    md: 'h-9 sm:h-12 w-auto',
     lg: 'h-16 w-auto',
     xl: 'h-24 w-auto',
   };
 
   return (
-    <div className={`flex items-center gap-3 ${className}`}>
+    <div className={`flex items-center gap-2 sm:gap-3 min-w-0 ${className}`}>
       <div className="relative shrink-0">
         <img
           src="/images/ubr_beverage_logo_transparent.png"
@@ -33,9 +33,9 @@ export const CompanyLogo: React.FC<CompanyLogoProps> = ({
         />
       </div>
       {showText && (
-        <div>
+        <div className="min-w-0 flex flex-col justify-center">
           <h1
-            className={`font-black tracking-tight leading-snug ${
+            className={`font-black tracking-tight leading-snug truncate sm:overflow-visible ${
               lightText ? 'text-white' : 'text-slate-900'
             } ${
               size === 'sm'
@@ -44,13 +44,13 @@ export const CompanyLogo: React.FC<CompanyLogoProps> = ({
                 ? 'text-xl'
                 : size === 'xl'
                 ? 'text-2xl'
-                : 'text-base sm:text-lg'
+                : 'text-[12.5px] sm:text-base lg:text-lg'
             }`}
           >
             หจก.อุบลรุ่งเรืองเบฟเวอเรจ
           </h1>
           <p
-            className={`text-[10px] font-bold uppercase tracking-widest ${
+            className={`text-[8.5px] sm:text-[10px] font-bold uppercase tracking-wider sm:tracking-widest truncate sm:overflow-visible ${
               lightText ? 'text-amber-400' : 'text-amber-700'
             }`}
           >
