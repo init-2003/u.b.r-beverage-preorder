@@ -316,10 +316,10 @@ function OrdersContent({
 
         {/* 1. Shopee Status Tabs Bar — ซ่อนเมื่อ tab=payment พร้อมแถบสไลด์อนิเมชัน */}
         {!isPaymentTab && (
-          <div className="bg-white rounded-xs border border-slate-100/90 shadow-[0_1px_1px_0_rgba(0,0,0,0.03)] overflow-hidden">
+          <div className="-mx-4 sm:mx-0 bg-white rounded-none sm:rounded-xs border-y sm:border border-slate-200 shadow-xs overflow-hidden">
             <div
               ref={tabsContainerRef}
-              className="relative flex items-center overflow-x-auto no-scrollbar border-b border-slate-200/80"
+              className="relative flex items-center overflow-x-auto no-scrollbar"
               style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
             >
               {statusTabs.map((tab) => {
@@ -395,7 +395,7 @@ function OrdersContent({
             <WineLoading size="md" />
           </div>
         ) : displayedOrders.length === 0 ? (
-          <div className="bg-white rounded-xs border border-slate-100/90 shadow-[0_1px_1px_0_rgba(0,0,0,0.03)] py-16 sm:py-20 px-4 text-center flex flex-col items-center justify-center space-y-4">
+          <div className="bg-white rounded-xs border border-slate-200 shadow-xs py-16 sm:py-20 px-4 text-center flex flex-col items-center justify-center space-y-4">
             <div className="flex items-center justify-center">
               <EmptyOrdersIllustration className="w-36 h-36 sm:w-40 sm:h-40" />
             </div>
@@ -426,10 +426,10 @@ function OrdersContent({
                 return (
                   <div
                     key={order.Fn_Doc_No}
-                    className="bg-white rounded-xs border border-slate-100/90 shadow-[0_1px_2px_0_rgba(0,0,0,0.04)] overflow-hidden transition-shadow hover:shadow-[0_2px_4px_0_rgba(0,0,0,0.06)]"
+                    className="bg-white rounded-xs border border-slate-200 shadow-xs overflow-hidden transition-all hover:border-slate-300 hover:shadow-md"
                   >
                     {/* Compact Header */}
-                    <div className="p-3.5 sm:px-6 sm:py-3.5 flex flex-wrap items-center justify-between gap-3 bg-white border-b border-slate-100">
+                    <div className="p-3.5 sm:px-6 sm:py-3.5 flex flex-wrap items-center justify-between gap-3 bg-white border-b border-slate-200">
                       <div className="flex flex-col gap-0.5">
                         <div className="flex items-center gap-2">
                           <span className="text-xs sm:text-sm font-medium text-slate-500">
@@ -487,17 +487,17 @@ function OrdersContent({
                         </p>
                       </div>
                       <div className="text-right shrink-0">
-                        <p className={`text-[11px] ${order.fn_deposit_H && Number(order.fn_deposit_H) > 0 ? 'text-blue-600 font-semibold' : 'text-slate-400'}`}>
+                        <p className={`text-[11px] ${order.fn_deposit_H && Number(order.fn_deposit_H) > 0 ? 'text-[#FF0000] font-semibold' : 'text-slate-400'}`}>
                           {order.fn_deposit_H && Number(order.fn_deposit_H) > 0 ? 'ยอดมัดจำที่ต้องชำระ' : 'ยอดชำระ'}
                         </p>
-                        <p className={`text-lg sm:text-xl font-bold ${order.fn_deposit_H && Number(order.fn_deposit_H) > 0 ? 'text-blue-600' : 'text-[#FF6B00]'}`}>
+                        <p className={`text-lg sm:text-xl font-bold ${order.fn_deposit_H && Number(order.fn_deposit_H) > 0 ? 'text-[#FF0000]' : 'text-[#FF6B00]'}`}>
                           {formatCurrency(payableAmount)}
                         </p>
                       </div>
                     </div>
 
                     {/* Compact Actions */}
-                    <div className="bg-slate-50/50 border-t border-slate-100/80 px-4 sm:px-6 py-3 flex items-center justify-end gap-2.5">
+                    <div className="bg-slate-50/50 border-t border-slate-200 px-4 sm:px-6 py-3 flex items-center justify-end gap-2.5">
                       {isPending && (
                         <Link
                           href={`/orders/${encodeURIComponent(order.Fn_Doc_No)}/payment`}
@@ -521,10 +521,10 @@ function OrdersContent({
               return (
                 <div
                   key={order.Fn_Doc_No}
-                  className="bg-white rounded-xs border border-slate-100/90 shadow-[0_1px_2px_0_rgba(0,0,0,0.04)] overflow-hidden transition-shadow hover:shadow-[0_2px_4px_0_rgba(0,0,0,0.06)]"
+                  className="bg-white rounded-xs border border-slate-200 shadow-xs overflow-hidden transition-all hover:border-slate-300 hover:shadow-md"
                 >
                   {/* Card Header: Store info + Badge + Doc No + Date | Status */}
-                  <div className="p-3.5 sm:px-6 sm:py-3.5 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3 bg-white">
+                  <div className="p-3.5 sm:px-6 sm:py-3.5 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3 bg-white">
                     {/* Left: Order Number & Date */}
                     <div className="flex flex-col gap-0.5">
                       <div className="flex items-center gap-2">
@@ -587,7 +587,7 @@ function OrdersContent({
                             className="p-3.5 sm:px-6 sm:py-4 flex items-center gap-3 sm:gap-4 hover:bg-slate-50/70 transition-colors group cursor-pointer block"
                           >
                             {/* Thumbnail Image */}
-                            <div className="w-20 h-20 sm:w-22 sm:h-22 rounded border border-slate-100 bg-white shrink-0 flex items-center justify-center overflow-hidden">
+                            <div className="w-20 h-20 sm:w-22 sm:h-22 rounded border border-slate-200 bg-white shrink-0 flex items-center justify-center overflow-hidden">
                               <ProductImage
                                 src={item.Trade_Part_Image || '/images/ubr_beverage_logo.png'}
                                 alt={item.Trade_Name}
@@ -654,7 +654,7 @@ function OrdersContent({
                   </div>
 
                   {/* Card Summary Row matching Image 2 */}
-                  <div className="bg-white border-t border-slate-100 px-4 sm:px-6 py-3.5 flex items-center justify-end">
+                  <div className="bg-white border-t border-slate-200 px-4 sm:px-6 py-3.5 flex items-center justify-end">
                     {(() => {
                       const totalOrderAmount = Number(order.Fn_Total) || 0;
                       const depositAmount = Number(order.fn_deposit_H) || 0;
@@ -674,7 +674,7 @@ function OrdersContent({
                           <div className="border-t border-dashed border-slate-200 my-1.5" />
 
                           {/* ยอดมัดจำที่ต้องชำระ (Deposit) */}
-                          <div className="flex justify-between items-center font-bold text-blue-600">
+                          <div className="flex justify-between items-center font-bold text-[#FF0000]">
                             <span>
                               {docStsCode === '1' ? 'ยอดมัดจำที่ต้องชำระ (Deposit)' : 'ยอดมัดจำที่ชำระ (Deposit)'}
                             </span>
@@ -696,7 +696,7 @@ function OrdersContent({
                   </div>
 
                   {/* Card Actions Row */}
-                  <div className="bg-white border-t border-slate-100/80 px-4 sm:px-6 py-3 flex items-center justify-end gap-2.5 flex-wrap">
+                  <div className="bg-white border-t border-slate-200 px-4 sm:px-6 py-3 flex items-center justify-end gap-2.5 flex-wrap">
                     {/* Primary Button */}
                     {docStsCode === '3' || docStsCode === '0' ? (
                       <Link

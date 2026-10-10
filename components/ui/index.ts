@@ -5,4 +5,4 @@ export * from './Modal';
 export * from './LoginHeader';
 export * from './LoginForm';
 export * from './ProductImage';
-
+export * from './QuantityInput';

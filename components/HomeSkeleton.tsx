@@ -7,7 +7,7 @@ import React from 'react';
  */
 export function ProductCardSkeleton() {
   return (
-    <div className="rounded-sm bg-white border border-slate-100/80 shadow-[0_1px_1px_0_rgba(0,0,0,0.05)] flex flex-col justify-between relative overflow-hidden h-full select-none pointer-events-none">
+    <div className="rounded-sm bg-white border border-slate-200 shadow-[0_1px_1px_0_rgba(0,0,0,0.05)] flex flex-col justify-between relative overflow-hidden h-full select-none pointer-events-none">
       {/* Product Image Box (Aspect Square Full Bleed) */}
       <div className="w-full aspect-square skeleton-shimmer shrink-0 relative overflow-hidden" />
 
@@ -57,12 +57,14 @@ export function ProductGridSkeleton({ count = 10 }: { count?: number }) {
  */
 export function HomeSkeleton() {
   return (
-    <div className="max-w-[1600px] mx-auto w-full px-4 sm:px-6 lg:px-8 pt-3 pb-12 flex-1 flex flex-col space-y-8">
-      {/* Top Banner Carousel Skeleton */}
-      <div className="relative w-full h-[150px] sm:h-[200px] md:h-[240px] lg:h-[280px] xl:h-[300px] rounded-lg shadow-sm border border-slate-200/80 overflow-hidden skeleton-shimmer shrink-0" />
+    <div className="flex-1 flex flex-col w-full bg-white">
+      <div className="max-w-[1600px] mx-auto w-full px-4 sm:px-6 lg:px-8 pt-3 pb-12 flex-1 flex flex-col space-y-8">
+        {/* Top Banner Carousel Skeleton */}
+        <div className="relative w-full h-[150px] sm:h-[200px] md:h-[240px] lg:h-[280px] xl:h-[300px] rounded-lg shadow-sm border border-slate-200/80 overflow-hidden skeleton-shimmer shrink-0" />
 
-      {/* Product Cards Grid Skeleton */}
-      <ProductGridSkeleton count={10} />
+        {/* Product Cards Grid Skeleton */}
+        <ProductGridSkeleton count={10} />
+      </div>
     </div>
   );
 }

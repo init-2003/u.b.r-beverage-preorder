@@ -9,6 +9,7 @@ import { EmptyCartIllustration } from '@/components/EmptyCartIllustration';
 import { CartIllustration } from '@/components/CartIllustration';
 import { ProductImage } from '@/components/ui/ProductImage';
 import { WineLoading } from '@/components/WineLoading';
+import { QuantityInput } from '@/components/ui';
 import { formatDepositPrice } from '@/lib/deposit';
 
 const CART_SELECTION_STORAGE_KEY = 'ubr_cart_selected_trade_ids';
@@ -40,7 +41,7 @@ export default function CartPage() {
           // หากเพิ่งมีการเพิ่มสินค้าเข้าตะกร้า: ติ๊กเลือกสินค้าทั้งหมดทันที
           try {
             localStorage.removeItem('ubr_cart_just_added');
-          } catch {}
+          } catch { }
           const allIds = items.map((i) => i.tradeId);
           setSelectedIds(new Set(allIds));
           localStorage.setItem(CART_SELECTION_STORAGE_KEY, JSON.stringify(allIds));
@@ -85,7 +86,7 @@ export default function CartPage() {
           localStorage.setItem(CART_SELECTION_STORAGE_KEY, JSON.stringify(allIds));
           sessionStorage.setItem('ubr_cart_selected_ids', JSON.stringify(allIds));
           localStorage.removeItem('ubr_cart_just_added');
-        } catch {}
+        } catch { }
       } else {
         // กรณีลบสินค้าออกจากตะกร้า: จำค่าที่ผู้ใช้เคยติ๊กเลือกไว้ตามเดิม
         setSelectedIds((prev) => {
@@ -154,6 +155,7 @@ export default function CartPage() {
     const unitDeposit = item.depositPrice && item.depositPrice > 0 ? item.depositPrice : 0;
     return sum + unitDeposit * item.qty;
   }, 0);
+  const selectedTotalRemaining = Math.max(0, selectedTotalAmount - selectedTotalDeposit);
   const isAllSelectedZero = selectedItems.length > 0 && validSelectedItems.length === 0;
 
   // Handle proceed to checkout (checkout only valid items with qty > 0)
@@ -165,14 +167,15 @@ export default function CartPage() {
       try {
         sessionStorage.removeItem('ubr_direct_checkout');
         sessionStorage.setItem('ubr_cart_selected_ids', JSON.stringify(selectedArr));
-      } catch {}
+        sessionStorage.setItem('ubr_checkout_from', 'cart');
+      } catch { }
     }
-    router.push(`/checkout?from=cart&items=${encodeURIComponent(selectedArr.join(','))}`);
+    router.push('/checkout');
   };
 
   if (!isMounted) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center bg-[#f5f5f5] py-16 sm:py-24 min-h-[calc(100vh-200px)] min-h-[calc(100dvh-200px)] pb-32">
+      <div className="flex-1 flex flex-col items-center justify-center bg-white py-16 sm:py-24 min-h-[calc(100vh-200px)] min-h-[calc(100dvh-200px)] pb-32">
         <WineLoading size="md" />
       </div>
     );
@@ -180,7 +183,7 @@ export default function CartPage() {
 
   if (items.length === 0) {
     return (
-      <div className="flex-1 flex flex-col bg-[#f5f5f5] py-6 sm:py-8 min-h-[calc(100vh-120px)] min-h-[calc(100dvh-120px)] pb-24 sm:pb-36">
+      <div className="flex-1 flex flex-col bg-white py-6 sm:py-8 min-h-[calc(100vh-120px)] min-h-[calc(100dvh-120px)] pb-24 sm:pb-36">
         <div className="max-w-[1600px] mx-auto w-full px-4 sm:px-6 lg:px-8 space-y-4 sm:space-y-5">
           {/* Page Title Header */}
           <div className="pb-3 border-b border-slate-200/80 animate-cart-slide-up">
@@ -197,7 +200,7 @@ export default function CartPage() {
             <div className="flex items-center justify-center">
               <EmptyCartIllustration className="w-36 h-36 sm:w-40 sm:h-40" />
             </div>
-            
+
             <div className="space-y-1.5 max-w-sm mx-auto">
               <h2 className="text-lg sm:text-xl font-bold text-slate-800">
                 ยังไม่มีสินค้าในตะกร้า
@@ -222,9 +225,9 @@ export default function CartPage() {
   }
 
   return (
-    <div className="flex-1 flex flex-col bg-[#f5f5f5] py-6 sm:py-8 min-h-[calc(100vh+80px)] min-h-[calc(100dvh+80px)] pb-24 sm:pb-36">
+    <div className="flex-1 flex flex-col bg-white py-6 sm:py-8 min-h-[calc(100vh+80px)] min-h-[calc(100dvh+80px)] pb-24 sm:pb-36">
       <div className="max-w-[1600px] mx-auto w-full px-4 sm:px-6 lg:px-8 space-y-4 sm:space-y-5 pb-16">
-        
+
         {/* Page Title Header */}
         <div className="pb-3 border-b border-slate-200/80 animate-cart-slide-up">
           <div className="flex items-center gap-3 sm:gap-3.5">
@@ -236,7 +239,7 @@ export default function CartPage() {
         </div>
 
         {/* 1. Top Table Header Card (Desktop only, matching Shopee screenshot) */}
-        <div 
+        <div
           className="hidden sm:flex items-center justify-between bg-white rounded-sm border border-slate-100/80 shadow-[0_1px_1px_0_rgba(0,0,0,0.05)] px-6 py-3.5 animate-cart-slide-up"
           style={{ animationDelay: '40ms' }}
         >
@@ -260,17 +263,17 @@ export default function CartPage() {
             <span className="text-center">หน่วย</span>
             <span className="text-center">ราคาต่อหน่วย</span>
             <span className="text-center text-[#FF6B00] font-semibold">ราคารวม</span>
-            <span className="text-center text-blue-600 font-semibold">ยอดมัดจำ</span>
+            <span className="text-center text-[#FF0000] font-semibold">ยอดมัดจำ</span>
             <span className="text-center">แอคชั่น</span>
           </div>
         </div>
 
         {/* 2. Product Items Container Card */}
-        <div 
+        <div
           className="bg-white rounded-sm border border-slate-100/80 shadow-[0_1px_1px_0_rgba(0,0,0,0.05)] overflow-hidden animate-cart-slide-up"
           style={{ animationDelay: '80ms' }}
         >
-          
+
 
 
           {/* DESKTOP ITEMS VIEW (>= 640px) matching screenshot */}
@@ -284,11 +287,9 @@ export default function CartPage() {
               return (
                 <div
                   key={item.tradeId}
-                  className={`px-6 flex items-center justify-between transition-colors ${
-                    item.qty <= 0 ? 'pt-5 pb-8' : 'py-5'
-                  } ${
-                    isSelected ? 'bg-white' : 'bg-slate-50/40 opacity-75'
-                  }`}
+                  className={`px-6 flex items-center justify-between transition-colors ${item.qty <= 0 ? 'pt-5 pb-8' : 'py-5'
+                    } ${isSelected ? 'bg-white' : 'bg-slate-50/40 opacity-75'
+                    }`}
                 >
                   {/* Left Column: Checkbox + Image + Details */}
                   <div className="flex items-center gap-4 flex-1 pr-6 min-w-0">
@@ -347,13 +348,10 @@ export default function CartPage() {
                           >
                             -
                           </button>
-                          <input
-                            type="text"
+                          <QuantityInput
                             value={item.qty}
-                            onChange={(e) => {
-                              const val = parseInt(e.target.value.replace(/[^0-9]/g, '') || '0', 10);
-                              updateQty(item.tradeId, val);
-                            }}
+                            onChange={(val) => updateQty(item.tradeId, val)}
+                            min={1}
                             className="w-10 sm:w-11 h-full text-center text-xs sm:text-sm font-black text-slate-900 border-x border-slate-200 outline-none focus:bg-slate-50 rounded-none"
                           />
                           <button
@@ -396,11 +394,11 @@ export default function CartPage() {
 
                     {/* 4. ยอดมัดจำ */}
                     <div className="text-center space-y-0.5">
-                      <span className="text-sm font-bold text-blue-600 tabular-nums block">
+                      <span className="text-sm font-bold text-[#FF0000] tabular-nums block">
                         ฿{lineDeposit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </span>
                       {unitDeposit > 0 && item.qty > 1 && (
-                        <span className="text-xs sm:text-[13px] text-blue-600 font-medium block">
+                        <span className="text-xs sm:text-[13px] text-[#FF0000] font-medium block">
                           (฿{formatDepositPrice(unitDeposit)}/{item.unitName || 'หน่วย'})
                         </span>
                       )}
@@ -434,9 +432,8 @@ export default function CartPage() {
               return (
                 <div
                   key={item.tradeId}
-                  className={`p-4 space-y-3 transition-colors ${
-                    isSelected ? 'bg-white' : 'bg-slate-50/40 opacity-70'
-                  }`}
+                  className={`p-4 space-y-3 transition-colors ${isSelected ? 'bg-white' : 'bg-slate-50/40 opacity-70'
+                    }`}
                 >
                   <div className="flex items-center gap-3">
                     <input
@@ -456,11 +453,10 @@ export default function CartPage() {
                             : '/images/ubr_beverage_logo.png'
                         }
                         alt={item.tradeName}
-                        className={`w-full h-full ${
-                          !item.image || item.image.includes('ubr_beverage_logo')
+                        className={`w-full h-full ${!item.image || item.image.includes('ubr_beverage_logo')
                             ? 'object-cover'
                             : 'object-contain p-1'
-                        }`}
+                          }`}
                         onError={(e) => {
                           const el = e.target as HTMLImageElement;
                           el.src = '/images/ubr_beverage_logo.png';
@@ -506,13 +502,10 @@ export default function CartPage() {
                             >
                               -
                             </button>
-                            <input
-                              type="text"
+                            <QuantityInput
                               value={item.qty}
-                              onChange={(e) => {
-                                const val = parseInt(e.target.value.replace(/[^0-9]/g, '') || '0', 10);
-                                updateQty(item.tradeId, val);
-                              }}
+                              onChange={(val) => updateQty(item.tradeId, val)}
+                              min={1}
                               className="w-8 h-full text-center font-black text-xs sm:text-sm text-slate-900 border-x border-slate-200 outline-none rounded-none"
                             />
                             <button
@@ -564,16 +557,16 @@ export default function CartPage() {
                     {/* Col 4: รวมมัดจำ: */}
                     <div className="flex flex-col items-center justify-start">
                       <div className="h-5 flex items-center justify-center">
-                        <span className="text-[11px] font-bold text-blue-600 leading-none">
+                        <span className="text-[11px] font-bold text-[#FF0000] leading-none">
                           รวมมัดจำ:
                         </span>
                       </div>
                       <div className="h-7 flex flex-col items-center justify-center mt-1">
-                        <span className="block text-xs font-bold text-blue-600 tabular-nums leading-tight">
+                        <span className="block text-xs font-bold text-[#FF0000] tabular-nums leading-tight">
                           ฿{lineDeposit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </span>
                         {unitDeposit > 0 && item.qty > 1 && (
-                          <span className="text-[11px] sm:text-xs text-blue-600 font-medium leading-none mt-0.5">
+                          <span className="text-[11px] sm:text-xs text-[#FF0000] font-medium leading-none mt-0.5">
                             (฿{formatDepositPrice(unitDeposit)}/{item.unitName || 'หน่วย'})
                           </span>
                         )}
@@ -601,96 +594,108 @@ export default function CartPage() {
 
         </div>
 
-        {/* 3. Sticky Bottom Bar (Shopee Checkout Bar matching screenshot & /checkout) */}
+        {/* 3. Cart Toolbar: Select All, Delete Selected, Continue Shopping */}
         <div 
-          className="sticky bottom-0 z-30 bg-white border border-slate-200/90 rounded-sm shadow-[0_-4px_16px_rgba(0,0,0,0.08)] mt-6 overflow-hidden animate-cart-slide-up"
-          style={{ animationDelay: '120ms' }}
+          className="bg-white border border-slate-200 rounded-sm shadow-xs px-4 sm:px-6 py-3.5 flex items-center justify-between flex-wrap gap-3 animate-cart-slide-up"
+          style={{ animationDelay: '100ms' }}
         >
-          <div className="px-5 sm:px-8 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            
-            {/* Left Actions: Checkbox All, Delete Selected, Continue Shopping */}
-            <div className="flex items-center gap-4 sm:gap-6 flex-wrap">
-              <label className="inline-flex items-center gap-2 cursor-pointer select-none text-xs sm:text-sm font-semibold text-slate-800">
-                <input
-                  type="checkbox"
-                  checked={isAllSelected}
-                  onChange={handleToggleSelectAll}
-                  className="w-4 h-4 rounded border-slate-300 text-black focus:ring-black accent-black cursor-pointer"
-                />
-                <span>เลือกทั้งหมด ({items.length})</span>
-              </label>
+          <div className="flex items-center gap-4 sm:gap-6">
+            <label className="inline-flex items-center gap-2 cursor-pointer select-none text-xs sm:text-sm font-semibold text-slate-800">
+              <input
+                type="checkbox"
+                checked={isAllSelected}
+                onChange={handleToggleSelectAll}
+                className="w-4 h-4 rounded border-slate-300 text-black focus:ring-black accent-black cursor-pointer"
+              />
+              <span>เลือกทั้งหมด ({items.length})</span>
+            </label>
 
-              {selectedIds.size > 0 && (
-                <button
-                  type="button"
-                  onClick={handleRemoveSelected}
-                  className="text-xs sm:text-sm font-medium text-slate-600 hover:text-red-600 transition-colors cursor-pointer"
-                >
-                  ลบ ({selectedIds.size})
-                </button>
-              )}
-
-              <Link
-                href="/"
-                className="text-xs sm:text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors inline-flex items-center gap-1"
+            {selectedIds.size > 0 && (
+              <button
+                type="button"
+                onClick={handleRemoveSelected}
+                className="text-xs sm:text-sm font-medium text-slate-600 hover:text-red-600 transition-colors cursor-pointer"
               >
-                <span>&lt; เลือกดูสินค้าต่อ</span>
-              </Link>
+                ลบ ({selectedIds.size})
+              </button>
+            )}
+          </div>
+
+          <Link
+            href="/"
+            className="text-xs sm:text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors inline-flex items-center gap-1"
+          >
+            <span>&lt; เลือกดูสินค้าต่อ</span>
+          </Link>
+        </div>
+
+        {/* 4. Financial Summary Card matching User Screenshot (ยาวเต็มจอ desktop ไม่มีเส้นขอบ card) */}
+        <div className="w-full bg-white py-2 sm:py-3 space-y-3.5 animate-cart-slide-up" style={{ animationDelay: '140ms' }}>
+          <h3 className="font-bold text-sm sm:text-base text-slate-900">
+            สรุปยอดคำสั่งซื้อ
+          </h3>
+
+          <div className="space-y-2.5 text-xs sm:text-sm">
+            {/* 1. ยอดรวมทั้งสิ้น (Grand Total) */}
+            <div className="flex justify-between items-center font-bold text-[#FF6B00]">
+              <span>ยอดรวมทั้งสิ้น (Grand Total)</span>
+              <span className="tabular-nums">
+                ฿{selectedTotalAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </span>
             </div>
 
-            {/* Right Financials & Checkout CTA Button */}
-            <div className="flex items-center justify-between sm:justify-end gap-4 sm:gap-6 w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100">
-              <div className="text-right space-y-1">
-                {/* 1. ยอดรวมทั้งสิ้น (Grand Total) */}
-                <div className="flex items-center gap-3 justify-end text-xs sm:text-sm font-bold text-[#FF6B00]">
-                  <span>ยอดรวมทั้งสิ้น (Grand Total)</span>
-                  <span className="tabular-nums">
-                    ฿{selectedTotalAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                  </span>
-                </div>
+            {/* Dashed separator */}
+            <div className="border-t border-dashed border-slate-200 my-2" />
 
-                {/* เส้นคั่นประ */}
-                <div className="border-t border-dashed border-slate-200" />
-
-                {/* 2. ยอดมัดจำที่ต้องชำระ (Deposit) */}
-                <div className="flex items-baseline gap-3 justify-end">
-                  <span className="text-xs sm:text-sm font-bold text-blue-600">
-                    ยอดมัดจำที่ต้องชำระ (Deposit)
-                  </span>
-                  <span className="text-xl sm:text-2xl font-black text-blue-600 tabular-nums">
-                    ฿{selectedTotalDeposit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                  </span>
-                </div>
-              </div>
-
-              {/* Primary Action Button */}
-              {selectedIds.size === 0 ? (
-                <button
-                  type="button"
-                  disabled
-                  className="px-8 sm:px-12 py-3.5 rounded-full bg-slate-100 border border-slate-200 text-slate-400 font-bold text-sm cursor-not-allowed whitespace-nowrap shadow-none"
-                >
-                  <span>สั่งสินค้า</span>
-                </button>
-              ) : isAllSelectedZero ? (
-                <button
-                  type="button"
-                  disabled
-                  className="px-8 sm:px-12 py-3.5 rounded-full bg-slate-100 border border-slate-200 text-slate-400 font-bold text-xs sm:text-sm cursor-not-allowed whitespace-nowrap shadow-none"
-                >
-                  <span>โปรดระบุจำนวน &gt; 0</span>
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={handleCheckout}
-                  className="px-10 sm:px-14 py-3.5 rounded-full bg-[#800020] hover:bg-[#6b001b] active:bg-[#570016] text-white font-bold text-sm sm:text-base shadow-xs hover:shadow transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99] whitespace-nowrap"
-                >
-                  <span>สั่งสินค้า</span>
-                </button>
-              )}
+            {/* 2. ยอดมัดจำที่ต้องชำระ (Deposit) */}
+            <div className="flex justify-between items-center">
+              <span className="font-bold text-[#FF0000]">
+                ยอดมัดจำที่ต้องชำระ: (Deposit)
+              </span>
+              <span className="text-xl sm:text-2xl font-bold text-[#FF0000] tabular-nums">
+                ฿{selectedTotalDeposit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </span>
             </div>
 
+            {/* 3. ยอดคงเหลือชำระเมื่อรับมอบ / Remaining */}
+            <div className="flex justify-between items-center text-slate-400">
+              <span>ยอดคงเหลือชำระเมื่อรับมอบ / Remaining</span>
+              <span className="text-slate-500 font-medium tabular-nums">
+                ฿{selectedTotalRemaining.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </span>
+            </div>
+          </div>
+
+          {/* Dashed separator */}
+          <div className="border-t border-dashed border-slate-200 my-3" />
+
+          {/* Action Button: Full Width on mobile, right-aligned on desktop matching Image 3 */}
+          <div className="flex justify-end pt-1">
+            {selectedIds.size === 0 ? (
+              <button
+                type="button"
+                disabled
+                className="w-full sm:w-auto px-10 sm:px-14 py-3 sm:py-3.5 rounded-full bg-slate-100 border border-slate-200 text-slate-400 font-bold text-sm cursor-not-allowed shadow-none"
+              >
+                <span>สั่งสินค้า</span>
+              </button>
+            ) : isAllSelectedZero ? (
+              <button
+                type="button"
+                disabled
+                className="w-full sm:w-auto px-8 sm:px-12 py-3 sm:py-3.5 rounded-full bg-slate-100 border border-slate-200 text-slate-400 font-bold text-xs sm:text-sm cursor-not-allowed shadow-none"
+              >
+                <span>โปรดระบุจำนวน &gt; 0</span>
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={handleCheckout}
+                className="w-full sm:w-auto px-10 sm:px-14 py-3 sm:py-3.5 rounded-full bg-[#800020] hover:bg-[#6b001b] active:bg-[#570016] text-white font-bold text-sm sm:text-base shadow-xs hover:shadow transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99]"
+              >
+                <span>สั่งสินค้า</span>
+              </button>
+            )}
           </div>
         </div>
 

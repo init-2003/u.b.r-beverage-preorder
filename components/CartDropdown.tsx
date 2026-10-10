@@ -137,16 +137,14 @@ export default function CartDropdown() {
         aria-expanded={isOpen && !isClosing}
       >
         <ShoppingCart
-          className={`w-6 h-6 sm:w-6.5 sm:h-6.5 text-white stroke-[1.8] transition-transform duration-200 ${
-            isBumping ? 'animate-cart-wiggle' : ''
-          }`}
+          className={`w-6 h-6 sm:w-6.5 sm:h-6.5 text-white stroke-[1.8] transition-transform duration-200 ${isBumping ? 'animate-cart-wiggle' : ''
+            }`}
         />
         {isMounted && totalQty > 0 && (
           <span
             key={totalQty}
-            className={`absolute -top-1 -right-1.5 min-w-[20px] h-[20px] px-1 bg-white text-[#800020] text-[11px] font-black rounded-full flex items-center justify-center border border-[#800020]/20 shadow-xs tabular-nums leading-none ${
-              isBumping ? 'animate-badge-bump' : ''
-            }`}
+            className={`absolute -top-1 -right-1.5 min-w-[20px] h-[20px] px-1 bg-white text-[#800020] text-[11px] font-black rounded-full flex items-center justify-center border border-[#800020]/20 shadow-xs tabular-nums leading-none ${isBumping ? 'animate-badge-bump' : ''
+              }`}
           >
             {totalQty}
           </span>
@@ -157,104 +155,103 @@ export default function CartDropdown() {
       {isOpen && (
         <div
           onAnimationEnd={handleAnimationEnd}
-          className={`absolute right-0 top-full mt-2.5 w-[360px] sm:w-[390px] max-w-[calc(100vw-24px)] z-50 ${
-            isClosing ? 'animate-popover-out' : 'animate-popover'
-          }`}
+          className={`absolute right-0 top-full mt-2.5 w-[360px] sm:w-[390px] max-w-[calc(100vw-24px)] z-50 ${isClosing ? 'animate-popover-out' : 'animate-popover'
+            }`}
         >
           {/* Arrow Pointer pointing to Cart Icon */}
           <div className="absolute -top-[7px] right-[13px] sm:right-[16px] w-3.5 h-3.5 bg-white rotate-45 border-t border-l border-slate-200 z-20 shadow-[-2px_-2px_3px_rgba(0,0,0,0.04)]" />
 
           {/* Popover Card */}
           <div className="relative bg-white rounded-sm shadow-xl border border-slate-200 overflow-hidden text-slate-800 z-10">
-          {items.length === 0 ? (
-            /* ========================================================= */
-            /* EMPTY STATE: 100% Matching User's Image Reference         */
-            /* ========================================================= */
-            <div className="py-8 px-6 text-center space-y-3">
-              {/* Illustrated Empty Cart with X */}
-              <EmptyCartIllustration />
+            {items.length === 0 ? (
+              /* ========================================================= */
+              /* EMPTY STATE: 100% Matching User's Image Reference         */
+              /* ========================================================= */
+              <div className="py-8 px-6 text-center space-y-3">
+                {/* Illustrated Empty Cart with X */}
+                <EmptyCartIllustration />
 
-              {/* Title */}
-              <h3 className="text-base font-bold text-slate-800 tracking-tight">
-                ไม่มีสินค้าในตะกร้า
-              </h3>
+                {/* Title */}
+                <h3 className="text-base font-bold text-slate-800 tracking-tight">
+                  ไม่มีสินค้าในตะกร้า
+                </h3>
 
-              {/* Subtitle description */}
-              <p className="text-xs sm:text-[13px] text-slate-500 leading-relaxed">
-                <span>คุณไม่มีสินค้าในตะกร้า</span>
-                <br />
-                <span>โปรดเลือกหยิบสินค้าที่ต้องการซื้อลงตะกร้า</span>
-              </p>
-            </div>
-          ) : (
-            /* ========================================================= */
-            /* ACTIVE CART STATE: Shopee style compact single line rows  */
-            /* ========================================================= */
-            <div className="flex flex-col">
-              {/* Header */}
-              <div className="px-3.5 pt-3 pb-1.5 flex items-center justify-between">
-                <span className="text-xs text-slate-400 font-normal">
-                  สินค้าที่เพิ่มเข้ามาล่าสุด
-                </span>
+                {/* Subtitle description */}
+                <p className="text-xs sm:text-[13px] text-slate-500 leading-relaxed">
+                  <span>คุณไม่มีสินค้าในตะกร้า</span>
+                  <br />
+                  <span>โปรดเลือกหยิบสินค้าที่ต้องการซื้อลงตะกร้า</span>
+                </p>
               </div>
+            ) : (
+              /* ========================================================= */
+              /* ACTIVE CART STATE: Shopee style compact single line rows  */
+              /* ========================================================= */
+              <div className="flex flex-col">
+                {/* Header */}
+                <div className="px-3.5 pt-3 pb-1.5 flex items-center justify-between">
+                  <span className="text-xs text-slate-400 font-normal">
+                    สินค้าที่เพิ่มเข้ามาล่าสุด
+                  </span>
+                </div>
 
-              {/* Items List (Shopee style single row per item) */}
-              <div className="max-h-80 overflow-y-auto divide-y divide-slate-100/80">
-                {items.map((item) => (
-                  <Link
-                    key={item.tradeId}
-                    href={`/products/${item.tradeId}`}
-                    onClick={() => closeDropdown()}
-                    className="p-2.5 sm:p-3 flex items-center gap-3 hover:bg-slate-50/80 transition-colors cursor-pointer group select-none"
+                {/* Items List (Shopee style single row per item) */}
+                <div className="max-h-80 overflow-y-auto divide-y divide-slate-100/80">
+                  {items.map((item) => (
+                    <Link
+                      key={item.tradeId}
+                      href={`/products/${item.tradeId}`}
+                      onClick={() => closeDropdown()}
+                      className="p-2.5 sm:p-3 flex items-center gap-3 hover:bg-slate-50/80 transition-colors cursor-pointer group select-none"
+                    >
+                      {/* Square Thumbnail */}
+                      <div className="w-12 h-12 sm:w-14 sm:h-14 rounded bg-white shrink-0 overflow-hidden border border-slate-200/80 flex items-center justify-center shadow-2xs">
+                        <ProductImage
+                          src={item.image || '/images/ubr_beverage_logo.png'}
+                          alt={item.tradeName}
+                          objectFit="auto"
+                          priority={true}
+                          fallbackSrc="/images/ubr_beverage_logo.png"
+                        />
+                      </div>
+
+                      {/* Product Name & Quantity (matching image 2) */}
+                      <div className="flex-1 min-w-0 flex flex-col justify-center">
+                        <span
+                          className="text-xs sm:text-[13px] text-slate-800 font-normal truncate group-hover:text-[#800020] transition-colors leading-snug"
+                          title={item.tradeName}
+                        >
+                          {item.tradeName}
+                        </span>
+                        <span className="text-[11px] sm:text-xs text-slate-400 font-normal mt-0.5">
+                          x{item.qty}
+                        </span>
+                      </div>
+
+                      {/* Price in Orange */}
+                      <span className="text-xs sm:text-[13px] font-bold text-[#FF6B00] shrink-0 tabular-nums ml-2">
+                        ฿{(item.salePrice || 0).toLocaleString()}
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+
+                {/* Footer Actions (Clean seamless white, no border line) */}
+                <div className="p-3 sm:p-3.5 bg-white flex items-center justify-between gap-3">
+                  <span className="text-xs text-slate-500 font-normal truncate">
+                    มีสินค้าในตะกร้า ({totalQty} ชิ้น)
+                  </span>
+
+                  <button
+                    type="button"
+                    onClick={handleGoToCart}
+                    className="py-2 px-5 rounded-full bg-[#800020] hover:bg-[#6b001b] active:bg-[#570016] text-white font-bold text-xs shadow-xs transition-all cursor-pointer active:scale-95 shrink-0"
                   >
-                    {/* Square Thumbnail */}
-                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded bg-white shrink-0 overflow-hidden border border-slate-200/80 flex items-center justify-center shadow-2xs">
-                      <ProductImage
-                        src={item.image || '/images/ubr_beverage_logo.png'}
-                        alt={item.tradeName}
-                        objectFit="auto"
-                        priority={true}
-                        fallbackSrc="/images/ubr_beverage_logo.png"
-                      />
-                    </div>
-
-                    {/* Product Name & Quantity (matching image 2) */}
-                    <div className="flex-1 min-w-0 flex flex-col justify-center">
-                      <span
-                        className="text-xs sm:text-[13px] text-slate-800 font-normal truncate group-hover:text-[#800020] transition-colors leading-snug"
-                        title={item.tradeName}
-                      >
-                        {item.tradeName}
-                      </span>
-                      <span className="text-[11px] sm:text-xs text-slate-400 font-normal mt-0.5">
-                        x{item.qty}
-                      </span>
-                    </div>
-
-                    {/* Price in Orange */}
-                    <span className="text-xs sm:text-[13px] font-bold text-[#FF6B00] shrink-0 tabular-nums ml-2">
-                      ฿{(item.salePrice || 0).toLocaleString()}
-                    </span>
-                  </Link>
-                ))}
+                    ไปที่ตะกร้า
+                  </button>
+                </div>
               </div>
-
-              {/* Footer Actions (Clean seamless white, no border line) */}
-              <div className="p-3 sm:p-3.5 bg-white flex items-center justify-between gap-3">
-                <span className="text-xs text-slate-500 font-normal truncate">
-                  มีสินค้าในตะกร้า ({totalQty} ชิ้น)
-                </span>
-
-                <button
-                  type="button"
-                  onClick={handleGoToCart}
-                  className="py-2 px-5 rounded-full bg-[#800020] hover:bg-[#6b001b] active:bg-[#570016] text-white font-bold text-xs shadow-xs transition-all cursor-pointer active:scale-95 shrink-0"
-                >
-                  ไปที่ตะกร้า
-                </button>
-              </div>
-            </div>
-          )}
+            )}
           </div>
         </div>
       )}

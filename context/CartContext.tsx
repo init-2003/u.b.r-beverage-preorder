@@ -11,6 +11,7 @@ export interface CartItem {
   typeName?: string;
   salePrice: number;
   depositPrice?: number;
+  depositPercent?: number;
   qty: number;
   image?: string;
 }
@@ -35,6 +36,8 @@ interface CartContextType {
   lastAddedItem: AddedModalData | null;
   openAddedModal: (item: CartItem, qty?: number) => void;
   closeAddedModal: () => void;
+  isToastOpen: boolean;
+  showSuccessToast: () => void;
   syncCartWithDb: () => Promise<void>;
 }
 
@@ -64,6 +67,28 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isAddedModalOpen, setIsAddedModalOpen] = useState(false);
   const [lastAddedItem, setLastAddedItem] = useState<AddedModalData | null>(null);
+  const [isToastOpen, setIsToastOpen] = useState(false);
+  const toastTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const showSuccessToast = useCallback(() => {
+    if (toastTimerRef.current) {
+      clearTimeout(toastTimerRef.current);
+      toastTimerRef.current = null;
+    }
+    setIsToastOpen(true);
+    toastTimerRef.current = setTimeout(() => {
+      setIsToastOpen(false);
+      toastTimerRef.current = null;
+    }, 1500);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (toastTimerRef.current) {
+        clearTimeout(toastTimerRef.current);
+      }
+    };
+  }, []);
 
   const isServerSyncedRef = useRef(false);
   const syncTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -271,6 +296,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         lastAddedItem,
         openAddedModal,
         closeAddedModal,
+        isToastOpen,
+        showSuccessToast,
         syncCartWithDb,
       }}
     >

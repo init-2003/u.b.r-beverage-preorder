@@ -87,10 +87,14 @@ function formatOrderDate(dateVal?: string) {
   return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
 }
 
-export default function OrderDetailPage() {
+interface OrderDetailPageProps {
+  forcedDocNo?: string | null;
+}
+
+export default function OrderDetailPage({ forcedDocNo }: OrderDetailPageProps = {}) {
   const params = useParams();
   const router = useRouter();
-  const docNo = params?.docNo as string;
+  const docNo = forcedDocNo || (params?.docNo as string);
   const { setCustomTitle } = useBreadcrumb();
   const { customer, loading: authLoading } = useAuth();
   const [order, setOrder] = useState<OrderDetail | null>(null);
@@ -220,6 +224,12 @@ export default function OrderDetailPage() {
   useEffect(() => {
     if (docNo) {
       setCustomTitle(order?.Fn_Doc_No || docNo);
+      try {
+        sessionStorage.setItem('ubr_active_order_doc_no', docNo);
+      } catch {}
+      if (typeof window !== 'undefined' && window.location.pathname !== '/orders') {
+        window.history.replaceState(null, '', '/orders');
+      }
     }
   }, [docNo, order?.Fn_Doc_No, setCustomTitle]);
 
@@ -229,7 +239,7 @@ export default function OrderDetailPage() {
 
   if (authLoading || !customer || loading) {
     return (
-      <div className="flex-1 min-h-[calc(100vh-200px)] bg-[#f5f5f5] px-4 flex items-center justify-center">
+      <div className="flex-1 min-h-[calc(100vh-200px)] bg-white px-4 flex items-center justify-center">
         <WineLoading size="md" />
       </div>
     );
@@ -237,7 +247,7 @@ export default function OrderDetailPage() {
 
   if (errorMsg || !order) {
     return (
-      <div className="flex-1 bg-[#f5f5f5] py-16 px-4 flex items-center justify-center">
+      <div className="flex-1 bg-white py-16 px-4 flex items-center justify-center">
         <div className="max-w-md w-full bg-white p-8 rounded-sm shadow-[0_1px_1px_0_rgba(0,0,0,0.05)] border border-slate-200 text-center space-y-4 animate-order-slide-up">
           <div className="w-14 h-14 bg-red-50 text-red-600 rounded-full flex items-center justify-center mx-auto">
             <AlertCircle className="w-7 h-7" />
@@ -294,13 +304,13 @@ export default function OrderDetailPage() {
     );
 
   return (
-    <div className="flex-1 flex flex-col w-full bg-[#f5f5f5] py-5 sm:py-8">
+    <div className="flex-1 flex flex-col w-full bg-white py-5 sm:py-8">
       <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 space-y-4">
 
         {/* ================= 1. SHOPEE STATUS & STEPPER HEADER BANNER ================= */}
-        <div className="bg-white rounded-sm shadow-[0_1px_1px_0_rgba(0,0,0,0.05)] border border-slate-100/80 overflow-hidden animate-order-slide-up">
+        <div className="bg-white rounded-sm shadow-xs border border-slate-200 overflow-hidden animate-order-slide-up">
           {/* Header row: Doc No + Order Date + Status + PO Print Link */}
-          <div className="p-4 sm:p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50/50">
+          <div className="p-4 sm:p-5 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50/50">
             <div>
               <div className="flex items-center gap-2.5 flex-wrap">
                 <span className="text-xs text-slate-500 font-medium">หมายเลขคำสั่งซื้อ:</span>
@@ -491,7 +501,7 @@ export default function OrderDetailPage() {
 
         {/* ================= 2. SHOPEE DELIVERY ADDRESS CARD ================= */}
         <div 
-          className="bg-white rounded-sm shadow-[0_1px_1px_0_rgba(0,0,0,0.05)] border border-slate-100/80 overflow-hidden animate-order-slide-up"
+          className="bg-white rounded-sm shadow-xs border border-slate-200 overflow-hidden animate-order-slide-up"
           style={{ animationDelay: '40ms' }}
         >
           {/* Signature envelope ribbon strip */}
@@ -516,11 +526,11 @@ export default function OrderDetailPage() {
 
         {/* ================= 3. SHOPEE ORDERED ITEMS CARD ================= */}
         <div 
-          className="bg-white rounded-sm shadow-[0_1px_1px_0_rgba(0,0,0,0.05)] border border-slate-100/80 overflow-hidden animate-order-slide-up"
+          className="bg-white rounded-sm shadow-xs border border-slate-200 overflow-hidden animate-order-slide-up"
           style={{ animationDelay: '80ms' }}
         >
           {/* Seamless Card Header matching checkout style */}
-          <div className="px-5 sm:px-6 pt-4 pb-2 flex items-center justify-between border-b border-slate-100/80">
+          <div className="px-5 sm:px-6 pt-4 pb-2 flex items-center justify-between border-b border-slate-200">
             <div className="flex items-center gap-3">
               <h2 className="text-sm sm:text-base font-bold text-slate-900 tracking-tight">
                 รายการสินค้า
@@ -532,7 +542,7 @@ export default function OrderDetailPage() {
               <span className="text-center">หน่วย</span>
               <span className="text-center">ราคาต่อหน่วย</span>
               <span className="text-center text-[#FF6B00] font-semibold">ราคารวม</span>
-              <span className="text-right pr-2 text-blue-600 font-semibold">ยอดมัดจำ</span>
+              <span className="text-right pr-2 text-[#FF0000] font-semibold">ยอดมัดจำ</span>
             </div>
           </div>
 
@@ -557,7 +567,7 @@ export default function OrderDetailPage() {
                     <div key={item.Trade_Id || idx} className="p-4 space-y-3">
                       {/* Product Info Row: Image + Name */}
                       <div className="flex items-center gap-3.5">
-                        <div className="w-14 h-14 bg-white border border-slate-100 rounded shrink-0 flex items-center justify-center overflow-hidden shadow-2xs">
+                        <div className="w-14 h-14 bg-white border border-slate-200 rounded shrink-0 flex items-center justify-center overflow-hidden shadow-2xs">
                           <ProductImage
                             src={imageSrc}
                             alt={item.Trade_Name}
@@ -631,16 +641,16 @@ export default function OrderDetailPage() {
                         {/* Col 4: ยอดมัดจำ: */}
                         <div className="flex flex-col items-center justify-start">
                           <div className="h-5 flex items-center justify-center">
-                            <span className="text-[11px] font-bold text-blue-600 leading-none">
+                            <span className="text-[11px] font-bold text-[#FF0000] leading-none">
                               ยอดมัดจำ:
                             </span>
                           </div>
                           <div className="h-7 flex flex-col items-center justify-center mt-1">
-                            <span className="block text-xs font-bold text-blue-600 tabular-nums leading-tight">
+                            <span className="block text-xs font-bold text-[#FF0000] tabular-nums leading-tight">
                               ฿{lineDeposit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </span>
                             {unitDeposit > 0 && item.Qty > 1 && (
-                              <span className="text-[11px] sm:text-xs text-blue-600 font-medium leading-none mt-0.5">
+                              <span className="text-[11px] sm:text-xs text-[#FF0000] font-medium leading-none mt-0.5">
                                 (฿{formatDepositPrice(unitDeposit)}/{item.Unit_Name || 'หน่วย'})
                               </span>
                             )}
@@ -681,7 +691,7 @@ export default function OrderDetailPage() {
                         <div className="flex items-center justify-between">
                           {/* Product Image & Info */}
                           <div className="flex items-center gap-3.5 min-w-0 flex-1 pr-4">
-                            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white border border-slate-100 rounded shrink-0 flex items-center justify-center overflow-hidden">
+                            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white border border-slate-200 rounded shrink-0 flex items-center justify-center overflow-hidden">
                               <ProductImage
                                 src={imageSrc}
                                 alt={item.Trade_Name}
@@ -736,11 +746,11 @@ export default function OrderDetailPage() {
 
                             {/* 5. ยอดมัดจำ */}
                             <div className="text-right pr-2">
-                              <div className="font-bold text-blue-600 text-xs sm:text-base tabular-nums">
+                              <div className="font-bold text-[#FF0000] text-xs sm:text-base tabular-nums">
                                 ฿{lineDeposit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                               </div>
                               {unitDeposit > 0 && item.Qty > 1 && (
-                                <div className="text-xs sm:text-[13px] text-blue-600 font-medium">
+                                <div className="text-xs sm:text-[13px] text-[#FF0000] font-medium">
                                   (฿{formatDepositPrice(unitDeposit)}/{item.Unit_Name || 'หน่วย'})
                                 </div>
                               )}
@@ -761,7 +771,7 @@ export default function OrderDetailPage() {
 
           {/* Remark section inside item card */}
           {(order.shipping?.Customer_Remark || order.Fn_Remark) && (
-            <div className="p-4 sm:px-6 bg-amber-50/40 border-t border-slate-100 flex items-start text-xs text-slate-700">
+            <div className="p-4 sm:px-6 bg-amber-50/40 border-t border-slate-200 flex items-start text-xs text-slate-700">
               <div>
                 <strong className="font-bold text-slate-900">หมายเหตุคำสั่งซื้อ: </strong>
                 <span>{order.shipping?.Customer_Remark || order.Fn_Remark}</span>
@@ -772,10 +782,10 @@ export default function OrderDetailPage() {
 
         {/* ================= 4. PAYMENT METHOD & SLIP UPLOAD CARD ================= */}
         <div 
-          className="bg-white rounded-sm shadow-[0_1px_1px_0_rgba(0,0,0,0.05)] border border-slate-100/80 p-4 sm:p-6 space-y-4 animate-order-slide-up"
+          className="bg-white rounded-sm shadow-xs border border-slate-200 p-4 sm:p-6 space-y-4 animate-order-slide-up"
           style={{ animationDelay: '100ms' }}
         >
-          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+          <div className="flex items-center justify-between border-b border-slate-200 pb-3">
             <div className="flex items-center gap-2 text-slate-900 font-bold text-sm sm:text-base">
               <CreditCard className="w-4 h-4 sm:w-5 sm:h-5 text-slate-700" />
               <span>ข้อมูลและการชำระเงิน</span>
@@ -825,7 +835,7 @@ export default function OrderDetailPage() {
                         <span>ชำระผ่าน QR PromptPay</span>
                       </div>
                       <p className="text-[11px] sm:text-xs text-slate-600 mt-0.5">
-                        <strong className="text-blue-600 font-bold">ยอดมัดจำ: ฿{deposit.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} บาท</strong> กรุณาสแกน QR Code เพื่อชำระเงิน
+                        <strong className="text-[#FF0000] font-bold">ยอดมัดจำ: ฿{deposit.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} บาท</strong> กรุณาสแกน QR Code เพื่อชำระเงิน
                       </p>
                     </div>
                   </div>
@@ -856,10 +866,10 @@ export default function OrderDetailPage() {
 
         {/* ================= 5. FINANCIAL SUMMARY CARD (SHOPEE STYLE) ================= */}
         <div 
-          className="bg-white rounded-sm shadow-[0_1px_1px_0_rgba(0,0,0,0.05)] border border-slate-100/80 p-5 sm:p-6 space-y-3 animate-order-slide-up"
+          className="bg-white rounded-sm shadow-xs border border-slate-200 p-5 sm:p-6 space-y-3 animate-order-slide-up"
           style={{ animationDelay: '120ms' }}
         >
-          <div className="border-b border-slate-100 pb-2.5">
+          <div className="border-b border-slate-200 pb-2.5">
             <h3 className="font-bold text-sm text-slate-900">
               สรุปยอดคำสั่งซื้อ
             </h3>
@@ -876,8 +886,8 @@ export default function OrderDetailPage() {
 
             {/* ข้อมูลมัดจำ / คงเหลือ */}
             <div className="flex justify-between items-center pt-2 border-t border-dashed border-slate-200">
-              <span className="font-bold text-blue-600">ยอดมัดจำที่ต้องชำระ (Deposit)</span>
-              <span className="text-base sm:text-xl font-black text-blue-600 tabular-nums">
+              <span className="font-bold text-[#FF0000]">ยอดมัดจำที่ต้องชำระ (Deposit)</span>
+              <span className="text-base sm:text-xl font-black text-[#FF0000] tabular-nums">
                 ฿{deposit.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </span>
             </div>
@@ -894,7 +904,7 @@ export default function OrderDetailPage() {
 
         {/* ================= 6. ACTION TOOLBAR WITH PO DOWNLOAD BUTTON ================= */}
         <div 
-          className="bg-white rounded-sm shadow-[0_1px_1px_0_rgba(0,0,0,0.05)] border border-slate-100/80 p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-3 animate-order-slide-up"
+          className="bg-white rounded-sm shadow-xs border border-slate-200 p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-3 animate-order-slide-up"
           style={{ animationDelay: '140ms' }}
         >
           <Link

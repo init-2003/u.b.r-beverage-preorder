@@ -7,6 +7,7 @@ import { useCart } from '@/context/CartContext';
 import { useBreadcrumb } from '@/context/BreadcrumbContext';
 import ProductImageMagnifier from '@/components/ProductImageMagnifier';
 import { WineLoading } from '@/components/WineLoading';
+import { QuantityInput } from '@/components/ui';
 import {
   ArrowLeft,
   ShoppingBag,
@@ -47,7 +48,7 @@ export default function ProductDetailPage({
 }) {
   const resolvedParams = use(params);
   const router = useRouter();
-  const { addItem } = useCart();
+  const { addItem, showSuccessToast } = useCart();
   const { setCustomTitle } = useBreadcrumb();
 
   const [product, setProduct] = useState<ProductDetail | null>(null);
@@ -95,11 +96,14 @@ export default function ProductDetailPage({
         typeName: product.category,
         salePrice: product.price,
         depositPrice: product.depositPrice,
+        depositPercent: product.depositPercent,
         image: product.imageUrl,
       },
-      qty
+      qty,
+      { showModal: false }
     );
 
+    showSuccessToast();
     setAddedSuccess(true);
     setTimeout(() => {
       setAddedSuccess(false);
@@ -121,7 +125,7 @@ export default function ProductDetailPage({
         );
       } catch {}
     }
-    router.push(`/checkout?from=product&productId=${encodeURIComponent(product.id)}&qty=${qty}`);
+    router.push('/checkout');
   };
 
   if (loading) {
@@ -165,7 +169,7 @@ export default function ProductDetailPage({
   const originalPrice = product.salePrice1 && product.salePrice1 > product.price ? product.salePrice1 : 0;
 
   return (
-    <div className="flex-1 flex flex-col bg-[#f5f5f5] py-8 sm:py-12 min-h-[calc(100vh+80px)] pb-48 sm:pb-64">
+    <div className="flex-1 flex flex-col bg-white py-8 sm:py-12 min-h-[calc(100vh+80px)] pb-48 sm:pb-64">
       <div className="max-w-[1600px] mx-auto w-full px-4 sm:px-6 lg:px-8 space-y-4">
 
         {/* Main Product Showcase Card (Shopee Style Clean Card) */}
@@ -243,14 +247,14 @@ export default function ProductDetailPage({
                 {/* Pre-order Deposit Callout (No background box) */}
                 {unitDeposit > 0 && (
                   <div className="flex items-center gap-1.5 text-xs flex-wrap pt-0.5">
-                    <span className="text-blue-600 font-bold">
+                    <span className="text-[#FF0000] font-bold">
                       มัดจำ:
                     </span>
-                    <span className="text-blue-600 font-black text-sm">
+                    <span className="text-[#FF0000] font-black text-sm">
                       ฿{formatDepositPrice(unitDeposit)}
                     </span>
                     {depositPercent > 0 && (
-                      <span className="text-blue-600 font-medium text-xs">
+                      <span className="text-[#FF0000] font-medium text-xs">
                         ({depositPercent}%)
                       </span>
                     )}
@@ -279,9 +283,12 @@ export default function ProductDetailPage({
                     >
                       -
                     </button>
-                    <div className="w-12 h-9 flex items-center justify-center font-black text-base text-slate-900 border-x border-slate-200 select-none">
-                      {qty}
-                    </div>
+                    <QuantityInput
+                      value={qty}
+                      onChange={setQty}
+                      min={1}
+                      className="w-12 h-9 font-black text-base text-slate-900 border-x border-slate-200 focus:outline-none"
+                    />
                     <button
                       type="button"
                       onClick={() => setQty(qty + 1)}
@@ -334,7 +341,7 @@ export default function ProductDetailPage({
                   className="py-3.5 px-5 rounded-full bg-[#800020] hover:bg-[#6b001b] active:bg-[#570016] text-white font-bold text-sm flex items-center justify-center gap-2 shadow-xs hover:shadow transition-all text-center cursor-pointer active:scale-[0.99]"
                 >
                   <ShoppingBag className="w-4 h-4 shrink-0 text-white" />
-                  <span>สั่งซื้อสินค้า</span>
+                  <span>สั่งซื้อเลย</span>
                 </button>
               </div>
 

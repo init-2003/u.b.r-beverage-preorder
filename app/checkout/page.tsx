@@ -11,6 +11,7 @@ import { EmptyCheckoutIllustration } from '@/components/EmptyCheckoutIllustratio
 import { CheckoutIllustration } from '@/components/CheckoutIllustration';
 import { WineLoading } from '@/components/WineLoading';
 import { ProductImage } from '@/components/ui/ProductImage';
+import { QuantityInput } from '@/components/ui';
 import { formatDepositPrice } from '@/lib/deposit';
 
 interface PreOrderItem {
@@ -132,11 +133,18 @@ function PreOrderContent() {
 
   const productId = rawProductId || directCheckout?.productId || null;
   const queryQty = rawProductId ? rawQty : (directCheckout?.qty || 1);
-  const fromSource = rawFrom || directCheckout?.from || (productId ? 'product' : 'cart');
+  const fromSource = rawFrom || directCheckout?.from || (typeof window !== 'undefined' ? sessionStorage.getItem('ubr_checkout_from') : null) || (productId ? 'product' : 'cart');
 
   const { customer, loading: authLoading } = useAuth();
   const { items: cartItems, clearCart, updateQty, removeItems } = useCart();
   const { setCustomTitle } = useBreadcrumb();
+
+  // Clean URL: Ensure address bar always cleanly displays /checkout without query parameters
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.location.search) {
+      window.history.replaceState(null, '', '/checkout');
+    }
+  }, []);
 
   // Selected trade IDs parsed from query parameter or sessionStorage
   const [selectedTradeIds] = useState<string[] | null>(() => {
@@ -630,14 +638,6 @@ function PreOrderContent() {
           } catch { }
         }
       }
-      // อัปเดต URL พารามิเตอร์ qty ทันที เพื่อให้เมื่อกดรีเฟรช (F5) เบราว์เซอร์จะจำจำนวนล่าสุดไว้
-      if (typeof window !== 'undefined') {
-        try {
-          const url = new URL(window.location.href);
-          url.searchParams.set('qty', String(nextQty));
-          window.history.replaceState(null, '', url.toString());
-        } catch { }
-      }
     }
   };
 
@@ -756,7 +756,7 @@ function PreOrderContent() {
 
   if (authLoading) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center bg-[#f5f5f5] min-h-[calc(100vh-200px)] min-h-[calc(100dvh-200px)] py-16 px-4">
+      <div className="flex-1 flex flex-col items-center justify-center bg-white min-h-[calc(100vh-200px)] min-h-[calc(100dvh-200px)] py-16 px-4">
         <WineLoading size="md" />
       </div>
     );
@@ -767,7 +767,7 @@ function PreOrderContent() {
   }
 
   return (
-    <div className="flex-1 flex flex-col bg-[#f5f5f5] py-6 sm:py-8">
+    <div className="flex-1 flex flex-col bg-white py-6 sm:py-8">
       <div className="max-w-[1600px] mx-auto w-full px-4 sm:px-6 lg:px-8 space-y-6 flex-1 flex flex-col">
 
         {/* Page Title Header (แสดงเฉพาะเมื่อมีสินค้า) */}
@@ -821,7 +821,7 @@ function PreOrderContent() {
             <form onSubmit={handleSubmitOrder} className="space-y-6">
 
               {/* Delivery Address Card (Shopee Style) */}
-              <div 
+              <div
                 className="bg-white border border-slate-100/80 rounded-sm shadow-[0_1px_1px_0_rgba(0,0,0,0.05)] overflow-hidden animate-checkout-slide-up"
                 style={{ animationDelay: '40ms' }}
               >
@@ -844,9 +844,8 @@ function PreOrderContent() {
                       type="button"
                       onClick={handleStartEditAddress}
                       disabled={isEditingAddress}
-                      className={`text-xs sm:text-sm font-semibold text-blue-600 hover:text-blue-700 hover:underline cursor-pointer transition-all duration-200 ${
-                        isEditingAddress ? 'opacity-0 scale-95 pointer-events-none' : 'opacity-100 scale-100'
-                      }`}
+                      className={`text-xs sm:text-sm font-semibold text-blue-600 hover:text-blue-700 hover:underline cursor-pointer transition-all duration-200 ${isEditingAddress ? 'opacity-0 scale-95 pointer-events-none' : 'opacity-100 scale-100'
+                        }`}
                     >
                       เปลี่ยน
                     </button>
@@ -859,157 +858,157 @@ function PreOrderContent() {
                   >
                     <div className="min-h-0 overflow-hidden">
                       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-6 pt-1">
-                      <div className="flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-8 flex-1">
-                        {/* Name & Phone (Bold) */}
-                        <div className="sm:w-60 shrink-0 space-y-0.5">
-                          <div className="font-bold text-slate-900 text-xs sm:text-sm leading-tight">
-                            {formatCustomerPhoneAndName(recipientName, recipientTel).displayName}
+                        <div className="flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-8 flex-1">
+                          {/* Name & Phone (Bold) */}
+                          <div className="sm:w-60 shrink-0 space-y-0.5">
+                            <div className="font-bold text-slate-900 text-xs sm:text-sm leading-tight">
+                              {formatCustomerPhoneAndName(recipientName, recipientTel).displayName}
+                            </div>
+                            <div className="font-bold text-slate-900 text-xs sm:text-sm leading-tight">
+                              {formatCustomerPhoneAndName(recipientName, recipientTel).formattedTel}
+                            </div>
                           </div>
-                          <div className="font-bold text-slate-900 text-xs sm:text-sm leading-tight">
-                            {formatCustomerPhoneAndName(recipientName, recipientTel).formattedTel}
-                          </div>
-                        </div>
 
-                        {/* Full Address */}
-                        <div className="flex-1 text-xs sm:text-sm text-slate-700 leading-relaxed flex items-center gap-2.5 flex-wrap">
-                          {recipientAddress ? (
-                            <>
-                              <span>
-                                {[
-                                  recipientAddress.trim(),
-                                  recipientZip && !recipientAddress.includes(recipientZip) ? recipientZip.trim() : '',
-                                ].filter(Boolean).join(', ')}
+                          {/* Full Address */}
+                          <div className="flex-1 text-xs sm:text-sm text-slate-700 leading-relaxed flex items-center gap-2.5 flex-wrap">
+                            {recipientAddress ? (
+                              <>
+                                <span>
+                                  {[
+                                    recipientAddress.trim(),
+                                    recipientZip && !recipientAddress.includes(recipientZip) ? recipientZip.trim() : '',
+                                  ].filter(Boolean).join(', ')}
+                                </span>
+                                <span className="text-[10px] text-red-600 border border-red-600 px-1.5 py-0.5 rounded-[2px] shrink-0 font-medium select-none">
+                                  ค่าเริ่มต้น
+                                </span>
+                              </>
+                            ) : (
+                              <span className="text-slate-400 italic">
+                                ยังไม่ได้ระบุที่อยู่จัดส่งสินค้า กรุณากด &quot;เปลี่ยน&quot; เพื่อระบุที่อยู่จัดส่ง
                               </span>
-                              <span className="text-[10px] text-red-600 border border-red-600 px-1.5 py-0.5 rounded-[2px] shrink-0 font-medium select-none">
-                                ค่าเริ่มต้น
-                              </span>
-                            </>
-                          ) : (
-                            <span className="text-slate-400 italic">
-                              ยังไม่ได้ระบุที่อยู่จัดส่งสินค้า กรุณากด &quot;เปลี่ยน&quot; เพื่อระบุที่อยู่จัดส่ง
-                            </span>
-                          )}
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
 
-                {/* Inline Edit Mode */}
+                  {/* Inline Edit Mode */}
                   <div
                     className={isEditingAddress ? 'address-accordion-open' : 'address-accordion-closed'}
                     aria-hidden={!isEditingAddress}
                   >
                     <div className="min-h-0 overflow-hidden">
                       <div className="pt-3 border-t border-slate-100 space-y-4">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                            ชื่อ-นามสกุล / ชื่อร้านค้า <span className="text-red-600">*</span>
-                          </label>
-                          <input
-                            type="text"
-                            value={tempName}
-                            onChange={(e) => {
-                              setTempName(e.target.value);
-                              syncTempAddressToStorage({ tempName: e.target.value });
-                            }}
-                            placeholder="เช่น สมชาย ใจดี หรือ ร้านต้นมะกรูด"
-                            className="w-full px-3.5 py-2 rounded-lg bg-slate-50 border border-slate-300 text-slate-900 text-xs sm:text-sm focus:bg-white focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-colors"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                            เบอร์โทรศัพท์ติดต่อ <span className="text-red-600">*</span>
-                          </label>
-                          <input
-                            type="tel"
-                            value={tempTel}
-                            onChange={(e) => {
-                              setTempTel(e.target.value);
-                              syncTempAddressToStorage({ tempTel: e.target.value });
-                            }}
-                            placeholder="เช่น 081-2345678"
-                            className="w-full px-3.5 py-2 rounded-lg bg-slate-50 border border-slate-300 text-slate-900 text-xs sm:text-sm focus:bg-white focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-colors"
-                          />
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                          ที่อยู่จัดส่งสินค้าโดยละเอียด <span className="text-red-600">*</span>
-                        </label>
-                        <textarea
-                          rows={2}
-                          value={tempAddress}
-                          onChange={(e) => {
-                            setTempAddress(e.target.value);
-                            syncTempAddressToStorage({ tempAddress: e.target.value });
-                          }}
-                          placeholder="ระบุบ้านเลขที่, ซอย, ถนน, ตำบล, อำเภอ, จังหวัด"
-                          className="w-full p-3 rounded-lg bg-slate-50 border border-slate-300 text-slate-900 text-xs sm:text-sm focus:bg-white focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-colors"
-                        />
-                      </div>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
-                        <div>
-                          <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                            รหัสไปรษณีย์
-                          </label>
-                          <input
-                            type="text"
-                            maxLength={5}
-                            value={tempZip}
-                            onChange={(e) => {
-                              setTempZip(e.target.value);
-                              syncTempAddressToStorage({ tempZip: e.target.value });
-                            }}
-                            placeholder="รหัสไปรษณีย์ 5 หลัก"
-                            className="w-full px-3.5 py-2 rounded-lg bg-slate-50 border border-slate-300 text-slate-900 text-xs sm:text-sm focus:bg-white focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-colors"
-                          />
-                        </div>
-
-                        <div className="sm:pt-5">
-                          <label className="inline-flex items-center gap-2 cursor-pointer select-none text-xs text-slate-600">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                              ชื่อ-นามสกุล / ชื่อร้านค้า <span className="text-red-600">*</span>
+                            </label>
                             <input
-                              type="checkbox"
-                              checked={saveToProfile}
+                              type="text"
+                              value={tempName}
                               onChange={(e) => {
-                                setSaveToProfile(e.target.checked);
-                                syncTempAddressToStorage({ saveToProfile: e.target.checked });
+                                setTempName(e.target.value);
+                                syncTempAddressToStorage({ tempName: e.target.value });
                               }}
-                              className="w-4 h-4 rounded border-slate-300 text-black focus:ring-black accent-black cursor-pointer"
+                              placeholder="เช่น สมชาย ใจดี หรือ ร้านต้นมะกรูด"
+                              className="w-full px-3.5 py-2 rounded-lg bg-slate-50 border border-slate-300 text-slate-900 text-xs sm:text-sm focus:bg-white focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-colors"
                             />
-                            <span>บันทึกเป็นที่อยู่เริ่มต้นในบัญชีของฉัน</span>
-                          </label>
-                        </div>
-                      </div>
+                          </div>
 
-                      <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-100">
-                        <button
-                          type="button"
-                          onClick={handleCancelEditAddress}
-                          className="px-4 py-2 rounded-full text-xs font-bold text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
-                        >
-                          ยกเลิก
-                        </button>
-                        <button
-                          type="button"
-                          onClick={handleSaveAddress}
-                          className="px-6 py-2 rounded-full bg-black hover:bg-neutral-800 text-white text-xs font-bold shadow-2xs transition-colors cursor-pointer"
-                        >
-                          บันทึกที่อยู่
-                        </button>
+                          <div>
+                            <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                              เบอร์โทรศัพท์ติดต่อ <span className="text-red-600">*</span>
+                            </label>
+                            <input
+                              type="tel"
+                              value={tempTel}
+                              onChange={(e) => {
+                                setTempTel(e.target.value);
+                                syncTempAddressToStorage({ tempTel: e.target.value });
+                              }}
+                              placeholder="เช่น 081-2345678"
+                              className="w-full px-3.5 py-2 rounded-lg bg-slate-50 border border-slate-300 text-slate-900 text-xs sm:text-sm focus:bg-white focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-colors"
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                            ที่อยู่จัดส่งสินค้าโดยละเอียด <span className="text-red-600">*</span>
+                          </label>
+                          <textarea
+                            rows={2}
+                            value={tempAddress}
+                            onChange={(e) => {
+                              setTempAddress(e.target.value);
+                              syncTempAddressToStorage({ tempAddress: e.target.value });
+                            }}
+                            placeholder="ระบุบ้านเลขที่, ซอย, ถนน, ตำบล, อำเภอ, จังหวัด"
+                            className="w-full p-3 rounded-lg bg-slate-50 border border-slate-300 text-slate-900 text-xs sm:text-sm focus:bg-white focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-colors"
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
+                          <div>
+                            <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                              รหัสไปรษณีย์
+                            </label>
+                            <input
+                              type="text"
+                              maxLength={5}
+                              value={tempZip}
+                              onChange={(e) => {
+                                setTempZip(e.target.value);
+                                syncTempAddressToStorage({ tempZip: e.target.value });
+                              }}
+                              placeholder="รหัสไปรษณีย์ 5 หลัก"
+                              className="w-full px-3.5 py-2 rounded-lg bg-slate-50 border border-slate-300 text-slate-900 text-xs sm:text-sm focus:bg-white focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-colors"
+                            />
+                          </div>
+
+                          <div className="sm:pt-5">
+                            <label className="inline-flex items-center gap-2 cursor-pointer select-none text-xs text-slate-600">
+                              <input
+                                type="checkbox"
+                                checked={saveToProfile}
+                                onChange={(e) => {
+                                  setSaveToProfile(e.target.checked);
+                                  syncTempAddressToStorage({ saveToProfile: e.target.checked });
+                                }}
+                                className="w-4 h-4 rounded border-slate-300 text-black focus:ring-black accent-black cursor-pointer"
+                              />
+                              <span>บันทึกเป็นที่อยู่เริ่มต้นในบัญชีของฉัน</span>
+                            </label>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-100">
+                          <button
+                            type="button"
+                            onClick={handleCancelEditAddress}
+                            className="px-4 py-2 rounded-full text-xs font-bold text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
+                          >
+                            ยกเลิก
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleSaveAddress}
+                            className="px-6 py-2 rounded-full bg-black hover:bg-neutral-800 text-white text-xs font-bold shadow-2xs transition-colors cursor-pointer"
+                          >
+                            บันทึกที่อยู่
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
 
               {/* Items Card (Single Unified Card) */}
-              <div 
+              <div
                 className="bg-white rounded-sm shadow-[0_1px_1px_0_rgba(0,0,0,0.05)] border border-slate-100/80 overflow-hidden animate-checkout-slide-up"
                 style={{ animationDelay: '80ms' }}
               >
@@ -1026,10 +1025,10 @@ function PreOrderContent() {
                     <span className="text-center">หน่วย</span>
                     <span className="text-center">ราคาต่อหน่วย</span>
                     <span className="text-center text-[#FF6B00] font-semibold">ราคารวม</span>
-                    <span className="text-right pr-2 text-blue-600 font-semibold">ยอดมัดจำ</span>
+                    <span className="text-right pr-2 text-[#FF0000] font-semibold">ยอดมัดจำ</span>
                   </div>
                 </div>
-                  {/* MOBILE VIEW (< 640px) */}
+                {/* MOBILE VIEW (< 640px) */}
                 <div className="block sm:hidden">
                   {/* Mobile Items List */}
                   <div className="divide-y divide-slate-100">
@@ -1089,9 +1088,12 @@ function PreOrderContent() {
                                     >
                                       -
                                     </button>
-                                    <span className="w-8 text-center font-black text-xs text-slate-900 border-x border-slate-200 select-none">
-                                      {item.qty}
-                                    </span>
+                                    <QuantityInput
+                                      value={item.qty}
+                                      onChange={(val) => handleUpdateItemQty(item.tradeId, val)}
+                                      min={1}
+                                      className="w-8 h-full text-center font-black text-xs text-slate-900 border-x border-slate-200 outline-none rounded-none"
+                                    />
                                     <button
                                       type="button"
                                       onClick={() => handleUpdateItemQty(item.tradeId, item.qty + 1)}
@@ -1141,16 +1143,16 @@ function PreOrderContent() {
                             {/* Col 4: ยอดมัดจำ: */}
                             <div className="flex flex-col items-center justify-start">
                               <div className="h-5 flex items-center justify-center">
-                                <span className="text-[11px] font-bold text-blue-600 leading-none">
+                                <span className="text-[11px] font-bold text-[#FF0000] leading-none">
                                   ยอดมัดจำ:
                                 </span>
                               </div>
                               <div className="h-7 flex flex-col items-center justify-center mt-1">
-                                <span className="block text-xs font-bold text-blue-600 tabular-nums leading-tight">
+                                <span className="block text-xs font-bold text-[#FF0000] tabular-nums leading-tight">
                                   ฿{lineDeposit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                 </span>
                                 {unitDeposit > 0 && item.qty > 1 && (
-                                  <span className="text-[11px] sm:text-xs text-blue-600 font-medium leading-none mt-0.5">
+                                  <span className="text-[11px] sm:text-xs text-[#FF0000] font-medium leading-none mt-0.5">
                                     (฿{formatDepositPrice(unitDeposit)}/{item.unitName || 'หน่วย'})
                                   </span>
                                 )}
@@ -1219,9 +1221,12 @@ function PreOrderContent() {
                                       >
                                         -
                                       </button>
-                                      <span className="w-8 sm:w-10 text-center font-black text-xs sm:text-sm text-slate-900 border-x border-slate-200 select-none">
-                                        {item.qty}
-                                      </span>
+                                      <QuantityInput
+                                        value={item.qty}
+                                        onChange={(val) => handleUpdateItemQty(item.tradeId, val)}
+                                        min={1}
+                                        className="w-8 sm:w-10 h-7 sm:h-8 text-center font-black text-xs sm:text-sm text-slate-900 border-x border-slate-200 outline-none rounded-none"
+                                      />
                                       <button
                                         type="button"
                                         onClick={() => handleUpdateItemQty(item.tradeId, item.qty + 1)}
@@ -1262,11 +1267,11 @@ function PreOrderContent() {
 
                                 {/* 5. รวมมัดจำ */}
                                 <div className="text-right pr-2">
-                                  <div className="font-bold text-blue-600 text-xs sm:text-base tabular-nums">
+                                  <div className="font-bold text-[#FF0000] text-xs sm:text-base tabular-nums">
                                     ฿{lineDeposit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                   </div>
                                   {unitDeposit > 0 && item.qty > 1 && (
-                                    <div className="text-xs sm:text-[13px] text-blue-600 font-medium">
+                                    <div className="text-xs sm:text-[13px] text-[#FF0000] font-medium">
                                       (฿{formatDepositPrice(unitDeposit)}/{item.unitName || 'หน่วย'})
                                     </div>
                                   )}
@@ -1307,7 +1312,7 @@ function PreOrderContent() {
               </div>
 
               {/* Bottom Action Bar: "< เลือกดูสินค้าต่อ" */}
-              <div 
+              <div
                 className="flex items-center justify-between gap-4 pt-1 animate-checkout-slide-up"
                 style={{ animationDelay: '100ms' }}
               >
@@ -1325,7 +1330,7 @@ function PreOrderContent() {
               </div>
 
               {/* 2. Shopee Full-Width Payment & Order Summary Card (Exact Match to Reference Image) */}
-              <div 
+              <div
                 className="bg-white border border-slate-100/80 rounded-sm shadow-[0_1px_1px_0_rgba(0,0,0,0.05)] overflow-hidden animate-checkout-slide-up"
                 style={{ animationDelay: '120ms' }}
               >
@@ -1422,8 +1427,8 @@ function PreOrderContent() {
 
                     {/* 2. ยอดมัดจำที่ต้องชำระ (Deposit) */}
                     <div className="flex justify-between items-center">
-                      <span className="font-bold text-blue-600">ยอดมัดจำที่ต้องชำระ (Deposit)</span>
-                      <span className="text-xl sm:text-2xl font-bold text-blue-600 tabular-nums">
+                      <span className="font-bold text-[#FF0000]">ยอดมัดจำที่ต้องชำระ (Deposit)</span>
+                      <span className="text-xl sm:text-2xl font-bold text-[#FF0000] tabular-nums">
                         ฿{totalDepositAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </span>
                     </div>
@@ -1473,7 +1478,7 @@ export default function PreOrderPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex-1 flex flex-col items-center justify-center bg-[#f5f5f5] min-h-[calc(100vh-200px)] min-h-[calc(100dvh-200px)] py-16">
+        <div className="flex-1 flex flex-col items-center justify-center bg-white min-h-[calc(100vh-200px)] min-h-[calc(100dvh-200px)] py-16">
           <WineLoading size="md" />
         </div>
       }

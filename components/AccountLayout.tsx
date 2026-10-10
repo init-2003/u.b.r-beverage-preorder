@@ -364,7 +364,7 @@ export default function AccountLayout({
 
   if (authLoading) {
     return (
-      <div className="flex-1 flex flex-col bg-[#f5f5f5] py-8">
+      <div className="flex-1 flex flex-col bg-white py-8">
         <div className="max-w-[1600px] mx-auto w-full px-4 sm:px-6 lg:px-8">
           <div className="w-full flex flex-col lg:flex-row gap-8 lg:gap-12 items-start">
             <Suspense fallback={<AccountSidebarFallback activeItemOverride={activeItemOverride} />}>
@@ -387,7 +387,7 @@ export default function AccountLayout({
   }
 
   return (
-    <div className="flex-1 flex flex-col bg-[#f5f5f5] py-8">
+    <div className="flex-1 flex flex-col bg-white py-8">
       <div className="max-w-[1600px] mx-auto w-full px-4 sm:px-6 lg:px-8">
         <div className="w-full flex flex-col lg:flex-row gap-8 lg:gap-12 items-start">
           {/* Persistent Left Sidebar */}

@@ -25,7 +25,7 @@ export function Modal({
   padding = 'p-8 sm:p-9',
 }: ModalProps) {
   const [mounted, setMounted] = useState(isOpen);
-  const [visible, setVisible] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
@@ -35,28 +35,25 @@ export function Modal({
         timerRef.current = null;
       }
       setMounted(true);
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          setVisible(true);
-        });
-      });
-    } else {
-      setVisible(false);
+      setIsClosing(false);
+    } else if (mounted) {
+      setIsClosing(true);
       timerRef.current = setTimeout(() => {
         setMounted(false);
+        setIsClosing(false);
         timerRef.current = null;
-      }, 200);
+      }, 190);
     }
     return () => {
       if (timerRef.current) {
         clearTimeout(timerRef.current);
       }
     };
-  }, [isOpen]);
+  }, [isOpen, mounted]);
 
   // Handle Escape key and lock body scroll when modal is open
   useEffect(() => {
-    if (!mounted) return;
+    if (!mounted || isClosing) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -72,24 +69,26 @@ export function Modal({
       window.removeEventListener('keydown', handleKeyDown);
       document.body.style.overflow = prevOverflow;
     };
-  }, [mounted, onClose]);
+  }, [mounted, isClosing, onClose]);
 
   if (!mounted) return null;
 
   return (
     <div
-      className={`fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 overflow-y-auto transition-opacity duration-200 ease-out ${visible ? 'opacity-100' : 'opacity-0 pointer-events-none'
-        }`}
+      className={`fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 overflow-y-auto ${
+        isClosing ? 'animate-modal-backdrop-out' : 'animate-modal-backdrop-in'
+      }`}
       onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
+        if (!isClosing && e.target === e.currentTarget) onClose();
       }}
       role="dialog"
       aria-modal="true"
       aria-labelledby={titleId}
     >
       <div
-        className={`bg-white rounded-sm ${padding} w-full ${maxWidth} shadow-2xl relative border border-slate-100/80 text-slate-800 transform transition-all duration-200 ease-out ${visible ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 translate-y-2'
-          } ${className}`.trim()}
+        className={`bg-white rounded-lg ${padding} w-full ${maxWidth} shadow-2xl relative border border-slate-100/80 text-slate-800 ${
+          isClosing ? 'animate-modal-card-out' : 'animate-modal-card-in'
+        } ${className}`.trim()}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close Button (✕) */}
@@ -97,6 +96,7 @@ export function Modal({
           <button
             type="button"
             onClick={onClose}
+            disabled={isClosing}
             className="absolute top-4 right-4 sm:top-5 sm:right-5 text-slate-400 hover:text-slate-700 p-2 rounded-full hover:bg-slate-100 transition-colors cursor-pointer"
             title="ปิดหน้าต่าง"
             aria-label="ปิดหน้าต่าง"

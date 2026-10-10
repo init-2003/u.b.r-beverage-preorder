@@ -48,11 +48,11 @@ export default function ProductCatalog({
 
   // Cart context
   const router = useRouter();
-  const { addItem, totalQty } = useCart();
+  const { openAddedModal, totalQty } = useCart();
   const [addedProductId, setAddedProductId] = useState<string | null>(null);
 
   const handleAddToCart = (product: Product) => {
-    addItem(
+    openAddedModal(
       {
         tradeId: product.id,
         tradeName: product.name,
@@ -61,15 +61,12 @@ export default function ProductCatalog({
         typeName: product.category,
         salePrice: product.price,
         depositPrice: product.depositPrice,
+        depositPercent: product.depositPercent,
         image: product.imageUrl,
+        qty: 1,
       },
       1
     );
-
-    setAddedProductId(product.id);
-    setTimeout(() => {
-      setAddedProductId(null);
-    }, 1200);
   };
 
   const handleDirectOrder = (e: React.MouseEvent, product: Product) => {
@@ -88,7 +85,7 @@ export default function ProductCatalog({
         );
       } catch { }
     }
-    router.push(`/checkout?from=catalog&productId=${encodeURIComponent(product.id)}&qty=1`);
+    router.push('/checkout');
   };
 
   const filteredProducts = products.filter((product) => {
@@ -140,7 +137,7 @@ export default function ProductCatalog({
       {loadingProducts ? (
         <ProductGridSkeleton count={10} />
       ) : filteredProducts.length === 0 ? (
-        <div className="min-h-[380px] sm:min-h-[440px] rounded-sm bg-white border border-slate-100/80 text-center flex flex-col items-center justify-center space-y-4 shadow-[0_1px_1px_0_rgba(0,0,0,0.05)] p-8 sm:p-12 my-2">
+        <div className="min-h-[380px] sm:min-h-[440px] rounded-sm bg-white border border-slate-200 text-center flex flex-col items-center justify-center space-y-4 shadow-[0_1px_1px_0_rgba(0,0,0,0.05)] p-8 sm:p-12 my-2">
           <div className="flex items-center justify-center mx-auto">
             <EmptySearchIllustration className="w-36 h-36 sm:w-40 sm:h-40" />
           </div>
@@ -190,7 +187,7 @@ export default function ProductCatalog({
               >
                 <div
                   onClick={() => router.push(`/products/${product.id}`)}
-                  className="rounded-sm bg-white border border-slate-100/80 shadow-[0_1px_1px_0_rgba(0,0,0,0.05)] hover:shadow-xl hover:shadow-slate-300/50 hover:border-slate-300 hover:scale-[1.03] hover:-translate-y-1 hover:z-20 flex flex-col justify-between group transition-all duration-300 ease-out relative cursor-pointer overflow-hidden will-change-transform h-full"
+                  className="rounded-sm bg-white border border-slate-200 shadow-xs hover:shadow-xl hover:shadow-slate-300/50 hover:border-slate-300 hover:scale-[1.03] hover:-translate-y-1 hover:z-20 flex flex-col justify-between group transition-all duration-300 ease-out relative cursor-pointer overflow-hidden will-change-transform h-full"
                 >
                   {/* Product Image Box (เต็ม Card บน ซ้าย ขวา) */}
                   <Link
@@ -258,8 +255,8 @@ export default function ProductCatalog({
                         </div>
 
                         {depositAmt > 0 ? (
-                          <p className="text-[11px] sm:text-xs text-blue-600 font-medium mt-0.5">
-                            มัดจำ ฿{formatDepositPrice(depositAmt)}
+                          <p className="text-[11px] sm:text-xs text-[#FF0000] font-medium mt-0.5">
+                            มัดจำ ฿{formatDepositPrice(depositAmt)}{depositPercent > 0 ? ` (${depositPercent}%)` : ''}
                           </p>
                         ) : null}
                       </div>
@@ -287,14 +284,14 @@ export default function ProductCatalog({
                           )}
                         </button>
 
-                        {/* ปุ่ม Pre Order พร้อมอนิเมชันเวลากด */}
+                        {/* ปุ่มสั่งซื้อเลย พร้อมอนิเมชันเวลากด */}
                         <button
                           type="button"
                           onClick={(e) => handleDirectOrder(e, product)}
                           className="flex-1 h-9 py-2 px-2.5 rounded-full font-bold text-xs flex items-center justify-center gap-1.5 transition-all duration-150 bg-[#800020] hover:bg-[#6b001b] active:bg-[#570016] text-white shadow-2xs hover:shadow-xs cursor-pointer active:scale-95 select-none"
-                          title="Pre Order"
+                          title="สั่งซื้อเลย"
                         >
-                          <span>Pre Order</span>
+                          <span>สั่งซื้อเลย</span>
                         </button>
                       </div>
                     </div>

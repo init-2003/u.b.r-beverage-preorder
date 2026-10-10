@@ -93,6 +93,7 @@ export interface CartItem {
   typeName?: string;
   salePrice: number;
   depositPrice?: number;
+  depositPercent?: number;
   qty: number;
   image?: string;
 }

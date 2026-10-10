@@ -208,7 +208,7 @@ function OrderPaymentContent() {
   }
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-center bg-[#f5f5f5] py-8 sm:py-12 px-4 font-sans">
+    <div className="flex-1 flex flex-col items-center justify-center bg-white py-8 sm:py-12 px-4 font-sans">
       {/* Top Heading matching reference */}
       <div 
         className="text-center space-y-1 mb-6 animate-payment-slide-up"
@@ -286,7 +286,7 @@ function OrderPaymentContent() {
               {/* Expected Payable Amount */}
               <div className="mt-2.5 pt-2 border-t border-slate-200/70 flex items-center justify-between text-xs">
                 <span className="text-slate-500">ยอดที่ต้องตรงกับสลิป:</span>
-                <span className="font-bold text-blue-600 text-sm">
+                <span className="font-bold text-[#FF0000] text-sm">
                   ฿{payableAmount.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} บาท
                 </span>
               </div>

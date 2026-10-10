@@ -63,6 +63,12 @@ This document provides developer and AI agent instructions, system architecture,
   - `Fnt_Header_online` is NEVER written or created for temporary cart states. It is reserved strictly for finalized, placed orders.
   - The actual document number (e.g. `ORD69000893`) is NOT generated until checkout is completed.
   - Upon checkout submission, `PBM_CTRL` atomically generates the next real document number sequence, the finalized order is saved to both `Fnt_Header_online` and `Fnt_Detail_online`, and the checked-out items are cleared/cut from the customer's `ORDautorun` cart in `Fnt_Detail_online`.
+- **Clean Checkout URL (`/checkout`)**:
+  - Navigation to checkout (from cart, catalog cards, or product details) uses clean `/checkout` without query strings. Selected item IDs and direct purchase data are stored in `sessionStorage` (`ubr_cart_selected_ids`, `ubr_direct_checkout`). If legacy query parameters are present on initial load, `/checkout` automatically cleanses the browser address bar to `/checkout` via `window.history.replaceState(null, '', '/checkout')`.
+- **Clean Order Details URL (`/orders`)**:
+  - When viewing order details (`/orders/[docNo]`), the active document number is saved to `sessionStorage` (`ubr_active_order_doc_no`) and the browser address bar is masked cleanly to `/orders` via `window.history.replaceState(null, '', '/orders')`.
+  - When the user refreshes (F5) or directly accesses `/orders`, `app/orders/page.tsx` retrieves `ubr_active_order_doc_no` from `sessionStorage` and seamlessly renders the order details for that order. If no active order exists in session storage, it safely redirects to `/orders/history`.
+  - Order cards across `/orders/history`, `/purchases/history`, and `/orders/[docNo]` feature crisp `border border-slate-200 shadow-xs` with matching `border-slate-200` interior dividers to provide clear visual boundaries on the clean `#ffffff` canvas.
 - Pre-orders are saved to tables:
   - `Fnt_Header_online` (header info: `Branch_Id`, `Fn_Doc_No`, `Fn_Doc_Date`, `Doc_Sts`, `Customer_Id`, `Fn_Total`, `Fn_Amount`, `money_sts`, `FILE_NAME_PIC`, `Fn_Remark`, `fn_deposit_H`, `fn_type_sale = 'Pre Order'`, etc.)
   - `Fnt_Detail_online` (line items: `Trade_Id`, `Qty`, `Unit_Name`, `Type_Name = 'Pre Order'`, `Sale_Price`, `Line_Total`, `fn_deposit_D`, etc. Note: `Fnt_Detail_online` does NOT have `fn_type_sale` column; that column is in `Fnt_Header_online`)
@@ -152,7 +158,7 @@ This document provides developer and AI agent instructions, system architecture,
   - All main page containers, Navbar, Breadcrumbs, and Footer use a standardized `max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8` for full visual harmony on widescreen displays.
 - **Clean White Theme**:
   - Cards: `bg-white border border-slate-200 rounded-lg shadow-sm/shadow-xl`.
-  - Body Background: `#f5f5f5` (Off-white / Soft gray background highlighting white cards).
+  - Body Background: `#ffffff` (Pure clean white across the entire application, including homepage, product details, cart, checkout, orders, and account. Product catalog cards feature crisp `border border-slate-200` for clear visual boundaries on the white canvas).
   - Navigation Bar: Burgundy (`#800020` / `#68001a`) with gold/amber accents. Hidden on standalone pages: `/login`, `/cookie-policy`, `/privacy-policy`, and purchase order documents.
     - Mobile Search Morph Animation (`components/Navbar.tsx`): Tapping the mobile search icon triggers a coordinated 300ms spring slide & scale morph transition (`cubic-bezier(0.16, 1, 0.3, 1)`). The standard navbar row gracefully fades & shifts left (`opacity-0 -translate-x-3`) while the white search pill expands smoothly into place from the right (`opacity-100 translate-x-0 scale-100`) with auto-focus. Tapping `[ ✕ ]` smoothly reverses the animation.
 - **Login System (`/login` & Authentication Gate)**:
@@ -166,7 +172,7 @@ This document provides developer and AI agent instructions, system architecture,
   - Features smooth slide-up showcase entrance animation (`.animate-product-detail-slide-up`, `translateY: 24px -> 0`, `opacity: 0 -> 1`).
   - Omit dummy wholesale tier tables and mock workflow boxes unless explicitly requested.
 - **Cart Page (`/cart`)**:
-  - Content sections (header, items table card, sticky bottom checkout bar, and empty state) feature smooth slide-up & fade-in entrance animation (`.animate-cart-slide-up`, `translateY: 22px -> 0`, `opacity: 0 -> 1`, `cubic-bezier(0.16, 1, 0.3, 1)`) with subtle cascading delays (`40ms`, `80ms`, `120ms`).
+  - Content sections (header, items table card, cart action toolbar, financial summary card with grand total, deposit, remaining and full-width checkout button, and empty state) feature smooth slide-up & fade-in entrance animation (`.animate-cart-slide-up`, `translateY: 22px -> 0`, `opacity: 0 -> 1`, `cubic-bezier(0.16, 1, 0.3, 1)`) with subtle cascading delays (`40ms`, `80ms`, `100ms`, `140ms`).
 - **Checkout & Confirmation Page (`/checkout`)**:
   - Content sections (header, delivery address card, items card, bottom navigation link, payment & summary card, and empty state) feature smooth slide-up & fade-in entrance animation (`.animate-checkout-slide-up`, `translateY: 22px -> 0`, `opacity: 0 -> 1`, `cubic-bezier(0.16, 1, 0.3, 1)`) with cascading delays (`40ms`, `80ms`, `100ms`, `120ms`).
 - **Order Details Page (`/orders/[docNo]`)**:
@@ -174,6 +180,7 @@ This document provides developer and AI agent instructions, system architecture,
 - **Account & History Pages (`/customer/account`, `/orders/history`, `/customer/account/address`, `/purchases/history`)**:
   - The left sidebar (`components/AccountLayout.tsx`) features a GPU-accelerated animated sliding active black `#000000` capsule pill (`rounded-full bg-[#000000] text-white font-semibold shadow-sm`, `transform: translateY(...)`, `duration-300 cubic-bezier(0.25, 1, 0.5, 1)`). Clicking an item triggers an immediate optimistic position glide, tactile scale press (`active:scale-[0.98]`), click pulse (`.animate-menu-click`), and hover text slide (`hover:translate-x-1 hover:text-black hover:bg-slate-200/50`). State is cached across route changes to eliminate position reset and flickering.
   - In mobile view (< lg), the header bar features an animated rotating morph hamburger button (Menu ↔ X with `rotate-90 scale-75` transitions) and a CSS Grid accordion collapsible menu (`.mobile-menu-enter` / `.mobile-menu-exit`) for smooth height and fade open/close animations.
+  - On `/orders/history`, the Shopee status tabs bar (`ทั้งหมด`, `รอชำระ`, `กำลังดำเนินการ`, `ออกใบเสร็จแล้ว`, `ยกเลิก`) stretches edge-to-edge on mobile (`-mx-4 sm:mx-0 rounded-none sm:rounded-xs border-y sm:border border-slate-200`) for seamless edge-to-edge swiping and full-width display without side margins.
   - The right-side main content panel features a gentle, smooth slide-up & fade-in entrance animation (`.animate-account-slide-up`, `translateY: 10px -> 0`, `opacity: 0 -> 1`, 0.3s cubic-bezier(0.16, 1, 0.3, 1)).
   - During route transitions and data fetching, nested `loading.tsx` maintains the left sidebar visible while centering `WineLoading` (`size="md"`) exclusively within the right-side main content panel without layout remounts or bouncing.
 - **Unified Loading System (`components/WineLoading.tsx`)**:

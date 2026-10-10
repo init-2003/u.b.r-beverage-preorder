@@ -196,16 +196,18 @@ function HomeAppPageContent() {
   }
 
   return (
-    <div className="max-w-[1600px] mx-auto w-full px-4 sm:px-6 lg:px-8 pt-3 pb-12 flex-1 flex flex-col space-y-4">
-      <ProductCatalog
-        products={products}
-        loadingProducts={loadingProducts}
-        selectedCategory={urlCategory}
-        onSelectCategory={handleSelectCategory}
-        searchQuery={urlSearch}
-        onSearchChange={handleSearchChange}
-        onResetFilters={handleResetFilters}
-      />
+    <div className="flex-1 flex flex-col w-full bg-white">
+      <div className="max-w-[1600px] mx-auto w-full px-4 sm:px-6 lg:px-8 pt-3 pb-12 flex-1 flex flex-col space-y-4">
+        <ProductCatalog
+          products={products}
+          loadingProducts={loadingProducts}
+          selectedCategory={urlCategory}
+          onSelectCategory={handleSelectCategory}
+          searchQuery={urlSearch}
+          onSearchChange={handleSearchChange}
+          onResetFilters={handleResetFilters}
+        />
+      </div>
     </div>
   );
 }

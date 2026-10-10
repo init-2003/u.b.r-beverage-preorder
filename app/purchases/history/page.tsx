@@ -244,7 +244,7 @@ function PurchasesContent() {
             <WineLoading size="md" />
           </div>
         ) : displayedOrders.length === 0 ? (
-          <div className="bg-white rounded-xs border border-slate-100/90 shadow-[0_1px_1px_0_rgba(0,0,0,0.03)] py-16 sm:py-20 px-4 text-center flex flex-col items-center justify-center space-y-4">
+          <div className="bg-white rounded-xs border border-slate-200 shadow-xs py-16 sm:py-20 px-4 text-center flex flex-col items-center justify-center space-y-4">
             <div className="flex items-center justify-center">
               <EmptyPaymentIllustration className="w-36 h-36 sm:w-40 sm:h-40" />
             </div>
@@ -269,7 +269,7 @@ function PurchasesContent() {
               return (
                 <div
                   key={order.Fn_Doc_No}
-                  className="bg-white rounded-xs border border-slate-100/90 shadow-[0_1px_2px_0_rgba(0,0,0,0.04)] overflow-hidden transition-shadow hover:shadow-[0_2px_4px_0_rgba(0,0,0,0.06)]"
+                  className="bg-white rounded-xs border border-slate-200 shadow-xs overflow-hidden transition-all hover:border-slate-300 hover:shadow-md"
                 >
                   {/* Row 1: Order Info + Amount */}
                   <div className="px-4 sm:px-6 py-3.5 flex items-center justify-between gap-3">
@@ -293,11 +293,11 @@ function PurchasesContent() {
                     </div>
                     {/* Right: Amount */}
                     <div className="text-right shrink-0">
-                      <span className={`text-base sm:text-lg font-bold ${order.fn_deposit_H && Number(order.fn_deposit_H) > 0 ? 'text-blue-600' : 'text-[#FF6B00]'}`}>
+                      <span className={`text-base sm:text-lg font-bold ${order.fn_deposit_H && Number(order.fn_deposit_H) > 0 ? 'text-[#FF0000]' : 'text-[#FF6B00]'}`}>
                         {formatCurrency(payableAmount)}
                       </span>
                       {order.fn_deposit_H && Number(order.fn_deposit_H) > 0 ? (
-                        <p className="text-[10px] text-blue-600 font-medium leading-none mt-0.5">
+                        <p className="text-[10px] text-[#FF0000] font-medium leading-none mt-0.5">
                           (ยอดมัดจำ)
                         </p>
                       ) : null}
@@ -305,7 +305,7 @@ function PurchasesContent() {
                   </div>
 
                   {/* Row 2: Status + Actions */}
-                  <div className="px-4 sm:px-6 py-2.5 border-t border-slate-100/80 bg-slate-50/40 flex items-center justify-between gap-3">
+                  <div className="px-4 sm:px-6 py-2.5 border-t border-slate-200 bg-slate-50/40 flex items-center justify-between gap-3">
                     {/* Left: Status Stamp */}
                     {isPending ? (
                       <PaidStamp
