@@ -4,247 +4,369 @@ import Link from 'next/link';
 
 export default function PrivacyPolicyPage() {
   return (
-    <div className="w-full flex-1 bg-white">
-      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
-      <div className="max-w-4xl mx-auto">
-        {/* Main Document Container */}
-        <div className="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
-          {/* Top Brand Accent Stripe */}
-          <div className="h-1 bg-[#800020] w-full" />
+    <div className="w-full flex-1 bg-white py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
+      {/* Formal Document Container (สไตล์เอกสาร Word / Plain Document) */}
+      <div className="max-w-4xl mx-auto bg-white text-slate-800 leading-relaxed text-sm sm:text-[15px]">
+        {/* Document Header (จัดกึ่งกลางสไตล์หัวเอกสารทางการ) */}
+        <div className="text-center pb-6 sm:pb-8 border-b border-slate-300 space-y-1.5">
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
+            นโยบายความเป็นส่วนตัว (Privacy Policy)
+          </h1>
+          <p className="text-base sm:text-lg font-semibold text-slate-800">
+            ห้างหุ้นส่วนจำกัด อุบลรุ่งเรืองเบฟเวอเรจ
+          </p>
+          <p className="text-xs sm:text-sm text-slate-500 pt-1">
+            การคุ้มครองข้อมูลส่วนบุคคลตาม พ.ร.บ. คุ้มครองข้อมูลส่วนบุคคล พ.ศ. 2562 (PDPA)<br />
+            มีผลบังคับใช้: 23 กันยายน 2569 &nbsp;|&nbsp; ปรับปรุงล่าสุด: 23 กันยายน 2569
+          </p>
+        </div>
 
-          {/* Header Section */}
-          <div className="p-6 sm:p-8 md:p-10 border-b border-slate-100 bg-gradient-to-b from-slate-50/60 to-white">
-            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-              <div>
-                <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 font-[Prompt] tracking-tight">
-                  นโยบายความเป็นส่วนตัว
-                </h1>
-                <p className="text-xs sm:text-sm text-slate-500 mt-1">
-                  Privacy Policy &bull; การคุ้มครองข้อมูลส่วนบุคคลตาม พ.ร.บ. คุ้มครองข้อมูลส่วนบุคคล พ.ศ. 2562 (PDPA)
-                </p>
-              </div>
-              <div className="text-xs text-slate-400 sm:text-right shrink-0 space-y-0.5 pt-1">
-                <div>มีผลบังคับใช้: <span className="text-slate-600 font-medium">23 กันยายน 2569</span></div>
-                <div>ปรับปรุงล่าสุด: <span className="text-slate-600 font-medium">23 กันยายน 2569</span></div>
-              </div>
+        {/* Document Body */}
+        <div className="pt-6 sm:pt-8 space-y-6 sm:space-y-7">
+          {/* Introduction */}
+          <p className="text-justify leading-relaxed">
+            <strong>ห้างหุ้นส่วนจำกัด อุบลรุ่งเรืองเบฟเวอเรจ</strong> (&quot;เรา&quot;) ให้ความสำคัญอย่างยิ่งต่อการคุ้มครองข้อมูลส่วนบุคคลและความเป็นส่วนตัวของลูกค้าทุกท่าน เอกสารฉบับนี้จัดทำขึ้นเพื่อชี้แจงรายละเอียดเกี่ยวกับการเก็บรวบรวม ใช้ เปิดเผย และคุ้มครองข้อมูลส่วนบุคคลของผู้ใช้บริการระบบสั่งจองสินค้าออนไลน์ ให้สอดคล้องตามพระราชบัญญัติคุ้มครองข้อมูลส่วนบุคคล พ.ศ. 2562 (PDPA)
+          </p>
+
+          {/* Section 1 */}
+          <section className="space-y-3">
+            <h2 className="text-base sm:text-lg font-bold text-slate-900">
+              1. ข้อมูลส่วนบุคคลที่เราเก็บรวบรวม
+            </h2>
+            <p className="text-slate-700">
+              ในการให้บริการระบบสั่งจองสินค้าออนไลน์ เรามีความจำเป็นต้องเก็บรวบรวมข้อมูลส่วนบุคคลของท่านตามขอบเขตและวัตถุประสงค์การใช้งาน ดังแสดงในตารางต่อไปนี้:
+            </p>
+
+            {/* Word-Style Table: ข้อมูลที่เก็บรวบรวม */}
+            <div className="overflow-x-auto my-3">
+              <table className="w-full border-collapse border border-slate-400 text-xs sm:text-sm text-slate-800">
+                <thead>
+                  <tr className="bg-slate-100 text-slate-900">
+                    <th className="border border-slate-400 px-3 py-2.5 text-center font-bold w-12 sm:w-16">
+                      ลำดับ
+                    </th>
+                    <th className="border border-slate-400 px-3.5 py-2.5 text-left font-bold w-48 sm:w-56">
+                      หมวดหมู่ข้อมูล
+                    </th>
+                    <th className="border border-slate-400 px-3.5 py-2.5 text-left font-bold">
+                      รายการข้อมูลส่วนบุคคลที่จัดเก็บ
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td className="border border-slate-400 px-3 py-2.5 text-center align-top font-medium">
+                      1
+                    </td>
+                    <td className="border border-slate-400 px-3.5 py-2.5 font-semibold align-top">
+                      ข้อมูลระบุตัวตน
+                    </td>
+                    <td className="border border-slate-400 px-3.5 py-2.5 align-top text-slate-700">
+                      รหัสลูกค้า (Customer ID), ชื่อร้านค้า หรือชื่อ-นามสกุลของผู้สั่งจองสินค้า
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="border border-slate-400 px-3 py-2.5 text-center align-top font-medium">
+                      2
+                    </td>
+                    <td className="border border-slate-400 px-3.5 py-2.5 font-semibold align-top">
+                      ข้อมูลการติดต่อและการจัดส่ง
+                    </td>
+                    <td className="border border-slate-400 px-3.5 py-2.5 align-top text-slate-700">
+                      หมายเลขโทรศัพท์, ที่อยู่สำหรับจัดส่งสินค้า, ที่อยู่สำหรับออกเอกสารใบสั่งซื้อ ใบเสร็จรับเงิน หรือใบกำกับภาษี
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="border border-slate-400 px-3 py-2.5 text-center align-top font-medium">
+                      3
+                    </td>
+                    <td className="border border-slate-400 px-3.5 py-2.5 font-semibold align-top">
+                      ข้อมูลการทำรายการและการชำระเงิน
+                    </td>
+                    <td className="border border-slate-400 px-3.5 py-2.5 align-top text-slate-700">
+                      ประวัติคำสั่งจองสินค้า (Pre-Order History), ข้อมูลรายการสินค้า, ยอดเงินมัดจำ, ยอดรวมคำสั่งซื้อ, วันเวลาที่ทำรายการ และหลักฐานการโอนเงิน (สลิปโอนเงิน)
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="border border-slate-400 px-3 py-2.5 text-center align-top font-medium">
+                      4
+                    </td>
+                    <td className="border border-slate-400 px-3.5 py-2.5 font-semibold align-top">
+                      ข้อมูลทางเทคนิคและความปลอดภัย
+                    </td>
+                    <td className="border border-slate-400 px-3.5 py-2.5 align-top text-slate-700">
+                      ข้อมูลเซสชันการเข้าสู่ระบบ (Session Token), ประวัติการเข้าสู่ระบบ, หมายเลขไอพี (IP Address) และข้อมูลการตั้งค่าเบราว์เซอร์
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
-          </div>
+          </section>
 
-          {/* Document Content */}
-          <div className="p-6 sm:p-8 md:p-10 space-y-8 text-slate-700 leading-relaxed text-sm sm:text-base">
-            {/* Intro */}
-            <div className="bg-slate-50/70 border border-slate-100 rounded-lg p-4 sm:p-5 text-sm text-slate-700">
-              <strong className="text-slate-900 font-medium">หจก. อุบลรุ่งเรืองเบฟเวอเรจ</strong> (&quot;เรา&quot;) ให้ความสำคัญอย่างยิ่งต่อการคุ้มครองข้อมูลส่วนบุคคลของท่าน
-              เอกสารฉบับนี้จัดทำขึ้นเพื่อชี้แจงรายละเอียดเกี่ยวกับการเก็บรวบรวม ใช้ และเปิดเผยข้อมูลส่วนบุคคล
-              ตามพระราชบัญญัติคุ้มครองข้อมูลส่วนบุคคล พ.ศ. 2562 (PDPA) สำหรับการให้บริการระบบสั่งจองสินค้าออนไลน์
+          {/* Section 2 */}
+          <section className="space-y-3">
+            <h2 className="text-base sm:text-lg font-bold text-slate-900">
+              2. วัตถุประสงค์และฐานทางกฎหมายในการประมวลผลข้อมูล
+            </h2>
+            <p className="text-slate-700">
+              เราประมวลผลข้อมูลส่วนบุคคลของท่านภายใต้ฐานกฎหมายที่กำหนดไว้ใน พ.ร.บ. คุ้มครองข้อมูลส่วนบุคคล พ.ศ. 2562 ดังแสดงในตารางต่อไปนี้:
+            </p>
+
+            {/* Word-Style Table: ฐานทางกฎหมาย */}
+            <div className="overflow-x-auto my-3">
+              <table className="w-full border-collapse border border-slate-400 text-xs sm:text-sm text-slate-800">
+                <thead>
+                  <tr className="bg-slate-100 text-slate-900">
+                    <th className="border border-slate-400 px-3 py-2.5 text-center font-bold w-12 sm:w-16">
+                      ลำดับ
+                    </th>
+                    <th className="border border-slate-400 px-3.5 py-2.5 text-left font-bold w-52 sm:w-60">
+                      วัตถุประสงค์ในการประมวลผล
+                    </th>
+                    <th className="border border-slate-400 px-3.5 py-2.5 text-left font-bold">
+                      ข้อมูลส่วนบุคคลที่ใช้
+                    </th>
+                    <th className="border border-slate-400 px-3.5 py-2.5 text-left font-bold w-48 sm:w-56">
+                      ฐานทางกฎหมาย (Legal Basis)
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td className="border border-slate-400 px-3 py-2.5 text-center align-top font-medium">
+                      1
+                    </td>
+                    <td className="border border-slate-400 px-3.5 py-2.5 font-semibold align-top">
+                      การให้บริการ รับคำสั่งซื้อ และจัดส่งสินค้า
+                    </td>
+                    <td className="border border-slate-400 px-3.5 py-2.5 align-top text-slate-700">
+                      ชื่อ-นามสกุล, เบอร์โทรศัพท์, ที่อยู่จัดส่ง, Customer ID, รายการสินค้า
+                    </td>
+                    <td className="border border-slate-400 px-3.5 py-2.5 align-top font-medium text-slate-900">
+                      ฐานสัญญา (Contract)
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="border border-slate-400 px-3 py-2.5 text-center align-top font-medium">
+                      2
+                    </td>
+                    <td className="border border-slate-400 px-3.5 py-2.5 font-semibold align-top">
+                      การจัดการบัญชีผู้ใช้และยืนยันสิทธิ์เข้าใช้ระบบ
+                    </td>
+                    <td className="border border-slate-400 px-3.5 py-2.5 align-top text-slate-700">
+                      Customer ID, รหัสผ่าน, ข้อมูลเซสชันการเข้าสู่ระบบ
+                    </td>
+                    <td className="border border-slate-400 px-3.5 py-2.5 align-top font-medium text-slate-900">
+                      ฐานสัญญา (Contract)
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="border border-slate-400 px-3 py-2.5 text-center align-top font-medium">
+                      3
+                    </td>
+                    <td className="border border-slate-400 px-3.5 py-2.5 font-semibold align-top">
+                      การออกเอกสารทางบัญชี ภาษี และใบสั่งซื้อ
+                    </td>
+                    <td className="border border-slate-400 px-3.5 py-2.5 align-top text-slate-700">
+                      ชื่อร้านค้า/ผู้สั่งซื้อ, ที่อยู่ออกเอกสาร, ข้อมูลคำสั่งซื้อ, ยอดเงิน
+                    </td>
+                    <td className="border border-slate-400 px-3.5 py-2.5 align-top font-medium text-slate-900">
+                      หน้าที่ตามกฎหมาย (Legal Obligation)
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="border border-slate-400 px-3 py-2.5 text-center align-top font-medium">
+                      4
+                    </td>
+                    <td className="border border-slate-400 px-3.5 py-2.5 font-semibold align-top">
+                      ความมั่นคงปลอดภัยและการป้องกันการทุจริต
+                    </td>
+                    <td className="border border-slate-400 px-3.5 py-2.5 align-top text-slate-700">
+                      Session Token, IP Address, ประวัติและบันทึกการทำรายการ
+                    </td>
+                    <td className="border border-slate-400 px-3.5 py-2.5 align-top font-medium text-slate-900">
+                      ประโยชน์โดยชอบด้วยกฎหมาย (Legitimate Interest)
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
+          </section>
 
-            {/* Section 1 */}
-            <section className="space-y-3">
-              <div className="border-l-4 border-[#800020] pl-3 py-0.5">
-                <h2 className="text-base sm:text-lg font-bold text-slate-900 font-[Prompt]">
-                  1. ข้อมูลส่วนบุคคลที่เราเก็บรวบรวม
-                </h2>
-              </div>
-              <p className="text-slate-600 text-sm sm:text-[15px] pl-1">
-                เราเก็บรวบรวมข้อมูลส่วนบุคคลของลูกค้าตามความจำเป็นต่อการให้บริการ ดังนี้:
-              </p>
-              <div className="grid sm:grid-cols-2 gap-3.5 pt-1">
-                <div className="rounded-lg border border-slate-200 p-4 bg-slate-50/50">
-                  <h3 className="font-bold text-slate-900 text-sm mb-2 font-[Prompt]">ข้อมูลระบุตัวตน</h3>
-                  <ul className="text-xs sm:text-sm text-slate-600 space-y-1.5 list-disc list-inside">
-                    <li>รหัสลูกค้า (Customer ID)</li>
-                    <li>ชื่อร้านค้า / ชื่อ-นามสกุลผู้สั่งซื้อ</li>
-                  </ul>
-                </div>
-                <div className="rounded-lg border border-slate-200 p-4 bg-slate-50/50">
-                  <h3 className="font-bold text-slate-900 text-sm mb-2 font-[Prompt]">ข้อมูลการติดต่อ</h3>
-                  <ul className="text-xs sm:text-sm text-slate-600 space-y-1.5 list-disc list-inside">
-                    <li>หมายเลขโทรศัพท์</li>
-                    <li>ที่อยู่สำหรับจัดส่งสินค้า</li>
-                    <li>ที่อยู่สำหรับออกเอกสารใบเสร็จ/ใบกำกับภาษี</li>
-                  </ul>
-                </div>
-                <div className="rounded-lg border border-slate-200 p-4 bg-slate-50/50">
-                  <h3 className="font-bold text-slate-900 text-sm mb-2 font-[Prompt]">ข้อมูลการทำรายการ</h3>
-                  <ul className="text-xs sm:text-sm text-slate-600 space-y-1.5 list-disc list-inside">
-                    <li>ประวัติคำสั่งจองสินค้า (Pre-Order History)</li>
-                    <li>ยอดเงินมัดจำและยอดรวมการสั่งจอง</li>
-                    <li>หลักฐานการชำระเงิน (สลิปโอนเงิน)</li>
-                  </ul>
-                </div>
-                <div className="rounded-lg border border-slate-200 p-4 bg-slate-50/50">
-                  <h3 className="font-bold text-slate-900 text-sm mb-2 font-[Prompt]">ข้อมูลทางเทคนิคและความปลอดภัย</h3>
-                  <ul className="text-xs sm:text-sm text-slate-600 space-y-1.5 list-disc list-inside">
-                    <li>ข้อมูลเซสชันการเข้าสู่ระบบ (Session Token)</li>
-                    <li>บันทึกการเข้าสู่ระบบและที่อยู่ IP (IP Address)</li>
-                    <li>ข้อมูลการตั้งค่าเบราว์เซอร์</li>
-                  </ul>
-                </div>
-              </div>
-            </section>
+          {/* Section 3 */}
+          <section className="space-y-2">
+            <h2 className="text-base sm:text-lg font-bold text-slate-900">
+              3. การรักษาความมั่นคงปลอดภัยของข้อมูลส่วนบุคคล
+            </h2>
+            <p className="text-justify leading-relaxed text-slate-700">
+              เราดำเนินมาตรการรักษาความปลอดภัยทางเทคนิคและการบริหารจัดการที่เข้มงวดตามมาตรฐานสากล เพื่อป้องกันการสูญหาย การเข้าถึง ทำลาย ใช้ ดัดแปลง แก้ไข หรือเปิดเผยข้อมูลส่วนบุคคลโดยปราศจากอำนาจหรือโดยมิชอบ ดังนี้:
+            </p>
+            <ul className="list-disc list-inside space-y-1.5 pl-2 text-slate-700">
+              <li>การเข้ารหัสข้อมูลทุกช่องทางการส่งผ่านเครือข่ายด้วยโปรโตคอลความปลอดภัยระดับสูง (HTTPS/TLS)</li>
+              <li>การควบคุมสิทธิ์การเข้าถึงข้อมูลตามบทบาทและความจำเป็นในการปฏิบัติงาน (Role-Based Access Control)</li>
+              <li>การจัดเก็บข้อมูลในระบบฐานข้อมูลที่มีการป้องกันและตรวจสอบความถูกต้องอย่างสม่ำเสมอ</li>
+              <li>การกำหนดคุณสมบัติด้านความปลอดภัยของคุกกี้ (HttpOnly, Secure, SameSite) เพื่อป้องกันภัยคุกคามทางไซเบอร์</li>
+            </ul>
+          </section>
 
-            {/* Section 2 */}
-            <section className="space-y-3">
-              <div className="border-l-4 border-[#800020] pl-3 py-0.5">
-                <h2 className="text-base sm:text-lg font-bold text-slate-900 font-[Prompt]">
-                  2. วัตถุประสงค์และฐานทางกฎหมายในการประมวลผลข้อมูล
-                </h2>
-              </div>
-              <p className="text-slate-600 text-sm sm:text-[15px] pl-1">
-                เราประมวลผลข้อมูลส่วนบุคคลของท่านภายใต้ฐานกฎหมายที่กำหนดไว้ใน พ.ร.บ. คุ้มครองข้อมูลส่วนบุคคล พ.ศ. 2562 ดังนี้:
-              </p>
+          {/* Section 4 */}
+          <section className="space-y-3">
+            <h2 className="text-base sm:text-lg font-bold text-slate-900">
+              4. การเปิดเผยข้อมูลส่วนบุคคลแก่บุคคลภายนอก
+            </h2>
+            <p className="text-justify leading-relaxed text-slate-700">
+              เราไม่มีนโยบายการจำหน่าย แลกเปลี่ยน หรือเปิดเผยข้อมูลส่วนบุคคลของท่านแก่บุคคลภายนอก เว้นแต่กรณีที่มีความจำเป็นเพื่อการปฏิบัติตามสัญญา การให้บริการ หรือการปฏิบัติตามกฎหมาย ดังต่อไปนี้:
+            </p>
 
-              <div className="overflow-x-auto rounded-lg border border-slate-200">
-                <table className="w-full text-xs sm:text-sm">
-                  <thead>
-                    <tr className="bg-slate-50 border-b border-slate-200 text-slate-800">
-                      <th className="text-left px-4 py-3 font-semibold">วัตถุประสงค์</th>
-                      <th className="text-left px-4 py-3 font-semibold">ข้อมูลที่ใช้</th>
-                      <th className="text-left px-4 py-3 font-semibold">ฐานทางกฎหมาย</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 text-slate-600">
-                    <tr>
-                      <td className="px-4 py-3 font-medium text-slate-800">การให้บริการและจัดส่งสินค้าสั่งจอง</td>
-                      <td className="px-4 py-3 text-slate-600">ชื่อ, เบอร์โทรศัพท์, ที่อยู่, Customer ID</td>
-                      <td className="px-4 py-3 text-slate-700">ฐานสัญญา (Contract)</td>
-                    </tr>
-                    <tr className="bg-slate-50/40">
-                      <td className="px-4 py-3 font-medium text-slate-800">การจัดการบัญชีผู้ใช้และยืนยันสิทธิ์</td>
-                      <td className="px-4 py-3 text-slate-600">Customer ID, ข้อมูลเซสชัน</td>
-                      <td className="px-4 py-3 text-slate-700">ฐานสัญญา (Contract)</td>
-                    </tr>
-                    <tr>
-                      <td className="px-4 py-3 font-medium text-slate-800">การออกเอกสารทางบัญชี ภาษี และใบสั่งซื้อ</td>
-                      <td className="px-4 py-3 text-slate-600">ชื่อร้านค้า/ผู้สั่งซื้อ, ที่อยู่, ข้อมูลคำสั่งซื้อ</td>
-                      <td className="px-4 py-3 text-slate-700">หน้าที่ตามกฎหมาย (Legal Obligation)</td>
-                    </tr>
-                    <tr className="bg-slate-50/40">
-                      <td className="px-4 py-3 font-medium text-slate-800">ความมั่นคงปลอดภัยและการป้องกันการทุจริต</td>
-                      <td className="px-4 py-3 text-slate-600">Session Token, IP Address, ประวัติการเข้าใช้</td>
-                      <td className="px-4 py-3 text-slate-700">ประโยชน์โดยชอบด้วยกฎหมาย (Legitimate Interest)</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </section>
-
-            {/* Section 3 */}
-            <section className="space-y-3">
-              <div className="border-l-4 border-[#800020] pl-3 py-0.5">
-                <h2 className="text-base sm:text-lg font-bold text-slate-900 font-[Prompt]">
-                  3. การรักษาความมั่นคงปลอดภัยของข้อมูล
-                </h2>
-              </div>
-              <p className="text-slate-600 text-sm sm:text-[15px] pl-1">
-                เราดำเนินมาตรการรักษาความปลอดภัยทางเทคนิคและการบริหารจัดการที่ได้มาตรฐาน ได้แก่:
-              </p>
-              <ul className="space-y-2 text-xs sm:text-sm text-slate-600 pl-1 list-disc list-inside">
-                <li>การเข้ารหัสการส่งผ่านข้อมูลด้วยโปรโตคอลความปลอดภัยระดับสูง (HTTPS/TLS)</li>
-                <li>การตรวจสอบความถูกต้องของเซสชันผู้ใช้ด้วยการลงนามทางดิจิทัลและโทเคนความปลอดภัย</li>
-                <li>การกำหนดสิทธิ์การเข้าถึงข้อมูลตามบทบาทและความจำเป็น (Role-Based Access Control)</li>
-                <li>การกำหนดคุณสมบัติด้านความปลอดภัยของคุกกี้ (HttpOnly, Secure, SameSite) เพื่อป้องกันการเข้าถึงจากสคริปต์ที่ไม่พึงประสงค์</li>
-              </ul>
-            </section>
-
-            {/* Section 4 */}
-            <section className="space-y-3">
-              <div className="border-l-4 border-[#800020] pl-3 py-0.5">
-                <h2 className="text-base sm:text-lg font-bold text-slate-900 font-[Prompt]">
-                  4. การเปิดเผยข้อมูลแก่บุคคลภายนอก
-                </h2>
-              </div>
-              <p className="text-slate-600 text-sm sm:text-[15px] pl-1">
-                เราไม่มีนโยบายการจำหน่ายหรือเปิดเผยข้อมูลส่วนบุคคลของท่านแก่บุคคลภายนอก เว้นแต่กรณีที่จำเป็นเพื่อการปฏิบัติตามสัญญาหรือกฎหมาย:
-              </p>
-              <div className="bg-slate-50 rounded-lg p-4 border border-slate-200 text-xs sm:text-sm space-y-2 text-slate-700">
-                <div>
-                  <strong className="text-slate-900">ผู้ให้บริการขนส่งและโลจิสติกส์:</strong> เพื่อการจัดส่งสินค้าสั่งจองตามที่อยู่ที่ท่านระบุ
-                </div>
-                <div>
-                  <strong className="text-slate-900">หน่วยงานราชการตามกฎหมาย:</strong> เมื่อมีคำสั่งศาล หรือคำสั่งของเจ้าพนักงานที่มีอำนาจตามกฎหมาย
-                </div>
-              </div>
-            </section>
-
-            {/* Section 5 */}
-            <section className="space-y-3">
-              <div className="border-l-4 border-[#800020] pl-3 py-0.5">
-                <h2 className="text-base sm:text-lg font-bold text-slate-900 font-[Prompt]">
-                  5. ระยะเวลาในการเก็บรักษาข้อมูล
-                </h2>
-              </div>
-              <div className="space-y-2 text-xs sm:text-sm text-slate-600 pl-1">
-                <div>
-                  <strong className="text-slate-800">ข้อมูลบัญชีลูกค้า:</strong> จัดเก็บตลอดระยะเวลาที่ท่านยังคงมีสถานะเป็นลูกค้าหรือใช้บริการระบบ
-                </div>
-                <div>
-                  <strong className="text-slate-800">ข้อมูลคำสั่งซื้อและเอกสารภาษี:</strong> จัดเก็บเป็นระยะเวลา 5–10 ปี ตามที่กฎหมายว่าด้วยการบัญชีและภาษีอากรกำหนด
-                </div>
-                <div>
-                  <strong className="text-slate-800">ข้อมูลเซสชัน (Session Data):</strong> มีอายุ 30 วัน หรือสิ้นสุดลงทันทีเมื่อท่านออกจากระบบ (Log out)
-                </div>
-              </div>
-            </section>
-
-            {/* Section 6 */}
-            <section className="space-y-3">
-              <div className="border-l-4 border-[#800020] pl-3 py-0.5">
-                <h2 className="text-base sm:text-lg font-bold text-slate-900 font-[Prompt]">
-                  6. สิทธิของเจ้าของข้อมูลส่วนบุคคล
-                </h2>
-              </div>
-              <p className="text-slate-600 text-sm sm:text-[15px] pl-1">
-                ภายใต้ พ.ร.บ. คุ้มครองข้อมูลส่วนบุคคล พ.ศ. 2562 ท่านมีสิทธิในการดำเนินการดังต่อไปนี้:
-              </p>
-              <ul className="grid sm:grid-cols-2 gap-2 text-xs sm:text-sm text-slate-600 pl-1 list-disc list-inside">
-                <li>สิทธิขอเข้าถึงและรับสำเนาข้อมูล</li>
-                <li>สิทธิขอแก้ไขข้อมูลให้ถูกต้องเป็นปัจจุบัน</li>
-                <li>สิทธิขอลบ ทำลาย หรือระงับการใช้ข้อมูล</li>
-                <li>สิทธิคัดค้านการเก็บรวบรวม ใช้ หรือเปิดเผยข้อมูล</li>
-                <li>สิทธิขอเพิกถอนความยินยอม</li>
-                <li>สิทธิยื่นเรื่องร้องเรียนต่อคณะกรรมการผู้เชี่ยวชาญ</li>
-              </ul>
-            </section>
-
-            {/* Section 7 */}
-            <section className="space-y-3">
-              <div className="border-l-4 border-[#800020] pl-3 py-0.5">
-                <h2 className="text-base sm:text-lg font-bold text-slate-900 font-[Prompt]">
-                  7. การเชื่อมโยงกับนโยบายคุกกี้
-                </h2>
-              </div>
-              <p className="text-slate-600 leading-relaxed text-sm sm:text-[15px] pl-1">
-                สำหรับการใช้งานคุกกี้และเทคโนโลยีติดตามบนเว็บไซต์นี้ ท่านสามารถศึกษารายละเอียดเพิ่มเติมได้ที่{' '}
-                <Link
-                  href="/cookie-policy"
-                  className="text-[#800020] hover:text-[#570016] font-semibold underline underline-offset-2 transition-colors"
-                >
-                  นโยบายการใช้งานคุกกี้ (Cookie Policy)
-                </Link>
-              </p>
-            </section>
-
-            {/* Contact / Footer Note */}
-            <div className="pt-4">
-              <div className="bg-slate-50 rounded-lg border border-slate-200 p-5 sm:p-6 text-xs sm:text-sm text-slate-600 space-y-2">
-                <div className="font-bold text-slate-900 font-[Prompt] text-sm sm:text-base">
-                  ช่องทางการติดต่อสอบถามหรือใช้สิทธิ
-                </div>
-                <p className="text-slate-600">
-                  หากท่านต้องการใช้สิทธิตามกฎหมาย PDPA หรือมีข้อสงสัยเกี่ยวกับนโยบายความเป็นส่วนตัวนี้ กรุณาติดต่อ:
-                </p>
-                <div className="text-slate-700 pt-1 space-y-0.5">
-                  <div className="font-semibold text-slate-900">หจก. อุบลรุ่งเรืองเบฟเวอเรจ (สำนักงานใหญ่)</div>
-                  <div>โทรศัพท์: 045-263-380</div>
-                </div>
-              </div>
+            {/* Word-Style Table: บุคคลภายนอก */}
+            <div className="overflow-x-auto my-3">
+              <table className="w-full border-collapse border border-slate-400 text-xs sm:text-sm text-slate-800">
+                <thead>
+                  <tr className="bg-slate-100 text-slate-900">
+                    <th className="border border-slate-400 px-3.5 py-2.5 text-left font-bold w-52 sm:w-60">
+                      ผู้รับข้อมูลภายนอก
+                    </th>
+                    <th className="border border-slate-400 px-3.5 py-2.5 text-left font-bold">
+                      วัตถุประสงค์และความจำเป็นในการเปิดเผยข้อมูล
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td className="border border-slate-400 px-3.5 py-2.5 font-semibold align-top">
+                      ผู้ให้บริการขนส่งและโลจิสติกส์
+                    </td>
+                    <td className="border border-slate-400 px-3.5 py-2.5 align-top text-slate-700">
+                      เพื่อการจัดส่งสินค้าสั่งจองไปยังที่อยู่ปลายทางตามที่ท่านระบุไว้ในคำสั่งซื้อ
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="border border-slate-400 px-3.5 py-2.5 font-semibold align-top">
+                      หน่วยงานราชการหรือเจ้าหน้าที่ผู้มีอำนาจ
+                    </td>
+                    <td className="border border-slate-400 px-3.5 py-2.5 align-top text-slate-700">
+                      เมื่อมีหมายศาล คำสั่งทางกฎหมาย หรือหนังสือราชการที่มีอำนาจตามบทบัญญัติแห่งกฎหมาย
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
-          </div>
+          </section>
+
+          {/* Section 5 */}
+          <section className="space-y-3">
+            <h2 className="text-base sm:text-lg font-bold text-slate-900">
+              5. ระยะเวลาในการเก็บรักษาข้อมูลส่วนบุคคล
+            </h2>
+            <p className="text-slate-700">
+              เราจะจัดเก็บรักษาข้อมูลส่วนบุคคลของท่านไว้ตามระยะเวลาที่จำเป็นต่อการบรรลุวัตถุประสงค์ในการประมวลผลข้อมูล ดังนี้:
+            </p>
+
+            {/* Word-Style Table: ระยะเวลาจัดเก็บ */}
+            <div className="overflow-x-auto my-3">
+              <table className="w-full border-collapse border border-slate-400 text-xs sm:text-sm text-slate-800">
+                <thead>
+                  <tr className="bg-slate-100 text-slate-900">
+                    <th className="border border-slate-400 px-3.5 py-2.5 text-left font-bold w-52 sm:w-60">
+                      ประเภทข้อมูล
+                    </th>
+                    <th className="border border-slate-400 px-3.5 py-2.5 text-left font-bold w-40 sm:w-48">
+                      ระยะเวลาจัดเก็บ
+                    </th>
+                    <th className="border border-slate-400 px-3.5 py-2.5 text-left font-bold">
+                      เหตุผลและความจำเป็น
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td className="border border-slate-400 px-3.5 py-2.5 font-semibold align-top">
+                      ข้อมูลบัญชีลูกค้า
+                    </td>
+                    <td className="border border-slate-400 px-3.5 py-2.5 align-top text-slate-700">
+                      ตลอดระยะเวลาที่เป็นลูกค้า
+                    </td>
+                    <td className="border border-slate-400 px-3.5 py-2.5 align-top text-slate-700">
+                      เพื่อการยืนยันตัวตนและการให้บริการสั่งจองสินค้าอย่างต่อเนื่อง
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="border border-slate-400 px-3.5 py-2.5 font-semibold align-top">
+                      ข้อมูลคำสั่งซื้อและเอกสารภาษี
+                    </td>
+                    <td className="border border-slate-400 px-3.5 py-2.5 align-top text-slate-700">
+                      5 – 10 ปี
+                    </td>
+                    <td className="border border-slate-400 px-3.5 py-2.5 align-top text-slate-700">
+                      ตามที่กฎหมายว่าด้วยการบัญชีและประมวลรัษฎากรกำหนด
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="border border-slate-400 px-3.5 py-2.5 font-semibold align-top">
+                      ข้อมูลเซสชัน (Session Data)
+                    </td>
+                    <td className="border border-slate-400 px-3.5 py-2.5 align-top text-slate-700">
+                      30 วัน หรือเมื่อออกจากระบบ
+                    </td>
+                    <td className="border border-slate-400 px-3.5 py-2.5 align-top text-slate-700">
+                      เพื่อความปลอดภัยในการยืนยันตัวตนของผู้ใช้งาน
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          {/* Section 6 */}
+          <section className="space-y-2">
+            <h2 className="text-base sm:text-lg font-bold text-slate-900">
+              6. สิทธิของเจ้าของข้อมูลส่วนบุคคล (PDPA Rights)
+            </h2>
+            <p className="text-slate-700">
+              ภายใต้พระราชบัญญัติคุ้มครองข้อมูลส่วนบุคคล พ.ศ. 2562 ท่านมีสิทธิในการดำเนินการดังต่อไปนี้:
+            </p>
+            <ol className="list-decimal list-inside space-y-1 pl-2 text-slate-700">
+              <li><strong>สิทธิขอเข้าถึงและรับสำเนาข้อมูล:</strong> ขอรับสำเนาข้อมูลส่วนบุคคลที่เกี่ยวกับท่าน หรือขอให้เปิดเผยถึงการได้มาซึ่งข้อมูลที่ท่านไม่ได้ให้ความยินยอม</li>
+              <li><strong>สิทธิขอแก้ไขข้อมูลให้ถูกต้อง:</strong> ขอให้ดำเนินการแก้ไขข้อมูลส่วนบุคคลให้ถูกต้อง เป็นปัจจุบัน สมบูรณ์ และไม่ก่อให้เกิดความเข้าใจผิด</li>
+              <li><strong>สิทธิขอลบหรือทำลายข้อมูล:</strong> ขอให้ลบ ทำลาย หรือทำให้ข้อมูลส่วนบุคคลเป็นข้อมูลที่ไม่สามารถระบุตัวบุคคลได้ตามเงื่อนไขที่กฎหมายกำหนด</li>
+              <li><strong>สิทธิขอให้ระงับการใช้ข้อมูล:</strong> ขอให้ระงับการใช้ข้อมูลส่วนบุคคลในกรณีที่มีการตรวจสอบความถูกต้อง หรือเมื่อหมดความจำเป็น</li>
+              <li><strong>สิทธิคัดค้านการประมวลผลข้อมูล:</strong> คัดค้านการเก็บรวบรวม ใช้ หรือเปิดเผยข้อมูลส่วนบุคคลที่เกี่ยวกับท่าน</li>
+              <li><strong>สิทธิขอเพิกถอนความยินยอม:</strong> เพิกถอนความยินยอมที่ท่านได้เคยให้ไว้ตลอดระยะเวลาที่ข้อมูลส่วนบุคคลของท่านอยู่กับเรา</li>
+              <li><strong>สิทธิยื่นเรื่องร้องเรียน:</strong> ยื่นเรื่องร้องเรียนต่อคณะกรรมการผู้เชี่ยวชาญตามกฎหมาย PDPA หากพบว่ามีการกระทำที่ฝ่าฝืนหรือไม่ปฏิบัติตามกฎหมาย</li>
+            </ol>
+          </section>
+
+          {/* Section 7 */}
+          <section className="space-y-2">
+            <h2 className="text-base sm:text-lg font-bold text-slate-900">
+              7. การเชื่อมโยงกับนโยบายการใช้งานคุกกี้
+            </h2>
+            <p className="text-justify leading-relaxed text-slate-700">
+              สำหรับการใช้งานคุกกี้และเทคโนโลยีการติดตามบนเว็บไซต์นี้ ท่านสามารถศึกษารายละเอียด วัตถุประสงค์ และวิธีการตั้งค่าเปิด-ปิดคุกกี้ได้ที่{' '}
+              <Link
+                href="/cookie-policy"
+                className="text-slate-900 font-semibold underline underline-offset-2 hover:text-[#800020] transition-colors"
+              >
+                นโยบายการใช้งานคุกกี้ (Cookie Policy)
+              </Link>
+            </p>
+          </section>
+
+          {/* Section 8: Contact Info */}
+          <section className="pt-4 border-t border-slate-300 space-y-1.5 text-xs sm:text-sm text-slate-700">
+            <div className="font-bold text-slate-900 text-sm sm:text-base">
+              ช่องทางการติดต่อสอบถามหรือใช้สิทธิ
+            </div>
+            <p>
+              หากท่านต้องการใช้สิทธิตามกฎหมาย PDPA หรือมีข้อสงสัยเกี่ยวกับนโยบายความเป็นส่วนตัวนี้ กรุณาติดต่อ:
+            </p>
+            <div className="pt-1 text-slate-800">
+              <div className="font-semibold">ห้างหุ้นส่วนจำกัด อุบลรุ่งเรืองเบฟเวอเรจ (สำนักงานใหญ่)</div>
+              <div>โทรศัพท์: 045-263-380</div>
+            </div>
+          </section>
         </div>
       </div>
     </div>
-  </div>
   );
 }

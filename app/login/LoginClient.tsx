@@ -5,14 +5,11 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { LoginHeader, LoginForm } from '@/components/ui';
-import { Alert } from '@/components/ui/Alert';
 import { CompanyLogo } from '@/components/CompanyLogo';
 
 export default function LoginClient() {
   const { customer, loading } = useAuth();
   const searchParams = useSearchParams();
-  const redirectUrl = searchParams.get('redirect') || '/';
-  const [globalError, setGlobalError] = useState('');
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   const previewLoading = searchParams.get('preview_loading') === 'true' || searchParams.get('loading') === 'true';
@@ -58,21 +55,23 @@ export default function LoginClient() {
     };
   }, [searchParams]);
 
-  // ถ้าล็อกอินอยู่แล้ว ให้ redirect ไปยังหน้าที่ต้องการทันที (เว้นแต่กำลังส่งพารามิเตอร์มาล็อกอินใหม่)
+  // ถ้าล็อกอินอยู่แล้ว ให้ redirect ไปยังหน้าหลัก (/) เสมอ
   useEffect(() => {
     if (previewLoading) return;
     if (shouldAutoLogin || (urlUser && urlPass)) return;
     if (!loading && customer) {
       setIsLoggingIn(true);
-      window.location.href = redirectUrl;
+      window.location.href = '/';
     }
-  }, [customer, loading, redirectUrl, previewLoading, shouldAutoLogin, urlUser, urlPass]);
+  }, [customer, loading, previewLoading, shouldAutoLogin, urlUser, urlPass]);
 
   const handleLoginSuccess = () => {
     setIsLoggingIn(true);
-    // ใช้ window.location.href แทน router.replace เพื่อทำ Full Browser Navigation
-    // ป้องกันปัญหา Next.js App Router Client Cache จำผล Redirect เดิมของหน้า / (307 -> /login) ก่อนล็อกอิน
-    window.location.href = redirectUrl;
+    try {
+      sessionStorage.setItem('ubr_home_scroll_y', '0');
+    } catch {}
+    // ทุกครั้งที่ Login ใหม่ ให้เปิดหน้าหลัก (/) ขึ้นมาเสมอตามความต้องการของผู้ใช้
+    window.location.href = '/';
   };
 
   const showTopLoading = isLoggingIn || isSubmitting || (!loading && customer);
@@ -88,7 +87,7 @@ export default function LoginClient() {
             className="flex items-center group min-w-0 transition-opacity hover:opacity-95"
             title="หน้าหลัก หจก.อุบลรุ่งเรืองเบฟเวอเรจ"
           >
-            <CompanyLogo size="md" lightText={true} />
+            <CompanyLogo size="md" lightText={true} suffix="(Pre-order)" />
           </Link>
         </div>
 
@@ -100,43 +99,28 @@ export default function LoginClient() {
         )}
       </header>
 
-      {/* Main Area: ตรงกลาง สีขาว */}
+      {/* Main Area: ตรงกลาง สีขาว โปร่งสบาย ไร้กรอบการ์ด (Seamless Canvas) */}
       <div className="flex-1 flex flex-col items-center justify-start pt-12 sm:pt-16 md:pt-20 pb-16 px-4 bg-white">
-        {/* Card Wrapper with relative positioning for zero-layout-shift floating alert */}
-        <div className="relative w-full max-w-[460px]">
-          {/* Error Alert — ลอยอยู่เหนือการ์ด (absolute) โดยไม่ดันการ์ดลงมาเด็ดขาด */}
-          {globalError && (
-            <div className="absolute bottom-full left-0 right-0 mb-3 sm:mb-3.5 z-30 pointer-events-auto">
-              <Alert variant="error" className="shadow-lg border-red-200">
-                {globalError}
-              </Alert>
-            </div>
-          )}
+        <div className="w-full max-w-[420px] text-slate-800">
+          {/* Header: หัวข้อ "เข้าสู่ระบบ" ชิดซ้าย พร้อมคำอธิบายบรรทัดถัดไป */}
+          <LoginHeader
+            showLogo={false}
+            title="เข้าสู่ระบบ"
+            subtitle="ใช้บัญชีลูกค้าในการเข้าสู่ระบบ"
+            titleId="login-page-title"
+            align="left"
+            className="mb-6 sm:mb-8"
+          />
 
-          {/* Modal Card Design (ยาวสูงขึ้นด้วย py-12 sm:py-16 และระยะเว้นช่องไฟที่โปร่งสบาย) */}
-          <div className="bg-white rounded-lg py-12 sm:py-16 px-6 sm:px-11 w-full shadow-[0_4px_24px_rgba(0,0,0,0.06)] relative border border-slate-200/90 text-slate-800">
-
-            {/* Header: มีเฉพาะหัวข้อ "เข้าสู่ระบบ" ชิดซ้าย */}
-            <LoginHeader
-              showLogo={false}
-              subtitle=""
-              title="เข้าสู่ระบบ"
-              titleId="login-page-title"
-              align="left"
-              className="mb-8 sm:mb-11"
-            />
-
-            {/* ฟอร์มเข้าสู่ระบบ (รหัสลูกค้า, รหัสผ่าน, Remember Me, ซัพพอร์ตโน้ต, ปุ่มแดงเบอร์กันดี) */}
-            <LoginForm
-              onSuccess={handleLoginSuccess}
-              autoFocus={!urlUser}
-              onGlobalError={setGlobalError}
-              onLoadingChange={setIsSubmitting}
-              initialUsername={urlUser}
-              initialPassword={urlPass}
-              autoSubmit={shouldAutoLogin}
-            />
-          </div>
+          {/* ฟอร์มเข้าสู่ระบบ (รหัสลูกค้า, รหัสผ่าน, แสดงรหัสผ่าน, จดจำการเข้าสู่ระบบ, ซัพพอร์ตโน้ต, ปุ่มแดงเบอร์กันดี) */}
+          <LoginForm
+            onSuccess={handleLoginSuccess}
+            autoFocus={!urlUser}
+            onLoadingChange={setIsSubmitting}
+            initialUsername={urlUser}
+            initialPassword={urlPass}
+            autoSubmit={shouldAutoLogin}
+          />
         </div>
       </div>
     </div>

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Save, Loader2 } from 'lucide-react';
+import { X, Loader2 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
 export interface CustomerProfileData {
@@ -114,10 +114,13 @@ export default function EditProfileModal({
   // Prevent background scrolling when modal is open
   useEffect(() => {
     if (!mounted) return;
-    const prevOverflow = document.body.style.overflow;
+    const prevBodyOverflow = document.body.style.overflow;
+    const prevHtmlOverflow = document.documentElement.style.overflow;
     document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
     return () => {
-      document.body.style.overflow = prevOverflow;
+      document.body.style.overflow = prevBodyOverflow;
+      document.documentElement.style.overflow = prevHtmlOverflow;
     };
   }, [mounted]);
 
@@ -185,7 +188,7 @@ export default function EditProfileModal({
       onClick={handleClose}
     >
       <div
-        className={`relative w-full max-w-2xl bg-white rounded-xl shadow-2xl border border-slate-100 overflow-hidden flex flex-col max-h-[90vh] transform transition-all duration-200 ease-out ${
+        className={`relative w-full max-w-2xl bg-white apple-squircle-modal shadow-2xl border border-slate-100 overflow-hidden flex flex-col max-h-[90vh] transform transition-all duration-200 ease-out ${
           visible
             ? 'opacity-100 scale-100 translate-y-0'
             : 'opacity-0 scale-95 translate-y-3'
@@ -214,25 +217,59 @@ export default function EditProfileModal({
           )}
 
           <div className="space-y-4">
-            {/* Row 1: Name and Tel */}
+            {/* 1. ชื่อ-นามสกุล / ชื่อร้านค้า */}
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                ชื่อ-นามสกุล / ชื่อร้านค้า <span className="text-red-600">*</span>
+              </label>
+              <input
+                type="text"
+                value={formData.customerName}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    customerName: e.target.value,
+                    customerContact: e.target.value,
+                  }))
+                }
+                placeholder="เช่น สมชาย ใจดี หรือ ร้านต้นมะกรูด"
+                className="w-full px-3.5 py-2 rounded-lg bg-slate-50 border border-slate-300 text-slate-900 text-base sm:text-sm focus:bg-white focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-colors"
+                required
+              />
+            </div>
+
+            {/* 2. ที่อยู่จัดส่งสินค้าโดยละเอียด */}
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                ที่อยู่จัดส่งสินค้าโดยละเอียด <span className="text-red-600">*</span>
+              </label>
+              <textarea
+                rows={2}
+                value={formData.customerAddress}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, customerAddress: e.target.value }))
+                }
+                placeholder="ระบุบ้านเลขที่, ซอย, ถนน, ตำบล, อำเภอ, จังหวัด"
+                className="w-full p-3 rounded-lg bg-slate-50 border border-slate-300 text-slate-900 text-base sm:text-sm focus:bg-white focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-colors"
+                required
+              />
+            </div>
+
+            {/* 3 & 4. รหัสไปรษณีย์ & เบอร์โทรศัพท์ติดต่อ */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                  ชื่อ-นามสกุล / ชื่อร้านค้า <span className="text-red-600">*</span>
+                  รหัสไปรษณีย์
                 </label>
                 <input
                   type="text"
-                  value={formData.customerName}
+                  maxLength={5}
+                  value={formData.customerZip}
                   onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      customerName: e.target.value,
-                      customerContact: e.target.value,
-                    }))
+                    setFormData((prev) => ({ ...prev, customerZip: e.target.value }))
                   }
-                  placeholder="เช่น สมชาย ใจดี หรือ ร้านต้นมะกรูด"
-                  className="w-full px-3.5 py-2 rounded-lg bg-slate-50 border border-slate-300 text-slate-900 text-xs sm:text-sm focus:bg-white focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-colors"
-                  required
+                  placeholder="รหัสไปรษณีย์ 5 หลัก"
+                  className="w-full px-3.5 py-2 rounded-lg bg-slate-50 border border-slate-300 text-slate-900 text-base sm:text-sm focus:bg-white focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-colors"
                 />
               </div>
 
@@ -247,82 +284,49 @@ export default function EditProfileModal({
                     setFormData((prev) => ({ ...prev, customerTel: e.target.value }))
                   }
                   placeholder="เช่น 081-2345678"
-                  className="w-full px-3.5 py-2 rounded-lg bg-slate-50 border border-slate-300 text-slate-900 text-xs sm:text-sm focus:bg-white focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-colors"
+                  className="w-full px-3.5 py-2 rounded-lg bg-slate-50 border border-slate-300 text-slate-900 text-base sm:text-sm focus:bg-white focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-colors"
                   required
                 />
               </div>
             </div>
 
-            {/* Row 2: Detailed Address */}
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                ที่อยู่จัดส่งสินค้าโดยละเอียด <span className="text-red-600">*</span>
-              </label>
-              <textarea
-                rows={2}
-                value={formData.customerAddress}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, customerAddress: e.target.value }))
-                }
-                placeholder="ระบุบ้านเลขที่, ซอย, ถนน, ตำบล, อำเภอ, จังหวัด"
-                className="w-full p-3 rounded-lg bg-slate-50 border border-slate-300 text-slate-900 text-xs sm:text-sm focus:bg-white focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-colors"
-                required
-              />
-            </div>
-
-            {/* Row 3: Zip code & Default Address Checkbox */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                  รหัสไปรษณีย์
-                </label>
+            {/* Checkbox: บันทึกเป็นที่อยู่เริ่มต้นในบัญชีของฉัน */}
+            <div className="pt-0.5">
+              <label className="inline-flex items-center gap-2 cursor-pointer select-none text-xs text-slate-600">
                 <input
-                  type="text"
-                  maxLength={5}
-                  value={formData.customerZip}
-                  onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, customerZip: e.target.value }))
-                  }
-                  placeholder="รหัสไปรษณีย์ 5 หลัก"
-                  className="w-full px-3.5 py-2 rounded-lg bg-slate-50 border border-slate-300 text-slate-900 text-xs sm:text-sm focus:bg-white focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-colors"
+                  type="checkbox"
+                  checked={saveAsDefault}
+                  onChange={(e) => setSaveAsDefault(e.target.checked)}
+                  className="w-4 h-4 rounded border-slate-300 text-black focus:ring-black accent-black cursor-pointer"
                 />
-              </div>
-
-              <div className="sm:pt-5">
-                <label className="inline-flex items-center gap-2 cursor-pointer select-none text-xs text-slate-600">
-                  <input
-                    type="checkbox"
-                    checked={saveAsDefault}
-                    onChange={(e) => setSaveAsDefault(e.target.checked)}
-                    className="w-4 h-4 rounded border-slate-300 text-black focus:ring-black accent-black cursor-pointer"
-                  />
-                  <span>บันทึกเป็นที่อยู่เริ่มต้นในบัญชีของฉัน</span>
-                </label>
-              </div>
+                <span>บันทึกเป็นที่อยู่เริ่มต้นในบัญชีของฉัน</span>
+              </label>
             </div>
           </div>
 
           {/* Modal Actions */}
-          <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-100">
+          <div className="flex items-center justify-end gap-2.5 pt-3">
             <button
               type="button"
               onClick={handleClose}
               disabled={saving}
-              className="px-5 py-2 text-xs sm:text-sm font-semibold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-full transition-colors cursor-pointer disabled:opacity-50"
+              className="flex-1 sm:flex-none px-6 py-2.5 min-h-[40px] text-xs sm:text-sm font-bold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-full transition-all cursor-pointer disabled:opacity-50 active:scale-[0.98]"
             >
               ยกเลิก
             </button>
             <button
               type="submit"
               disabled={saving}
-              className="inline-flex items-center justify-center gap-2 py-2.5 px-6 text-xs sm:text-sm font-bold text-white bg-slate-900 hover:bg-black active:bg-slate-950 rounded-full transition-all shadow-xs hover:shadow cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed select-none"
+              className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 py-2.5 px-6 min-h-[40px] text-xs sm:text-sm font-bold text-white bg-slate-900 hover:bg-black active:bg-slate-950 rounded-full transition-all shadow-xs hover:shadow cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed select-none active:scale-[0.98]"
             >
               {saving ? (
-                <Loader2 className="w-4 h-4 animate-spin shrink-0" />
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin shrink-0" />
+                  <span>บันทึก</span>
+                </>
               ) : (
-                <Save className="w-4 h-4 shrink-0" />
+                <span>บันทึก</span>
               )}
-              <span>บันทึก</span>
             </button>
           </div>
         </form>

@@ -163,7 +163,7 @@ function SlipViewerContent() {
         src={imgSrc}
         alt={`Slip-${order?.Fn_Doc_No || docNo}`}
         onError={handleImageError}
-        className="max-h-full max-w-full object-contain rounded-xs shadow-2xl transition-transform duration-200"
+        className="max-h-full max-w-full object-contain rounded-[10px] apple-squircle-sm shadow-2xl transition-transform duration-200"
       />
     </div>
   );

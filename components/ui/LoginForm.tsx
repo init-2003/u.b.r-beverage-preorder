@@ -78,27 +78,21 @@ export function LoginForm({
     } catch {}
   };
 
-  // จำแนกข้อความ error จากเซิร์ฟเวอร์ว่าควรไปแสดงที่ช่องไหน
-  // - มีคำว่า "รหัสผ่าน"  -> placeholder ของช่องรหัสผ่าน
-  // - มีคำว่า "ยูสเซอร์" / "บัญชีลูกค้า" / "รหัสลูกค้า" -> placeholder ของช่องรหัสลูกค้า
-  // - อื่น ๆ -> Alert ด้านบนฟอร์ม
+  // จำแนกข้อความ error จากเซิร์ฟเวอร์ และแสดงผลอย่างเด่นชัดภายในฟอร์ม
+  // ห้ามล้างค่า (username/password) ที่ผู้ใช้กรอกทิ้งเด็ดขาด เพื่อให้ผู้ใช้มองเห็นและแก้ไขจุดที่ผิดได้ทันที
   const applyError = (message: string) => {
+    setFormError(message);
     if (message.includes('รหัสผ่าน')) {
       setPasswordError(message);
-      setPassword('');
     } else if (
       message.includes('ยูสเซอร์') ||
       message.includes('บัญชีลูกค้า') ||
       message.includes('รหัสลูกค้า')
     ) {
       setUsernameError(message);
-      setUsername('');
-    } else {
-      if (onGlobalError) {
-        onGlobalError(message);
-      } else {
-        setFormError(message);
-      }
+    }
+    if (onGlobalError) {
+      onGlobalError(message);
     }
   };
 
@@ -199,13 +193,6 @@ export function LoginForm({
 
   return (
     <div className={`w-full ${className}`}>
-      {/* Error Alert — ใช้เฉพาะกรณีที่ไม่ได้ส่งออกไปแสดงนอก card */}
-      {!onGlobalError && formError && (
-        <Alert variant="error" className="mb-5">
-          {formError}
-        </Alert>
-      )}
-
       {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-6.5">
         {/* Field 1: Cus_User */}
@@ -215,6 +202,10 @@ export function LoginForm({
           label="รหัสลูกค้า"
           error={usernameError}
           value={username}
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
+          autoComplete="username"
           onChange={(e) => {
             setUsername(e.target.value);
             if (usernameError) setUsernameError('');
@@ -231,6 +222,10 @@ export function LoginForm({
           label="รหัสผ่าน"
           error={passwordError}
           value={password}
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
+          autoComplete="current-password"
           onChange={(e) => {
             setPassword(e.target.value);
             if (passwordError) setPasswordError('');
@@ -325,7 +320,7 @@ export function LoginForm({
 
               {/* Tooltip Popover */}
               <div
-                className={`absolute left-1/2 -translate-x-6 top-full mt-2 w-64 sm:w-72 bg-white border border-slate-200/90 rounded-sm shadow-xl p-3 z-50 text-[11.5px] sm:text-xs text-slate-700 leading-relaxed text-left transition-all duration-150 ${
+                className={`absolute left-1/2 -translate-x-6 top-full mt-2 w-64 sm:w-72 bg-white border border-slate-200/90 apple-squircle-sm shadow-xl p-3 z-50 text-[11.5px] sm:text-xs text-slate-700 leading-relaxed text-left transition-all duration-150 ${
                   showRememberTooltip
                     ? 'opacity-100 visible pointer-events-auto'
                     : 'opacity-0 invisible group-hover/tip:opacity-100 group-hover/tip:visible pointer-events-none group-hover/tip:pointer-events-auto'
@@ -352,6 +347,13 @@ export function LoginForm({
             ติดต่อสอบถามเพิ่มเติมได้ที่แผนกลูกค้าสัมพันธ์{' '}
             <span className="font-semibold text-slate-700 whitespace-nowrap">045-245-888</span>
           </p>
+        )}
+
+        {/* Error Alert — แสดงเหนือปุ่มเข้าสู่ระบบ เพื่อไม่ดันช่องกรอก (Input fields) ด้านบนลงมา */}
+        {formError && (
+          <Alert variant="error" className="shadow-xs">
+            {formError}
+          </Alert>
         )}
 
         {/* Full Width Primary Brand Red Button */}

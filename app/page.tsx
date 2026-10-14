@@ -7,6 +7,12 @@ import ProductCatalog from '@/components/ProductCatalog';
 import { useAuth } from '@/context/AuthContext';
 import { HomeSkeleton } from '@/components/HomeSkeleton';
 import { calcDeposit } from '@/lib/deposit';
+import {
+  getStoredCategory,
+  setStoredCategory,
+  clearStoredCategory,
+  CATEGORY_CHANGE_EVENT,
+} from '@/lib/category-storage';
 
 const SCROLL_STORAGE_KEY = 'ubr_home_scroll_y';
 
@@ -15,7 +21,33 @@ function HomeAppPageContent() {
   const { customer, loading: authLoading } = useAuth();
   const searchParams = useSearchParams();
   const urlSearch = searchParams.get('search') ?? '';
-  const urlCategory = searchParams.get('category') ?? 'all';
+  const urlCategoryParam = searchParams.get('category');
+  const [persistedCat, setPersistedCat] = useState<string>('all');
+
+  useEffect(() => {
+    setPersistedCat(getStoredCategory());
+
+    const handleCategoryChange = () => {
+      setPersistedCat(getStoredCategory());
+    };
+    window.addEventListener(CATEGORY_CHANGE_EVENT, handleCategoryChange);
+    window.addEventListener('storage', handleCategoryChange);
+    return () => {
+      window.removeEventListener(CATEGORY_CHANGE_EVENT, handleCategoryChange);
+      window.removeEventListener('storage', handleCategoryChange);
+    };
+  }, []);
+
+  // If URL explicitly defines category, sync with storage
+  useEffect(() => {
+    if (urlCategoryParam) {
+      const subId = searchParams.get('subMenuId') ? Number(searchParams.get('subMenuId')) : undefined;
+      setStoredCategory(urlCategoryParam, subId);
+      setPersistedCat(urlCategoryParam);
+    }
+  }, [urlCategoryParam, searchParams]);
+
+  const activeCategory = urlCategoryParam || persistedCat || 'all';
 
   const [products, setProducts] = useState<Product[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
@@ -117,7 +149,11 @@ function HomeAppPageContent() {
             id: p.Trade_Id,
             name: p.Trade_Name,
             nameEN: p.Trade_NameEN,
-            category: p.Type_Name || 'Pre Order',
+            category: p.category || p.SubMenu_NameTH || p.Type_Name || 'Pre Order',
+            productType: p.productType,
+            subMenuIdRef: p.SubMenu_ID_Ref,
+            subMenuNameTH: p.SubMenu_NameTH,
+            subMenuNameEN: p.SubMenu_NameEN,
             unitName: (p.Unit_Name || '').trim(),
             price,
             salePrice1: price,
@@ -144,21 +180,24 @@ function HomeAppPageContent() {
     }
   }, []);
 
-  // 3. เรียก fetchProducts เมื่อ URL parameters (category หรือ search) เปลี่ยน
+  // 3. เรียก fetchProducts เมื่อ activeCategory หรือ search เปลี่ยน
   useEffect(() => {
-    fetchProducts(urlCategory, urlSearch);
-  }, [urlCategory, urlSearch, fetchProducts]);
+    fetchProducts(activeCategory, urlSearch);
+  }, [activeCategory, urlSearch, fetchProducts]);
 
   const handleSelectCategory = (cat: string) => {
     try {
       sessionStorage.setItem(SCROLL_STORAGE_KEY, '0');
     } catch {}
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    setStoredCategory(cat);
+    setPersistedCat(cat);
     const params = new URLSearchParams(searchParams.toString());
-    if (cat && cat !== 'all') {
+    if (cat && cat !== 'all' && cat !== 'ทั้งหมด') {
       params.set('category', cat);
     } else {
       params.delete('category');
+      params.delete('subMenuId');
     }
     const newUrl = params.toString() ? `/?${params.toString()}` : '/';
     router.push(newUrl);
@@ -175,6 +214,9 @@ function HomeAppPageContent() {
     } else {
       params.delete('search');
     }
+    if (activeCategory && activeCategory !== 'all' && activeCategory !== 'ทั้งหมด') {
+      params.set('category', activeCategory);
+    }
     const newUrl = params.toString() ? `/?${params.toString()}` : '/';
     router.push(newUrl);
   };
@@ -188,6 +230,8 @@ function HomeAppPageContent() {
       sessionStorage.setItem(SCROLL_STORAGE_KEY, '0');
     } catch {}
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    clearStoredCategory();
+    setPersistedCat('all');
     router.push('/');
   };
 
@@ -201,7 +245,7 @@ function HomeAppPageContent() {
         <ProductCatalog
           products={products}
           loadingProducts={loadingProducts}
-          selectedCategory={urlCategory}
+          selectedCategory={activeCategory}
           onSelectCategory={handleSelectCategory}
           searchQuery={urlSearch}
           onSearchChange={handleSearchChange}

@@ -59,6 +59,15 @@ export interface CategoryItem {
   Product_Count?: number;
 }
 
+export interface SubMenuItem {
+  SubMenu_ID: number;
+  Type_ID: string;
+  SubMenu_NameTH: string;
+  SubMenu_NameEN?: string;
+  Sort_Order?: number;
+  Product_Count?: number;
+}
+
 /**
  * ข้อมูลสินค้าพรีออเดอร์สำหรับแสดงผลในหน้า Catalog & Detail
  * อ้างอิงจากตาราง Trade ใน MSSQL
@@ -67,7 +76,11 @@ export interface Product {
   id: string;              // Trade_Id
   name: string;            // Trade_Name
   nameEN?: string;         // Trade_NameEN
-  category: string;        // Type_Name (เช่น Pre Order หรือชื่อหมวดหมู่)
+  category: string;        // SubMenu_NameTH หรือ Type_Name
+  productType?: string;    // productType (เช่น PREORDER)
+  subMenuIdRef?: number;   // Trade.SubMenu_ID_Ref
+  subMenuNameTH?: string;  // Type_SubMenu.SubMenu_NameTH
+  subMenuNameEN?: string;  // Type_SubMenu.SubMenu_NameEN
   unitName: string;        // Unit_Name (หน่วยนับ เช่น ขวด, ลัง, แพ็ค)
   price: number;           // Sale_Price1 (ราคาขายหลัก)
   salePrice1: number;      // Sale_Price1
@@ -91,6 +104,7 @@ export interface CartItem {
   tradeNameEN?: string;
   unitName: string;
   typeName?: string;
+  productType?: string;
   salePrice: number;
   depositPrice?: number;
   depositPercent?: number;

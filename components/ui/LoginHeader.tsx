@@ -6,6 +6,7 @@ export interface LoginHeaderProps {
   showLogo?: boolean;
   title?: string;
   subtitle?: string;
+  description?: string;
   titleId?: string;
   className?: string;
   align?: 'left' | 'center';
@@ -15,11 +16,14 @@ export function LoginHeader({
   showLogo = false,
   title = 'เข้าสู่ระบบ',
   subtitle,
+  description,
   titleId = 'login-modal-title',
   className = '',
   align = 'left',
 }: LoginHeaderProps) {
   const isLeft = align === 'left';
+  const subText = description || subtitle;
+
   return (
     <div
       className={`flex flex-col w-full ${
@@ -38,14 +42,7 @@ export function LoginHeader({
         />
       )}
 
-      {/* Line 2: Welcome to U.B.R Beverage Online Store */}
-      {subtitle && (
-        <p className="text-xs sm:text-[13px] font-medium text-slate-500 tracking-normal">
-          {subtitle}
-        </p>
-      )}
-
-      {/* Line 3: Title */}
+      {/* Line 2: Title */}
       {title && (
         <h3
           id={titleId}
@@ -53,6 +50,13 @@ export function LoginHeader({
         >
           {title}
         </h3>
+      )}
+
+      {/* Line 3: Subtitle / Description on next line */}
+      {subText && (
+        <p className="text-sm sm:text-base text-slate-500 font-normal tracking-normal mt-1 sm:mt-1.5">
+          {subText}
+        </p>
       )}
     </div>
   );

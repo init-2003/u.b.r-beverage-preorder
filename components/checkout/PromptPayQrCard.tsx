@@ -88,7 +88,7 @@ export default function PromptPayQrCard({
 
   return (
     <div
-      className={`w-full max-w-[400px] bg-white rounded-sm shadow-[0_1px_1px_0_rgba(0,0,0,0.05)] border border-slate-100/80 overflow-hidden ${className}`}
+      className={`w-full max-w-[400px] bg-white rounded-[14px] apple-squircle-card shadow-xs border border-slate-200 overflow-hidden ${className}`}
     >
       {/* Navy Header Banner with Official THAI QR PAYMENT Logo */}
       <div className="bg-[#1A3763] px-6 py-3 flex items-center justify-center">
@@ -159,12 +159,12 @@ export default function PromptPayQrCard({
       </div>
 
       {/* Action Buttons inside bottom of card matching reference */}
-      <div className="border-t border-slate-100 grid grid-cols-2 divide-x divide-slate-100 bg-slate-50/50">
+      <div className="border-t border-slate-200 grid grid-cols-2 divide-x divide-slate-200 bg-slate-50/50">
         <button
           type="button"
           onClick={handleDownloadQr}
           disabled={!qrDataUrl || qrLoading}
-          className="py-3.5 px-4 flex items-center justify-center gap-2 text-xs font-bold text-slate-700 hover:text-slate-950 hover:bg-slate-100/80 transition-colors cursor-pointer disabled:opacity-50"
+          className="py-3.5 px-4 min-h-[42px] flex items-center justify-center gap-2 text-xs sm:text-sm font-bold text-slate-700 hover:text-slate-950 hover:bg-slate-100/80 transition-colors cursor-pointer disabled:opacity-50"
         >
           <Download className="w-4 h-4 text-slate-600" />
           <span>บันทึก QR</span>
@@ -173,7 +173,7 @@ export default function PromptPayQrCard({
           type="button"
           onClick={handleShareQr}
           disabled={!qrDataUrl || qrLoading}
-          className="py-3.5 px-4 flex items-center justify-center gap-2 text-xs font-bold text-slate-700 hover:text-slate-950 hover:bg-slate-100/80 transition-colors cursor-pointer disabled:opacity-50"
+          className="py-3.5 px-4 min-h-[42px] flex items-center justify-center gap-2 text-xs sm:text-sm font-bold text-slate-700 hover:text-slate-950 hover:bg-slate-100/80 transition-colors cursor-pointer disabled:opacity-50"
         >
           {copiedShare ? (
             <>

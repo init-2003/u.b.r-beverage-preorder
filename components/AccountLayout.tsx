@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useRef, Suspense } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { usePathname, useSearchParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
@@ -41,40 +41,11 @@ const MENU_ITEMS: MenuItem[] = [
   },
 ];
 
-const ITEM_HEIGHT_ESTIMATE = 40;
-const ITEM_GAP_ESTIMATE = 4;
-const ITEM_STEP_ESTIMATE = ITEM_HEIGHT_ESTIMATE + ITEM_GAP_ESTIMATE; // 44px
-
-function getEstimatedTop(key: string): number {
-  const index = MENU_ITEMS.findIndex((item) => item.key === key);
-  return index >= 0 ? index * ITEM_STEP_ESTIMATE : 0;
-}
-
-interface CachedNavState {
-  activeKey: string;
-  indicatorTop: number;
-  indicatorHeight: number;
-  hasMeasured: boolean;
-}
-
-// Module-level persistent cache across client-side route transitions
-let globalNavState: CachedNavState = {
-  activeKey: 'account',
-  indicatorTop: 0,
-  indicatorHeight: ITEM_HEIGHT_ESTIMATE,
-  hasMeasured: false,
-};
-
-function updateGlobalNavState(state: CachedNavState) {
-  globalNavState = state;
-}
-
 function AccountSidebar({ activeItemOverride }: { activeItemOverride?: string }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { customer, logout } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [clickedKey, setClickedKey] = useState<string | null>(null);
 
   const tab = searchParams?.get('tab') || '';
 
@@ -82,6 +53,17 @@ function AccountSidebar({ activeItemOverride }: { activeItemOverride?: string })
   useEffect(() => {
     setIsMobileMenuOpen(false);
   }, [pathname, tab]);
+
+  // Auto-close mobile menu when resizing to desktop (>= lg / 1024px)
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) {
+        setIsMobileMenuOpen(false);
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // ตรวจสอบว่าเมนูไหน Active อยู่
   const getIsActive = (key: string): boolean => {
@@ -111,78 +93,8 @@ function AccountSidebar({ activeItemOverride }: { activeItemOverride?: string })
     setOptimisticActiveKey(currentActiveKey);
   }, [currentActiveKey]);
 
-  // Sliding indicator measurements & GPU-accelerated transform
-  const navRef = useRef<HTMLElement | null>(null);
-  const itemRefs = useRef<{ [key: string]: HTMLAnchorElement | null }>({});
-
-  const [indicatorStyle, setIndicatorStyle] = useState<{
-    top: number;
-    height: number;
-  }>(() => {
-    if (globalNavState.hasMeasured) {
-      return {
-        top: globalNavState.indicatorTop,
-        height: globalNavState.indicatorHeight,
-      };
-    }
-    return {
-      top: getEstimatedTop(currentActiveKey),
-      height: ITEM_HEIGHT_ESTIMATE,
-    };
-  });
-
-  const updateIndicator = useCallback((key: string) => {
-    const el = itemRefs.current[key];
-    if (el && navRef.current) {
-      const top = el.offsetTop;
-      const height = el.offsetHeight;
-      setIndicatorStyle({ top, height });
-      globalNavState = {
-        activeKey: key,
-        indicatorTop: top,
-        indicatorHeight: height,
-        hasMeasured: true,
-      };
-    }
-  }, []);
-
-  useEffect(() => {
-    updateIndicator(optimisticActiveKey);
-    const timer = setTimeout(() => updateIndicator(optimisticActiveKey), 30);
-    const handleResize = () => updateIndicator(optimisticActiveKey);
-    window.addEventListener('resize', handleResize);
-    return () => {
-      clearTimeout(timer);
-      window.removeEventListener('resize', handleResize);
-    };
-  }, [optimisticActiveKey, updateIndicator]);
-
   const handleItemClick = (key: string) => {
-    setClickedKey(key);
-    setTimeout(() => setClickedKey(null), 300);
-
     setOptimisticActiveKey(key);
-    const el = itemRefs.current[key];
-    if (el) {
-      const top = el.offsetTop;
-      const height = el.offsetHeight;
-      setIndicatorStyle({ top, height });
-      updateGlobalNavState({
-        activeKey: key,
-        indicatorTop: top,
-        indicatorHeight: height,
-        hasMeasured: true,
-      });
-    } else {
-      const estTop = getEstimatedTop(key);
-      setIndicatorStyle({ top: estTop, height: ITEM_HEIGHT_ESTIMATE });
-      updateGlobalNavState({
-        activeKey: key,
-        indicatorTop: estTop,
-        indicatorHeight: ITEM_HEIGHT_ESTIMATE,
-        hasMeasured: true,
-      });
-    }
   };
 
   const currentActiveItem = MENU_ITEMS.find((item) => item.key === optimisticActiveKey) || MENU_ITEMS[0];
@@ -222,11 +134,11 @@ function AccountSidebar({ activeItemOverride }: { activeItemOverride?: string })
           </button>
         </div>
 
-        {/* Mobile Accordion Menu with Smooth Height & Fade Open/Close Animation */}
-        <div className={`${isMobileMenuOpen ? 'mobile-menu-enter mt-2.5' : 'mobile-menu-exit mt-0'}`}>
+        {/* Mobile Accordion Menu with Edge-to-Edge Layout & Dashed Line Dividers matching Image 2 */}
+        <div className={`-mx-4 sm:-mx-6 lg:mx-0 ${isMobileMenuOpen ? 'mobile-menu-enter mt-2 mb-3' : 'mobile-menu-exit mt-0 mb-0'}`}>
           <div className="overflow-hidden min-h-0">
-            <div className="bg-white rounded-xl border border-slate-200/80 p-2 sm:p-2.5 shadow-sm">
-              <nav className="space-y-1 text-sm">
+            <div className="w-full bg-white border-t border-dashed border-slate-200">
+              <nav className="text-sm sm:text-base">
                 {MENU_ITEMS.map((item) => {
                   const isActive = optimisticActiveKey === item.key;
                   return (
@@ -237,31 +149,29 @@ function AccountSidebar({ activeItemOverride }: { activeItemOverride?: string })
                         handleItemClick(item.key);
                         setIsMobileMenuOpen(false);
                       }}
-                      className={`px-4 py-2.5 rounded-full transition-all duration-150 block cursor-pointer active:scale-[0.98] ${
+                      className={`w-full flex items-center px-4 sm:px-6 py-3.5 border-b border-dashed border-slate-200 transition-colors duration-150 cursor-pointer active:bg-slate-50 ${
                         isActive
-                          ? 'font-semibold text-white bg-[#000000] shadow-sm'
-                          : 'font-medium text-slate-600 hover:text-black hover:bg-slate-100'
+                          ? 'font-bold text-slate-900'
+                          : 'font-normal text-slate-600 hover:text-slate-900'
                       }`}
                     >
-                      {item.label}
+                      <span>{item.label}</span>
                     </Link>
                   );
                 })}
 
                 {customer && (
-                  <div className="pt-2 border-t border-slate-100 mt-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsMobileMenuOpen(false);
-                        logout();
-                      }}
-                      className="w-full text-left px-4 py-2.5 text-red-600 hover:bg-red-50 rounded-full transition-colors flex items-center gap-2 cursor-pointer font-medium active:scale-[0.98]"
-                    >
-                      <LogOut className="w-4 h-4" />
-                      <span>ออกจากระบบ</span>
-                    </button>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      logout();
+                    }}
+                    className="w-full text-left px-4 sm:px-6 py-3.5 text-red-600 hover:bg-red-50/50 active:bg-red-50 transition-colors flex items-center gap-2 cursor-pointer font-medium text-sm sm:text-base border-b border-dashed border-slate-200"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    <span>ออกจากระบบ</span>
+                  </button>
                 )}
               </nav>
             </div>
@@ -269,54 +179,36 @@ function AccountSidebar({ activeItemOverride }: { activeItemOverride?: string })
         </div>
       </div>
 
-      {/* 2. Desktop View (>= lg): Persistent Left Sidebar with Black Capsule Sliding Indicator */}
-      <aside className="hidden lg:block w-64 shrink-0 bg-transparent select-none">
-        <nav ref={navRef} className="relative space-y-1 text-sm text-slate-600">
-          {/* Animated Sliding Active Black #000000 Capsule Indicator */}
-          <div
-            className="absolute top-0 left-0 right-0 rounded-full bg-[#000000] shadow-sm pointer-events-none transition-transform duration-300 ease-[cubic-bezier(0.25,1,0.5,1)] z-0"
-            style={{
-              height: `${indicatorStyle.height}px`,
-              transform: `translateY(${indicatorStyle.top}px)`,
-              willChange: 'transform',
-            }}
-          />
-
+      {/* 2. Desktop View (>= lg): Persistent Left Sidebar with Dashed Line Dividers matching Image 2 */}
+      <aside className="hidden lg:block w-64 shrink-0 bg-white select-none">
+        <nav className="w-full border-t border-dashed border-slate-200 text-sm">
           {MENU_ITEMS.map((item) => {
             const isActive = optimisticActiveKey === item.key;
-            const isClicked = clickedKey === item.key;
             return (
               <Link
                 key={item.key}
-                ref={(el) => { itemRefs.current[item.key] = el; }}
                 href={item.href}
                 onClick={() => handleItemClick(item.key)}
-                className={`relative z-10 px-4 py-2.5 rounded-full transition-all duration-200 block cursor-pointer select-none active:scale-[0.98] ${
-                  isClicked ? 'animate-menu-click' : ''
-                } ${
+                className={`w-full flex items-center px-4 py-3.5 border-b border-dashed border-slate-200 transition-colors duration-150 cursor-pointer ${
                   isActive
-                    ? 'font-semibold text-white'
-                    : 'font-medium text-slate-600 hover:text-black hover:bg-slate-200/50 hover:translate-x-1'
+                    ? 'font-bold text-slate-900'
+                    : 'font-normal text-slate-600 hover:text-slate-900'
                 }`}
               >
-                <span className="inline-block transition-transform duration-200">
-                  {item.label}
-                </span>
+                <span>{item.label}</span>
               </Link>
             );
           })}
 
           {customer && (
-            <div className="pt-4 border-t border-slate-200 mt-3 relative z-10">
-              <button
-                type="button"
-                onClick={() => logout()}
-                className="w-full text-left px-4 py-2.5 text-red-600 hover:bg-red-50 rounded-full transition-all duration-150 flex items-center gap-2 cursor-pointer font-medium active:scale-[0.98]"
-              >
-                <LogOut className="w-4 h-4" />
-                <span>ออกจากระบบ</span>
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={() => logout()}
+              className="w-full text-left px-4 py-3.5 text-red-600 hover:bg-red-50/50 active:bg-red-50 transition-colors flex items-center gap-2 cursor-pointer font-medium text-sm border-b border-dashed border-slate-200"
+            >
+              <LogOut className="w-4 h-4" />
+              <span>ออกจากระบบ</span>
+            </button>
           )}
         </nav>
       </aside>
@@ -326,21 +218,21 @@ function AccountSidebar({ activeItemOverride }: { activeItemOverride?: string })
 
 function AccountSidebarFallback({ activeItemOverride }: { activeItemOverride?: string }) {
   return (
-    <aside className="hidden lg:block w-64 shrink-0 bg-transparent select-none">
-      <nav className="relative space-y-1 text-sm text-slate-600">
+    <aside className="hidden lg:block w-64 shrink-0 bg-white select-none">
+      <nav className="w-full border-t border-dashed border-slate-200 text-sm">
         {MENU_ITEMS.map((item) => {
           const isActive = activeItemOverride === item.key;
           return (
             <Link
               key={item.key}
               href={item.href}
-              className={`px-4 py-2.5 rounded-full block select-none ${
+              className={`w-full flex items-center px-4 py-3.5 border-b border-dashed border-slate-200 block select-none ${
                 isActive
-                  ? 'font-semibold text-white bg-[#000000] shadow-sm'
-                  : 'font-medium text-slate-600 hover:text-black hover:bg-slate-200/50'
+                  ? 'font-bold text-slate-900'
+                  : 'font-normal text-slate-600 hover:text-slate-900'
               }`}
             >
-              {item.label}
+              <span>{item.label}</span>
             </Link>
           );
         })}

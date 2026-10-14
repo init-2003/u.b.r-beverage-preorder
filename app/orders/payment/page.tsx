@@ -198,7 +198,7 @@ function OrderPaymentContent() {
           <p className="text-xs text-slate-500">{errorMsg || 'ไม่พบข้อมูลคำสั่งซื้อ'}</p>
           <Link
             href="/orders/history"
-            className="inline-block px-5 py-2.5 rounded-sm bg-slate-800 text-white text-xs font-bold hover:bg-slate-900 transition-colors"
+            className="inline-block px-6 py-2.5 rounded-full bg-slate-800 text-white text-xs font-bold hover:bg-slate-900 transition-colors"
           >
             กลับไปหน้ารายการสั่งซื้อ
           </Link>
@@ -232,7 +232,7 @@ function OrderPaymentContent() {
 
       {/* Inline Slip Upload & Auto-verification Section */}
       <div 
-        className="w-full max-w-[400px] mt-6 bg-white border border-slate-200 rounded-lg p-4 sm:p-5 shadow-sm space-y-3.5 animate-payment-slide-up"
+        className="w-full max-w-[400px] mt-6 bg-white border border-slate-200 rounded-[14px] apple-squircle-card p-4 sm:p-5 shadow-sm space-y-3.5 animate-payment-slide-up"
         style={{ animationDelay: '120ms' }}
       >
         <div className="border-b border-slate-100 pb-2.5">
@@ -243,7 +243,7 @@ function OrderPaymentContent() {
 
         {!slipPreview ? (
           /* Dropzone / Upload Trigger */
-          <label className="group relative border-2 border-dashed border-slate-200 hover:border-black hover:bg-slate-50/70 rounded-lg p-5 transition-all flex flex-col items-center justify-center text-center cursor-pointer">
+          <label className="group relative border-2 border-dashed border-slate-200 hover:border-black hover:bg-slate-50/70 rounded-lg p-5 sm:p-6 min-h-[120px] transition-all flex flex-col items-center justify-center text-center cursor-pointer">
             <input
               type="file"
               accept="image/*"
@@ -268,7 +268,7 @@ function OrderPaymentContent() {
                   type="button"
                   onClick={handleClearSlip}
                   disabled={uploadingSlip}
-                  className="text-xs font-semibold text-rose-600 hover:text-rose-700 hover:underline cursor-pointer disabled:opacity-50 shrink-0 ml-2"
+                  className="text-xs font-semibold text-rose-600 hover:text-rose-700 hover:underline cursor-pointer disabled:opacity-50 shrink-0 ml-2 py-1 px-2"
                 >
                   <span>ลบ</span>
                 </button>
@@ -297,7 +297,7 @@ function OrderPaymentContent() {
               type="button"
               onClick={handleUploadSlip}
               disabled={uploadingSlip}
-              className="w-full py-2.5 px-4 rounded-md bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold text-xs sm:text-sm transition-all shadow-sm hover:shadow-md disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
+              className="w-full py-3.5 px-6 min-h-[46px] rounded-full bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold text-sm transition-all shadow-sm hover:shadow-md disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
             >
               {uploadingSlip ? (
                 <>

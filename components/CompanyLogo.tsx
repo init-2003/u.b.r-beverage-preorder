@@ -6,6 +6,7 @@ interface CompanyLogoProps {
   lightText?: boolean;
   className?: string;
   loading?: 'lazy' | 'eager';
+  suffix?: string;
 }
 
 export const CompanyLogo: React.FC<CompanyLogoProps> = ({
@@ -14,6 +15,7 @@ export const CompanyLogo: React.FC<CompanyLogoProps> = ({
   lightText = true,
   className = '',
   loading = 'lazy',
+  suffix,
 }) => {
   const sizeClasses = {
     sm: 'h-9 w-auto',
@@ -48,6 +50,11 @@ export const CompanyLogo: React.FC<CompanyLogoProps> = ({
             }`}
           >
             หจก.อุบลรุ่งเรืองเบฟเวอเรจ
+            {suffix && (
+              <span className={`ml-1.5 sm:ml-2 font-bold ${lightText ? 'text-white/95' : 'text-slate-800'}`}>
+                {' '}{suffix}
+              </span>
+            )}
           </h1>
           <p
             className={`text-[8.5px] sm:text-[10px] font-bold uppercase tracking-wider sm:tracking-widest truncate sm:overflow-visible ${

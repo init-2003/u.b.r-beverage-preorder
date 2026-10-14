@@ -211,7 +211,7 @@ function PurchasesContent() {
 
 
         {/* Search Box */}
-        <div className="bg-[#eaeaea] sm:bg-[#f0f2f5] rounded-xs px-4 py-2.5 flex items-center gap-3 border border-slate-200/60 shadow-2xs">
+        <div className="bg-[#eaeaea] sm:bg-[#f0f2f5] rounded-full px-5 py-2.5 flex items-center gap-3 border border-slate-200/60 shadow-2xs">
           <Search className="w-4 h-4 text-slate-400 shrink-0" />
           <input
             type="text"
@@ -244,7 +244,7 @@ function PurchasesContent() {
             <WineLoading size="md" />
           </div>
         ) : displayedOrders.length === 0 ? (
-          <div className="bg-white rounded-xs border border-slate-200 shadow-xs py-16 sm:py-20 px-4 text-center flex flex-col items-center justify-center space-y-4">
+          <div className="bg-white rounded-[14px] apple-squircle-card border border-slate-200 shadow-xs py-16 sm:py-20 px-4 text-center flex flex-col items-center justify-center space-y-4">
             <div className="flex items-center justify-center">
               <EmptyPaymentIllustration className="w-36 h-36 sm:w-40 sm:h-40" />
             </div>
@@ -269,7 +269,7 @@ function PurchasesContent() {
               return (
                 <div
                   key={order.Fn_Doc_No}
-                  className="bg-white rounded-xs border border-slate-200 shadow-xs overflow-hidden transition-all hover:border-slate-300 hover:shadow-md"
+                  className="bg-white rounded-[14px] apple-squircle-card border border-slate-200 shadow-xs overflow-hidden transition-all hover:border-slate-300 hover:shadow-md"
                 >
                   {/* Row 1: Order Info + Amount */}
                   <div className="px-4 sm:px-6 py-3.5 flex items-center justify-between gap-3">
@@ -305,40 +305,40 @@ function PurchasesContent() {
                   </div>
 
                   {/* Row 2: Status + Actions */}
-                  <div className="px-4 sm:px-6 py-2.5 border-t border-slate-200 bg-slate-50/40 flex items-center justify-between gap-3">
+                  <div className="px-4 sm:px-6 py-2.5 border-t border-slate-200 bg-slate-50/40 flex flex-wrap items-center justify-between gap-3">
                     {/* Left: Status Stamp */}
-                    {isPending ? (
-                      <PaidStamp
-                        shape="badge"
-                        label="รอชำระ"
-                        subLabel="PENDING"
-                        color="red"
-                      />
-                    ) : order.money_sts === 'M' ? (
-                      <PaidStamp
-                        shape="badge"
-                        label="ชำระเงินปลายทาง"
-                        subLabel="C.O.D"
-                        color="blue"
-                      />
-                    ) : (
-                      <PaidStamp
-                        shape="badge"
-                        label="ชำระแล้ว"
-                        subLabel="PAID"
-                        color="green"
-                      />
-                    )}
-                    {/* Right: Action Buttons */}
-                    <div className="flex items-center gap-2">
-                      {isPending && (
-                        <Link
-                          href={`/orders/${encodeURIComponent(order.Fn_Doc_No)}/payment`}
-                          className="px-4 py-1.5 rounded-full bg-red-600 hover:bg-red-700 active:bg-red-800 text-white text-xs font-medium transition-colors shadow-xs inline-flex items-center justify-center"
-                        >
-                          ชำระเงิน
-                        </Link>
+                    <div className="shrink-0">
+                      {isPending ? (
+                        <PaidStamp
+                          shape="badge"
+                          label="รอชำระ"
+                          subLabel="PENDING"
+                          color="red"
+                        />
+                      ) : order.money_sts === 'M' ? (
+                        <PaidStamp
+                          shape="badge"
+                          label="ชำระเงินปลายทาง"
+                          subLabel="C.O.D"
+                          color="blue"
+                        />
+                      ) : (
+                        <PaidStamp
+                          shape="badge"
+                          label="ชำระแล้ว"
+                          subLabel="PAID"
+                          color="green"
+                        />
                       )}
+                    </div>
+                    {/* Right: Action Buttons */}
+                    <div className="flex items-center gap-2 justify-end shrink-0 flex-wrap">
+                      <Link
+                        href={`/orders/${encodeURIComponent(order.Fn_Doc_No)}`}
+                        className="whitespace-nowrap h-[38px] px-3.5 sm:px-4 rounded-full bg-white border border-slate-200 hover:bg-slate-50 active:bg-slate-100 active:scale-[0.98] text-slate-700 text-xs sm:text-sm font-semibold transition-all shadow-xs inline-flex items-center justify-center text-center"
+                      >
+                        รายละเอียด
+                      </Link>
                       {order.FILE_NAME_PIC && order.FILE_NAME_PIC.trim() && (
                         <button
                           type="button"
@@ -351,17 +351,19 @@ function PurchasesContent() {
                                 : `/uploads/slips/${order.Fn_Doc_No}/${filePic}`;
                             openSlipPreview(url);
                           }}
-                          className="px-4 py-1.5 rounded-full bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white text-xs font-medium transition-colors shadow-xs inline-flex items-center justify-center cursor-pointer"
+                          className="whitespace-nowrap h-[38px] px-3.5 sm:px-4 rounded-full bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 active:scale-[0.98] text-white text-xs sm:text-sm font-semibold transition-all shadow-xs inline-flex items-center justify-center text-center cursor-pointer"
                         >
                           ดูสลิป
                         </button>
                       )}
-                      <Link
-                        href={`/orders/${encodeURIComponent(order.Fn_Doc_No)}`}
-                        className="px-3.5 py-1.5 rounded-full bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 text-xs font-medium transition-colors shadow-xs inline-flex items-center justify-center"
-                      >
-                        ดูรายละเอียด
-                      </Link>
+                      {isPending && (
+                        <Link
+                          href={`/orders/${encodeURIComponent(order.Fn_Doc_No)}/payment`}
+                          className="whitespace-nowrap h-[38px] px-3.5 sm:px-4 rounded-full bg-black hover:bg-neutral-800 active:bg-neutral-900 active:scale-[0.98] text-white text-xs sm:text-sm font-semibold transition-all shadow-xs inline-flex items-center justify-center text-center"
+                        >
+                          ชำระเงิน
+                        </Link>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -388,7 +390,7 @@ function PurchasesContent() {
                       setPageSize(Number(e.target.value));
                       setCurrentPage(1);
                     }}
-                    className="appearance-none bg-white border border-slate-200 rounded-xs pl-3 pr-7 py-1 text-xs sm:text-sm text-slate-800 cursor-pointer focus:outline-none focus:border-[#800020] shadow-2xs"
+                    className="appearance-none bg-white border border-slate-200 rounded-[8px] apple-squircle-xs pl-3 pr-7 py-1 text-xs sm:text-sm text-slate-800 cursor-pointer focus:outline-none focus:border-[#800020] shadow-2xs"
                   >
                     <option value={5}>5</option>
                     <option value={10}>10</option>
@@ -467,7 +469,7 @@ function PurchasesContent() {
               <img
                 src={slipPreview}
                 alt="สลิปการโอนเงิน"
-                className="max-w-full h-auto rounded-xs shadow-xs"
+                className="max-w-full h-auto rounded-[10px] apple-squircle-sm shadow-xs"
                 onError={(e) => {
                   const target = e.currentTarget as HTMLImageElement;
                   if (slipPreview && slipPreview.includes('/uploads/slips/') && !target.dataset.triedFallback) {

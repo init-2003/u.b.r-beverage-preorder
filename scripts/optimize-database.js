@@ -2,6 +2,23 @@ const { getDbPool } = require('../lib/db.ts');
 
 const INDEX_SCRIPTS = [
   {
+    name: 'IX_Trade_productType',
+    table: 'Trade',
+    sql: `
+      IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_Trade_productType' AND object_id = OBJECT_ID('Trade'))
+      BEGIN
+        CREATE NONCLUSTERED INDEX IX_Trade_productType
+        ON Trade (productType, Trade_Name)
+        INCLUDE (Trade_Id, Type_Name, Sale_Price1, Trade_deposit, Unit_Name, Trade_Part_Image, Trade_Province, Trade_Note, Trade_NameEN);
+        PRINT 'Created index IX_Trade_productType on Trade';
+      END
+      ELSE
+      BEGIN
+        PRINT 'Index IX_Trade_productType already exists';
+      END
+    `
+  },
+  {
     name: 'IX_Trade_Type_Name',
     table: 'Trade',
     sql: `

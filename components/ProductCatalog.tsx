@@ -89,15 +89,38 @@ export default function ProductCatalog({
   };
 
   const filteredProducts = products.filter((product) => {
-    const matchesCategory =
-      activeCategory === 'all' ||
-      activeCategory === 'Pre Order' ||
-      product.category === activeCategory ||
-      product.name.toLowerCase().includes(activeCategory.toLowerCase());
+    const cat = (activeCategory || '').trim().toLowerCase();
+    const isAll = !cat || cat === 'all' || cat === 'ทั้งหมด' || cat === 'pre order' || cat === 'preorder' || cat === 'สินค้าเปิดจอง' || cat === 'สินค้านำเข้า';
+
+    let matchesCategory = isAll;
+    if (!matchesCategory) {
+      const isWhisky = cat.includes('วิสกี้') || cat.includes('whisky') || cat.includes('scotch');
+      const isWine = cat.includes('ไวน์') || cat.includes('wine');
+      const isBeer = cat.includes('เบียร์') || cat.includes('beer');
+      const isSake = cat.includes('สาเก') || cat.includes('sake');
+      const isPlum = cat.includes('บ๊วย') || cat.includes('umeshu');
+      const isBrandy = cat.includes('บรั่นดี') || cat.includes('brandy') || cat.includes('cognac');
+      const isSoju = cat.includes('โซจู') || cat.includes('soju');
+
+      matchesCategory =
+        Boolean(product.category && product.category.toLowerCase() === cat) ||
+        Boolean(product.category && product.category.toLowerCase().includes(cat)) ||
+        product.name.toLowerCase().includes(cat) ||
+        Boolean(product.origin && product.origin.toLowerCase().includes(cat)) ||
+        (isWhisky && (product.name.toLowerCase().includes('whisky') || product.name.toLowerCase().includes('scotch') || product.name.toLowerCase().includes('macallan') || Boolean(product.origin && product.origin.toLowerCase().includes('whisky')))) ||
+        (isWine && (product.name.toLowerCase().includes('wine') || Boolean(product.origin && product.origin.toLowerCase().includes('wine')))) ||
+        (isBeer && (product.name.toLowerCase().includes('beer') || Boolean(product.origin && product.origin.toLowerCase().includes('beer')))) ||
+        (isSake && (product.name.toLowerCase().includes('sake') || Boolean(product.category && product.category.toLowerCase().includes('สาเก')))) ||
+        (isPlum && (product.name.toLowerCase().includes('umeshu') || product.name.toLowerCase().includes('plum'))) ||
+        (isBrandy && (product.name.toLowerCase().includes('brandy') || product.name.toLowerCase().includes('cognac'))) ||
+        (isSoju && product.name.toLowerCase().includes('soju'));
+    }
+
     const matchesSearch =
       !activeSearch.trim() ||
       product.name.toLowerCase().includes(activeSearch.toLowerCase()) ||
-      (product.origin && product.origin.toLowerCase().includes(activeSearch.toLowerCase())) ||
+      Boolean(product.nameEN && product.nameEN.toLowerCase().includes(activeSearch.toLowerCase())) ||
+      Boolean(product.origin && product.origin.toLowerCase().includes(activeSearch.toLowerCase())) ||
       product.id.toLowerCase().includes(activeSearch.toLowerCase());
     return matchesCategory && matchesSearch;
   });
@@ -187,7 +210,7 @@ export default function ProductCatalog({
               >
                 <div
                   onClick={() => router.push(`/products/${product.id}`)}
-                  className="rounded-sm bg-white border border-slate-200 shadow-xs hover:shadow-xl hover:shadow-slate-300/50 hover:border-slate-300 hover:scale-[1.03] hover:-translate-y-1 hover:z-20 flex flex-col justify-between group transition-all duration-300 ease-out relative cursor-pointer overflow-hidden will-change-transform h-full"
+                  className="apple-squircle-card bg-white border border-slate-200 shadow-xs hover:shadow-xl hover:shadow-slate-300/50 hover:border-slate-300 hover:scale-[1.03] hover:-translate-y-1 hover:z-20 flex flex-col justify-between group transition-all duration-300 ease-out relative cursor-pointer overflow-hidden will-change-transform h-full"
                 >
                   {/* Product Image Box (เต็ม Card บน ซ้าย ขวา) */}
                   <Link
@@ -196,7 +219,7 @@ export default function ProductCatalog({
                   >
                     {/* PRE-ORDER Badge at Top-Left Corner (Non-bold, slightly larger) */}
                     <div
-                      className="absolute top-2.5 left-2.5 sm:top-3 sm:left-3 z-10 flex items-center gap-1.5 bg-[#ffb930] rounded-[4px] px-2 py-0.5 sm:px-2.5 sm:py-1 shadow-2xs select-none pointer-events-none"
+                      className="absolute top-2.5 left-2.5 sm:top-3 sm:left-3 z-10 flex items-center gap-1.5 bg-[#ffb930] apple-squircle-xs px-2 py-0.5 sm:px-2.5 sm:py-1 shadow-2xs select-none pointer-events-none"
                       title="Pre-Order"
                     >
                       <div className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-white flex items-center justify-center shrink-0">
@@ -212,7 +235,7 @@ export default function ProductCatalog({
                     {/* Yellow Sticker Badge at Top-Right Corner */}
                     {depositPercent > 0 && (
                       <div
-                        className="absolute top-2.5 right-2.5 sm:top-3 sm:right-3 z-10 flex flex-col items-center justify-center bg-[#ffe01b] border border-amber-300 rounded-[5px] px-2 py-1 shadow-2xs select-none pointer-events-none min-w-[38px]"
+                        className="absolute top-2.5 right-2.5 sm:top-3 sm:right-3 z-10 flex flex-col items-center justify-center bg-[#ffe01b] border border-amber-300 apple-squircle-xs px-2 py-1 shadow-2xs select-none pointer-events-none min-w-[38px]"
                         title={`มัดจำ ${depositPercent}%`}
                       >
                         <span className="text-[9.5px] sm:text-[10px] font-bold text-blue-700 leading-tight">
@@ -238,7 +261,7 @@ export default function ProductCatalog({
                     {/* Product Name (Clean 2-line title) */}
                     <div className="space-y-1 mb-2">
                       <Link href={`/products/${product.id}`} className="block group/title">
-                        <h3 className="text-sm font-normal text-slate-800 line-clamp-2 min-h-[38px] leading-snug" title={product.name}>
+                        <h3 className="text-xs sm:text-sm font-semibold text-slate-800 line-clamp-2 min-h-[36px] sm:min-h-[40px] leading-snug" title={product.name}>
                           {product.name}
                         </h3>
                       </Link>
@@ -249,13 +272,13 @@ export default function ProductCatalog({
                       {/* Price Tag */}
                       <div>
                         <div className="flex items-baseline gap-1">
-                          <span className="text-base sm:text-lg font-bold text-[#FF6B00]">
+                          <span className="text-base sm:text-lg font-bold text-[#FF6B00] tabular-nums">
                             ฿{(product.price || 0).toLocaleString()}
                           </span>
                         </div>
 
                         {depositAmt > 0 ? (
-                          <p className="text-[11px] sm:text-xs text-[#FF0000] font-medium mt-0.5">
+                          <p className="text-[11px] sm:text-xs text-[#FF0000] font-medium mt-0.5 tabular-nums">
                             มัดจำ ฿{formatDepositPrice(depositAmt)}{depositPercent > 0 ? ` (${depositPercent}%)` : ''}
                           </p>
                         ) : null}
@@ -270,7 +293,7 @@ export default function ProductCatalog({
                             e.stopPropagation();
                             handleAddToCart(product);
                           }}
-                          className={`h-9 w-9 shrink-0 rounded-full font-bold text-xs flex items-center justify-center transition-all duration-150 active:scale-80 border cursor-pointer select-none ${addedProductId === product.id
+                          className={`h-9.5 w-9.5 shrink-0 rounded-full font-bold text-xs flex items-center justify-center transition-all duration-150 active:scale-90 border cursor-pointer select-none ${addedProductId === product.id
                               ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
                               : 'bg-black hover:bg-neutral-800 text-white border-black shadow-2xs'
                             }`}
@@ -288,7 +311,7 @@ export default function ProductCatalog({
                         <button
                           type="button"
                           onClick={(e) => handleDirectOrder(e, product)}
-                          className="flex-1 h-9 py-2 px-2.5 rounded-full font-bold text-xs flex items-center justify-center gap-1.5 transition-all duration-150 bg-[#800020] hover:bg-[#6b001b] active:bg-[#570016] text-white shadow-2xs hover:shadow-xs cursor-pointer active:scale-95 select-none"
+                          className="flex-1 h-9.5 min-h-[38px] py-2 px-2.5 rounded-full font-bold text-xs sm:text-[13px] flex items-center justify-center gap-1.5 transition-all duration-150 bg-[#800020] hover:bg-[#6b001b] active:bg-[#570016] text-white shadow-2xs hover:shadow-xs cursor-pointer active:scale-[0.98] select-none"
                           title="สั่งซื้อเลย"
                         >
                           <span>สั่งซื้อเลย</span>

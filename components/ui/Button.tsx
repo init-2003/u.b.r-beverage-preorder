@@ -25,10 +25,10 @@ const variantStyles: Record<ButtonVariant, string> = {
 };
 
 const sizeStyles: Record<ButtonSize, string> = {
-  sm: 'py-2 px-4 text-xs rounded-full',
-  md: 'py-2.5 px-5 text-sm rounded-full',
-  lg: 'py-3.5 px-6 text-base rounded-full',
-  icon: 'p-2 rounded-full flex items-center justify-center',
+  sm: 'py-2 px-4 text-xs sm:text-sm rounded-full min-h-[36px]',
+  md: 'py-2.5 px-6 text-sm rounded-full min-h-[42px]',
+  lg: 'py-3.5 px-8 text-base rounded-full min-h-[48px]',
+  icon: 'p-2 rounded-full flex items-center justify-center min-w-[36px] min-h-[36px]',
 };
 
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
@@ -48,7 +48,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     ref
   ) => {
     const baseClasses =
-      'inline-flex items-center justify-center gap-2 transition-all cursor-pointer select-none active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100';
+      'inline-flex items-center justify-center gap-2 transition-all cursor-pointer select-none active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100';
     const variantClass = variantStyles[variant];
     const sizeClass = sizeStyles[size];
     const widthClass = fullWidth ? 'w-full' : '';

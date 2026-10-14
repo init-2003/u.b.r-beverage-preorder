@@ -144,7 +144,7 @@ export function BannerCarousel() {
 
   return (
     <div
-      className="relative rounded-lg shadow-sm border border-slate-200/80 bg-black overflow-hidden select-none group"
+      className="relative apple-squircle-card shadow-sm border border-slate-200/80 bg-black overflow-hidden select-none group"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
       onTouchStart={handleTouchStart}

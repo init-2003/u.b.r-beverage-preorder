@@ -17,6 +17,7 @@ export function QuantityInput({
   min = 1,
   max,
   className = '',
+  onFocus,
   ...props
 }: QuantityInputProps) {
   const [text, setText] = useState<string>(String(value ?? min));
@@ -37,7 +38,7 @@ export function QuantityInput({
     }
   };
 
-  const handleBlur = () => {
+  const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
     if (text === '' || isNaN(parseInt(text, 10)) || parseInt(text, 10) < min) {
       setText(String(min));
       onChange(min);
@@ -47,16 +48,29 @@ export function QuantityInput({
       setText(String(num));
       onChange(num);
     }
+    if (props.onBlur) {
+      props.onBlur(e);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       e.currentTarget.blur();
     }
+    if (props.onKeyDown) {
+      props.onKeyDown(e);
+    }
   };
 
   const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
-    e.target.select();
+    // ไม่คลุมดำ/ไฮไลท์ (ไม่เรียก e.target.select()) ให้ขึ้นเคอร์เซอร์ | ทันที
+    const len = e.target.value.length;
+    try {
+      e.target.setSelectionRange(len, len);
+    } catch {}
+    if (onFocus) {
+      onFocus(e);
+    }
   };
 
   return (
@@ -69,7 +83,7 @@ export function QuantityInput({
       onBlur={handleBlur}
       onFocus={handleFocus}
       onKeyDown={handleKeyDown}
-      className={`text-center select-none outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${className}`.trim()}
+      className={`text-center outline-none text-base sm:text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${className}`.trim()}
       {...props}
     />
   );

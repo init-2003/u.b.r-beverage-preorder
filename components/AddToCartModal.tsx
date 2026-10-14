@@ -102,17 +102,17 @@ export default function AddToCartModal() {
           </div>
 
           {/* Stepper / Quantity Row */}
-          <div className="pt-2.5 border-t border-slate-200/70 flex items-center justify-end gap-2.5">
+          <div className="pt-2.5 border-t border-slate-200/70 flex items-center justify-start gap-2.5">
             <span className="text-xs font-semibold text-slate-700">
               จำนวน:
             </span>
             <div className="flex items-center gap-2">
-              <div className="flex items-center border border-slate-300 rounded bg-white overflow-hidden shadow-2xs">
+              <div className="flex items-center border border-slate-300 apple-squircle-xs bg-white overflow-hidden shadow-2xs">
                 <button
                   type="button"
                   onClick={() => handleQtyChange(modalQty - 1)}
                   disabled={modalQty <= 1}
-                  className="w-8 h-8 flex items-center justify-center text-slate-700 hover:bg-slate-100 disabled:opacity-30 disabled:hover:bg-white text-base font-bold transition-colors cursor-pointer select-none"
+                  className="w-9 h-9 flex items-center justify-center text-slate-700 hover:bg-slate-100 disabled:opacity-30 disabled:hover:bg-white text-base font-normal transition-colors cursor-pointer select-none"
                   aria-label="ลดจำนวน"
                 >
                   -
@@ -121,19 +121,19 @@ export default function AddToCartModal() {
                   value={modalQty}
                   onChange={setModalQty}
                   min={1}
-                  className="w-12 h-8 text-center font-bold text-sm text-slate-900 border-x border-slate-200 focus:outline-none"
+                  className="w-12 h-9 text-center font-normal text-sm text-slate-900 border-x border-slate-200 focus:outline-none"
                 />
                 <button
                   type="button"
                   onClick={() => handleQtyChange(modalQty + 1)}
-                  className="w-8 h-8 flex items-center justify-center text-slate-700 hover:bg-slate-100 text-base font-bold transition-colors cursor-pointer select-none"
+                  className="w-9 h-9 flex items-center justify-center text-slate-700 hover:bg-slate-100 text-base font-normal transition-colors cursor-pointer select-none"
                   aria-label="เพิ่มจำนวน"
                 >
                   +
                 </button>
               </div>
               {item.unitName ? (
-                <span className="text-xs text-slate-500 font-medium">
+                <span className="text-xs sm:text-sm text-slate-500 font-medium">
                   {item.unitName}
                 </span>
               ) : null}
@@ -142,21 +142,13 @@ export default function AddToCartModal() {
         </div>
       </div>
 
-      {/* Footer Actions (3 ปุ่ม: เลือกดูสินค้าต่อ / ดูตะกร้าสินค้า / เพิ่มในตะกร้า) */}
-      <div className="px-6 pb-6 pt-3 grid grid-cols-2 sm:flex sm:items-center sm:gap-2 gap-2.5">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={closeAddedModal}
-          className="w-full sm:w-auto"
-        >
-          เลือกดูสินค้าต่อ
-        </Button>
+      {/* Footer Actions (2 ปุ่ม: ดูตะกร้าสินค้า / เพิ่มในตะกร้า ขนาดเท่ากัน ซ้าย-ขวา) */}
+      <div className="px-6 pb-6 pt-3 grid grid-cols-2 sm:flex sm:items-center sm:justify-end gap-2.5 sm:gap-3">
         <Button
           variant="outline"
           size="sm"
           onClick={handleGoToCart}
-          className="w-full sm:w-auto sm:ml-auto"
+          className="w-full sm:w-[140px] h-10 min-h-[40px] text-xs sm:text-sm font-bold"
         >
           ดูตะกร้าสินค้า
         </Button>
@@ -164,7 +156,7 @@ export default function AddToCartModal() {
           variant="primary"
           size="sm"
           onClick={handleConfirmAddToCart}
-          className="col-span-2 w-full sm:w-auto"
+          className="w-full sm:w-[140px] h-10 min-h-[40px] text-xs sm:text-sm font-bold"
         >
           เพิ่มในตะกร้า
         </Button>

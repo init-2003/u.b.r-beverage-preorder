@@ -34,6 +34,10 @@ export async function GET(
           RTRIM(LTRIM(ISNULL(t.Trade_NameEN, ''))) AS Trade_NameEN,
           RTRIM(LTRIM(ISNULL(t.Unit_Name, ''))) AS Unit_Name,
           RTRIM(LTRIM(ISNULL(t.Type_Name, ''))) AS Type_Name,
+          RTRIM(LTRIM(ISNULL(t.productType, ''))) AS productType,
+          ISNULL(t.SubMenu_ID_Ref, 0) AS SubMenu_ID_Ref,
+          RTRIM(LTRIM(ISNULL(sm.SubMenu_NameTH, ''))) AS SubMenu_NameTH,
+          RTRIM(LTRIM(ISNULL(sm.SubMenu_NameEN, ''))) AS SubMenu_NameEN,
           ISNULL(t.Sale_Price1, 0) AS Sale_Price1,
           t.Sale_Price2,
           t.Sale_Price3,
@@ -49,6 +53,7 @@ export async function GET(
           RTRIM(LTRIM(ISNULL(t.Detail_Trade, ''))) AS Detail_Trade,
           ISNULL(t.Trade_deposit, 0) AS Trade_deposit
         FROM Trade t
+        LEFT JOIN Type_SubMenu sm ON t.SubMenu_ID_Ref = sm.SubMenu_ID
         WHERE t.Trade_Id = @id
       `);
 
@@ -69,7 +74,11 @@ export async function GET(
       id: p.Trade_Id,
       name: p.Trade_Name,
       nameEN: p.Trade_NameEN,
-      category: p.Type_Name || 'Pre Order',
+      category: p.SubMenu_NameTH || p.Type_Name || 'Pre Order',
+      productType: p.productType,
+      subMenuIdRef: p.SubMenu_ID_Ref,
+      subMenuNameTH: p.SubMenu_NameTH,
+      subMenuNameEN: p.SubMenu_NameEN,
       unitName: (p.Unit_Name || '').trim(),
       price: activePrice,
       salePrice1: Number(p.Sale_Price1) || 0,
@@ -84,7 +93,7 @@ export async function GET(
       origin,
       description: (p.Detail_Trade || p.Trade_Note || '').trim(),
       imageUrl: resolveProductImageUrl(p.Trade_Part_Image),
-      isPreorderOnly: (p.Type_Name || '').trim().toLowerCase() === 'pre order',
+      isPreorderOnly: (p.productType || '').trim().toUpperCase() === 'PREORDER' || (p.Type_Name || '').trim().toLowerCase() === 'pre order',
     };
 
     return NextResponse.json({

@@ -273,6 +273,31 @@ body {
   overflow-x: clip;
 }
 
+/* ม่านบังขอบบน Navbar (Top Curtain Shield): 
+   ใช้ box-shadow (วิธีแนะนำที่สุด) และ ::before แผ่ขยายแถบสีทึบ #800020 ทะลุขอบจอขึ้นไปด้านบน 
+   เมื่อเกิดจังหวะกระตุก 1-2 พิกเซล หรือจังหวะดึงหน้าจอลง (Pull-to-refresh)
+   เนื้อหาที่แลบขึ้นไปจะถูกแถบสีนี้ทับไว้ทั้งหมด 100% ทำให้มองไม่เห็น และคงระบบ Scroll ดั้งเดิมไว้โดยไม่ต้องใช้ overscroll-behavior-y: none */
+.navbar-top-curtain,
+header[class*="sticky"],
+header[class*="fixed"] {
+  box-shadow: 0 -1502px 0 1500px #800020, 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1) !important;
+}
+
+.navbar-top-curtain::before,
+header[class*="sticky"]::before,
+header[class*="fixed"]::before {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  right: 0;
+  width: 100%;
+  height: 200vh;
+  background-color: #800020;
+  pointer-events: none;
+  z-index: 50;
+}
+
 /* Prompt สำหรับ heading ทุกระดับโดยอัตโนมัติ */
 h1,
 h2,
@@ -284,6 +309,146 @@ h4 {
 /* Utility class สำหรับ apply Prompt ได้ตรง ๆ */
 .font-heading {
   font-family: var(--font-heading) !important;
+}
+
+/* ========================================================
+   RESPONSIVE TYPE SCALE TOKENS (Universal Device Standard)
+   ======================================================== */
+
+.type-display {
+  font-size: 1.5rem; /* 24px Mobile */
+  line-height: 1.25;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+@media (min-width: 640px) {
+  .type-display {
+    font-size: 1.875rem; /* 30px Desktop */
+    line-height: 1.25;
+  }
+}
+
+.type-h1 {
+  font-size: 1.25rem; /* 20px Mobile */
+  line-height: 1.3;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  letter-spacing: -0.015em;
+}
+@media (min-width: 640px) {
+  .type-h1 {
+    font-size: 1.5rem; /* 24px Desktop */
+    line-height: 1.3;
+  }
+}
+
+.type-h2 {
+  font-size: 1rem; /* 16px Mobile */
+  line-height: 1.35;
+  font-family: var(--font-heading);
+  font-weight: 700;
+}
+@media (min-width: 640px) {
+  .type-h2 {
+    font-size: 1.125rem; /* 18px Desktop */
+    line-height: 1.35;
+  }
+}
+
+.type-h3 {
+  font-size: 0.9375rem; /* 15px Mobile */
+  line-height: 1.4;
+  font-family: var(--font-heading);
+  font-weight: 700;
+}
+@media (min-width: 640px) {
+  .type-h3 {
+    font-size: 1rem; /* 16px Desktop */
+    line-height: 1.4;
+  }
+}
+
+.type-body {
+  font-size: 0.875rem; /* 14px Mobile */
+  line-height: 1.5;
+  font-family: var(--font-sans);
+}
+@media (min-width: 640px) {
+  .type-body {
+    font-size: 0.9375rem; /* 15px Desktop */
+    line-height: 1.5;
+  }
+}
+
+.type-body-sm {
+  font-size: 0.75rem; /* 12px Mobile */
+  line-height: 1.45;
+  font-family: var(--font-sans);
+}
+@media (min-width: 640px) {
+  .type-body-sm {
+    font-size: 0.8125rem; /* 13px Desktop */
+    line-height: 1.45;
+  }
+}
+
+.type-caption {
+  font-size: 0.6875rem; /* 11px Mobile */
+  line-height: 1.35;
+  font-family: var(--font-sans);
+}
+@media (min-width: 640px) {
+  .type-caption {
+    font-size: 0.75rem; /* 12px Desktop */
+    line-height: 1.35;
+  }
+}
+
+.type-price-hero {
+  font-size: 1.375rem; /* 22px Mobile */
+  line-height: 1.2;
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+@media (min-width: 640px) {
+  .type-price-hero {
+    font-size: 1.75rem; /* 28px Desktop */
+    line-height: 1.2;
+  }
+}
+@media (min-width: 1024px) {
+  .type-price-hero {
+    font-size: 1.875rem; /* 30px Desktop LG */
+  }
+}
+
+.type-price-item {
+  font-size: 0.875rem; /* 14px Mobile */
+  line-height: 1.25;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+@media (min-width: 640px) {
+  .type-price-item {
+    font-size: 1rem; /* 16px Desktop */
+  }
+}
+
+/* ป้องกัน iOS Safari Auto-zoom บนอุปกรณ์มือถือ (ต้องมีขนาดอย่างน้อย 16px) */
+input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='button']):not([type='submit']):not([type='reset']),
+textarea,
+select {
+  font-size: 16px;
+}
+@media (min-width: 640px) {
+  input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='button']):not([type='submit']):not([type='reset']),
+  textarea,
+  select {
+    font-size: 0.875rem; /* 14px */
+  }
 }
 
 /* Custom utility styles for burgundy theme */
@@ -620,6 +785,43 @@ h4 {
 }
 
 /* ============================================
+   DROPDOWN & CATEGORY ITEM CASCADE ANIMATION
+   ============================================ */
+@keyframes dropdownPanelSlideDown {
+  0% {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-dropdown-panel {
+  transform-origin: top left;
+  animation: dropdownPanelSlideDown 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, opacity;
+}
+
+@keyframes dropdownItemSlideDown {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-dropdown-item {
+  opacity: 0;
+  animation: dropdownItemSlideDown 0.26s cubic-bezier(0.16, 1, 0.3, 1) both;
+  will-change: transform, opacity;
+}
+
+/* ============================================
    ACCOUNT SIDEBAR MENU CLICK & PILL ANIMATION
    ============================================ */
 @keyframes menuClickFlash {
@@ -828,4 +1030,147 @@ h4 {
   animation: modalScaleOut 0.18s cubic-bezier(0.4, 0, 0.2, 1) forwards;
   will-change: transform, opacity;
   pointer-events: none;
+}
+
+/* Category Dropdown Scrollbar (BaNANA / Shopee Luxury Style) */
+.dropdown-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #94a3b8 #f1f5f9;
+}
+
+.dropdown-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.dropdown-scrollbar::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+
+.dropdown-scrollbar::-webkit-scrollbar-thumb {
+  background: #94a3b8;
+  border-radius: 4px;
+}
+
+.dropdown-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
+/* ==========================================================================
+   iOS SAFARI AUTO-ZOOM PREVENTION
+   Enforce at least 16px font-size on mobile screens (< 640px) so Safari does
+   not trigger automatic viewport zoom on input focus.
+   ========================================================================== */
+@media screen and (max-width: 639.98px) {
+  input[type="text"],
+  input[type="number"],
+  input[type="password"],
+  input[type="search"],
+  input[type="tel"],
+  input[type="url"],
+  input[type="email"],
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}
+
+/* ==========================================================================
+   APPLE SQUIRCLE / G2 CONTINUOUS DESIGN SYSTEM TOKENS
+   Applies native W3C corner-shape: squircle (Chromium 139+ & WebKit)
+   with calibrated Superellipse radii for seamless G2 continuity.
+   ========================================================================== */
+[class*="rounded-"]:not([class*="rounded-full"]):not([class*="rounded-l-full"]):not([class*="rounded-r-full"]):not([class*="rounded-t-full"]):not([class*="rounded-b-full"]),
+.apple-squircle,
+button:not([class*="rounded-full"]):not([class*="rounded-l-full"]):not([class*="rounded-r-full"]),
+input:not([class*="rounded-full"]),
+select,
+textarea {
+  corner-shape: squircle;
+  -webkit-corner-shape: squircle;
+}
+
+/* Explicit true circular capsules for any capsule/pill elements */
+.rounded-full,
+.rounded-l-full,
+.rounded-r-full,
+.rounded-t-full,
+.rounded-b-full,
+[class*="rounded-full"],
+[class*="rounded-l-full"],
+[class*="rounded-r-full"] {
+  corner-shape: round !important;
+  -webkit-corner-shape: round !important;
+}
+
+@utility apple-squircle-xs {
+  border-radius: 6px;
+  corner-shape: squircle;
+  -webkit-corner-shape: squircle;
+}
+
+@utility apple-squircle-sm {
+  border-radius: 9px;
+  corner-shape: squircle;
+  -webkit-corner-shape: squircle;
+}
+
+@utility apple-squircle-input {
+  border-radius: 10px;
+  corner-shape: squircle;
+  -webkit-corner-shape: squircle;
+}
+
+@utility apple-squircle-btn {
+  border-radius: 13px;
+  corner-shape: squircle;
+  -webkit-corner-shape: squircle;
+}
+
+@utility apple-squircle-card {
+  border-radius: 14px;
+  corner-shape: squircle;
+  -webkit-corner-shape: squircle;
+}
+
+@utility apple-squircle-modal {
+  border-radius: 22px;
+  corner-shape: squircle;
+  -webkit-corner-shape: squircle;
+}
+
+.apple-squircle-xs {
+  border-radius: 6px;
+  corner-shape: squircle;
+  -webkit-corner-shape: squircle;
+}
+
+.apple-squircle-sm {
+  border-radius: 9px;
+  corner-shape: squircle;
+  -webkit-corner-shape: squircle;
+}
+
+.apple-squircle-input {
+  border-radius: 10px;
+  corner-shape: squircle;
+  -webkit-corner-shape: squircle;
+}
+
+.apple-squircle-btn {
+  border-radius: 13px;
+  corner-shape: squircle;
+  -webkit-corner-shape: squircle;
+}
+
+.apple-squircle-card {
+  border-radius: 14px;
+  corner-shape: squircle;
+  -webkit-corner-shape: squircle;
+}
+
+.apple-squircle-modal {
+  border-radius: 22px;
+  corner-shape: squircle;
+  -webkit-corner-shape: squircle;
 }

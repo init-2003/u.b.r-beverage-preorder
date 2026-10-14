@@ -6,22 +6,17 @@ import { useParams, useRouter } from 'next/navigation';
 import { useBreadcrumb } from '@/context/BreadcrumbContext';
 import {
   QrCode,
-  Loader2,
-  MapPin,
   Clock,
-  CreditCard,
   ArrowLeft,
   AlertCircle,
   XCircle,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import PaidStamp from '@/components/orders/PaidStamp';
-import { CodIllustration } from '@/components/orders/CodIllustration';
-import { PaymentQrIllustration } from '@/components/orders/PaymentQrIllustration';
-import { SlipVerifiedIllustration } from '@/components/orders/SlipVerifiedIllustration';
 import { StepPaymentIllustration } from '@/components/orders/StepPaymentIllustration';
 import { StepProcessingIllustration } from '@/components/orders/StepProcessingIllustration';
 import { StepReceiptIllustration } from '@/components/orders/StepReceiptIllustration';
+import { StepCancelledIllustration } from '@/components/orders/StepCancelledIllustration';
 import { WineLoading } from '@/components/WineLoading';
 import { ProductImage } from '@/components/ui/ProductImage';
 import { formatDepositPrice } from '@/lib/deposit';
@@ -85,6 +80,49 @@ function formatOrderDate(dateVal?: string) {
   const minutes = pad(d.getMinutes());
   const seconds = pad(d.getSeconds());
   return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+}
+
+function formatCustomerPhoneAndName(name: string, tel: string) {
+  const trimmedName = (name || '').trim();
+  const rawTel = (tel || '').trim();
+  const digitsOnly = rawTel.replace(/[^0-9]/g, '');
+
+  if (digitsOnly.startsWith('0') && digitsOnly.length === 10) {
+    const formattedTel = `${digitsOnly.slice(0, 3)} ${digitsOnly.slice(3, 6)} ${digitsOnly.slice(6)}`;
+    return {
+      displayName: trimmedName || 'ผู้สั่งซื้อ',
+      formattedTel,
+    };
+  }
+
+  if (!digitsOnly.startsWith('0') && digitsOnly.length === 9) {
+    const withZero = `0${digitsOnly}`;
+    const formattedTel = `${withZero.slice(0, 3)} ${withZero.slice(3, 6)} ${withZero.slice(6)}`;
+    return {
+      displayName: trimmedName || 'ผู้สั่งซื้อ',
+      formattedTel,
+    };
+  }
+
+  if (digitsOnly.startsWith('0') && digitsOnly.length === 9) {
+    const formattedTel = `${digitsOnly.slice(0, 3)} ${digitsOnly.slice(3, 6)} ${digitsOnly.slice(6)}`;
+    return {
+      displayName: trimmedName || 'ผู้สั่งซื้อ',
+      formattedTel,
+    };
+  }
+
+  if (rawTel) {
+    return {
+      displayName: trimmedName || 'ผู้สั่งซื้อ',
+      formattedTel: rawTel,
+    };
+  }
+
+  return {
+    displayName: trimmedName || 'ผู้สั่งซื้อ',
+    formattedTel: '-',
+  };
 }
 
 interface OrderDetailPageProps {
@@ -159,34 +197,6 @@ export default function OrderDetailPage({ forcedDocNo }: OrderDetailPageProps = 
     };
   }, []);
 
-  const [downloadingPdf, setDownloadingPdf] = useState(false);
-
-  const handleDownloadPdf = async () => {
-    if (downloadingPdf || !order) return;
-    try {
-      setDownloadingPdf(true);
-      const res = await fetch(`/api/orders/${encodeURIComponent(order.Fn_Doc_No)}/pdf`);
-      if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        alert(errData.message || 'ไม่สามารถดาวน์โหลดใบสั่งซื้อได้');
-        return;
-      }
-      const blob = await res.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `PO-${order.Fn_Doc_No}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      window.URL.revokeObjectURL(url);
-    } catch (err) {
-      console.error('Download error:', err);
-      alert('เกิดข้อผิดพลาดในการดาวน์โหลด กรุณาลองใหม่อีกครั้ง');
-    } finally {
-      setDownloadingPdf(false);
-    }
-  };
 
   useEffect(() => {
     if (!authLoading && !customer) {
@@ -226,10 +236,7 @@ export default function OrderDetailPage({ forcedDocNo }: OrderDetailPageProps = 
       setCustomTitle(order?.Fn_Doc_No || docNo);
       try {
         sessionStorage.setItem('ubr_active_order_doc_no', docNo);
-      } catch {}
-      if (typeof window !== 'undefined' && window.location.pathname !== '/orders') {
-        window.history.replaceState(null, '', '/orders');
-      }
+      } catch { }
     }
   }, [docNo, order?.Fn_Doc_No, setCustomTitle]);
 
@@ -248,7 +255,7 @@ export default function OrderDetailPage({ forcedDocNo }: OrderDetailPageProps = 
   if (errorMsg || !order) {
     return (
       <div className="flex-1 bg-white py-16 px-4 flex items-center justify-center">
-        <div className="max-w-md w-full bg-white p-8 rounded-sm shadow-[0_1px_1px_0_rgba(0,0,0,0.05)] border border-slate-200 text-center space-y-4 animate-order-slide-up">
+        <div className="max-w-md w-full bg-white p-8 apple-squircle-card rounded-[14px] shadow-[0_1px_1px_0_rgba(0,0,0,0.05)] border border-slate-200 text-center space-y-4 animate-order-slide-up">
           <div className="w-14 h-14 bg-red-50 text-red-600 rounded-full flex items-center justify-center mx-auto">
             <AlertCircle className="w-7 h-7" />
           </div>
@@ -257,7 +264,7 @@ export default function OrderDetailPage({ forcedDocNo }: OrderDetailPageProps = 
           <div className="pt-2">
             <Link
               href="/orders/history"
-              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs transition-colors shadow-2xs"
+              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs sm:text-sm transition-colors shadow-2xs min-h-[42px]"
             >
               <ArrowLeft className="w-4 h-4" />
               <span>กลับไปหน้ารายการสั่งซื้อ</span>
@@ -303,14 +310,21 @@ export default function OrderDetailPage({ forcedDocNo }: OrderDetailPageProps = 
       (order.money_sts === 'T' && docStsCode === '0')
     );
 
-  return (
-    <div className="flex-1 flex flex-col w-full bg-white py-5 sm:py-8">
-      <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 space-y-4">
+  const totalItemsCount = order.items && order.items.length > 0
+    ? order.items.reduce((sum, item) => sum + (Number(item.Qty) || 0), 0)
+    : 0;
 
-        {/* ================= 1. SHOPEE STATUS & STEPPER HEADER BANNER ================= */}
-        <div className="bg-white rounded-sm shadow-xs border border-slate-200 overflow-hidden animate-order-slide-up">
-          {/* Header row: Doc No + Order Date + Status + PO Print Link */}
-          <div className="p-4 sm:p-5 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50/50">
+  return (
+    <div className="flex-1 flex flex-col w-full bg-white pt-6 sm:pt-8 pb-16 sm:pb-24 min-h-[calc(100vh+80px)] min-h-[calc(100dvh+80px)]">
+      <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 space-y-3 sm:space-y-6">
+
+        {/* ================= 1. STATUS & STEPPER HEADER BANNER CARD ================= */}
+        <div
+          className="bg-white rounded-[14px] apple-squircle-card border border-slate-200 shadow-2xs overflow-hidden animate-order-slide-up"
+          style={{ animationDelay: '40ms' }}
+        >
+          {/* Header row: Doc No + Order Date + Status */}
+          <div className="p-4 sm:px-6 sm:py-5 border-b border-slate-200 bg-white sm:bg-slate-50/50">
             <div>
               <div className="flex items-center gap-2.5 flex-wrap">
                 <span className="text-xs text-slate-500 font-medium">หมายเลขคำสั่งซื้อ:</span>
@@ -345,70 +359,32 @@ export default function OrderDetailPage({ forcedDocNo }: OrderDetailPageProps = 
                 <span>วันที่และเวลาที่สั่งซื้อ: {formatOrderDate(order.confirm_at || order.Fn_Doc_Date)}</span>
               </p>
             </div>
-
-            {/* Action buttons on top right */}
-            {(docStsCode === '3' || docStsCode === '0') && (
-              <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
-                <button
-                  type="button"
-                  onClick={handleDownloadPdf}
-                  disabled={downloadingPdf}
-                  className={`w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-5 py-2 rounded-full bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold text-xs shadow-2xs hover:shadow transition-all cursor-pointer ${downloadingPdf ? 'opacity-70 cursor-not-allowed' : ''
-                    }`}
-                  title="ดาวน์โหลดไฟล์ใบสั่งซื้อ PDF"
-                >
-                  {downloadingPdf ? (
-                    <span className="inline-flex items-center gap-1.5">
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      <span>กำลังดาวน์โหลด...</span>
-                    </span>
-                  ) : (
-                    <span>ดาวน์โหลดใบสั่งซื้อ</span>
-                  )}
-                </button>
-
-                <Link
-                  href={`/orders/${encodeURIComponent(order.Fn_Doc_No)}/purchase-order-viewer`}
-                  className="w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-5 py-2 rounded-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold text-xs shadow-2xs hover:shadow transition-all"
-                  title="เปิดดูและพิมพ์ใบสั่งซื้อ A4"
-                >
-                  <span>ดูใบสั่งซื้อ</span>
-                </Link>
-              </div>
-            )}
           </div>
 
           {/* Stepper Timeline or Cancelled Status */}
           {docStsCode === '4' ? (
-            <div className="p-5 sm:px-8 sm:py-6 bg-red-50/50 border-t sm:border-t-0 border-red-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="flex items-center gap-3.5">
-                <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center text-red-600 shrink-0">
-                  <XCircle className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="text-sm sm:text-base font-bold text-red-900">
-                    ยกเลิก Order
-                  </h3>
-                  <p className="text-xs text-red-600 mt-0.5">
-                    คำสั่งซื้อนี้ถูกยกเลิกแล้ว (สถานะเอกสาร: ยกเลิก Order)
-                  </p>
-                </div>
+            <div className="p-5 sm:px-8 sm:py-6 bg-red-50/40 border-t sm:border-t-0 border-red-100/80 flex items-center gap-4">
+              <StepCancelledIllustration className="w-13 h-13 sm:w-16 sm:h-16 shrink-0 transition-transform duration-200 hover:scale-105" />
+              <div>
+                <h3 className="text-base sm:text-lg font-bold text-red-950">
+                  ยกเลิก Order
+                </h3>
+                <p className="text-xs sm:text-sm text-red-600/90 mt-0.5">
+                  คำสั่งซื้อนี้ถูกยกเลิกแล้ว
+                </p>
               </div>
-              <span className="self-start sm:self-auto text-xs font-bold px-3 py-1 bg-red-100 text-red-700 rounded-full border border-red-200">
-                สถานะ: ยกเลิก Order
-              </span>
             </div>
           ) : (
-            <div className="p-5 sm:px-8 sm:py-7">
+            <div className="py-5 sm:py-7 px-0">
               <div className="max-w-2xl mx-auto relative">
                 {/* Stepper Progress Line */}
                 <div className="absolute top-6 sm:top-7 left-[16.666%] right-[16.666%] h-1 bg-slate-200 -z-0 rounded-full overflow-hidden">
                   <div
                     className={`h-full transition-all duration-500 ${docStsCode === '3'
-                        ? 'w-full bg-gradient-to-r from-blue-600 via-amber-500 to-emerald-600'
-                        : (docStsCode === '0' || isCod)
-                          ? 'w-1/2 bg-gradient-to-r from-blue-600 to-amber-500'
-                          : 'w-0'
+                      ? 'w-full bg-gradient-to-r from-blue-600 via-amber-500 to-emerald-600'
+                      : (docStsCode === '0' || isCod)
+                        ? 'w-1/2 bg-gradient-to-r from-blue-600 to-amber-500'
+                        : 'w-0'
                       }`}
                   />
                 </div>
@@ -458,10 +434,10 @@ export default function OrderDetailPage({ forcedDocNo }: OrderDetailPageProps = 
                         />
                         <span
                           className={`text-xs sm:text-sm font-bold ${isStep2Complete
-                              ? 'text-amber-700'
-                              : isStep2Active
-                                ? 'text-amber-600'
-                                : 'text-slate-400'
+                            ? 'text-amber-700'
+                            : isStep2Active
+                              ? 'text-amber-600'
+                              : 'text-slate-400'
                             }`}
                         >
                           กำลังดำเนินการ
@@ -499,38 +475,65 @@ export default function OrderDetailPage({ forcedDocNo }: OrderDetailPageProps = 
           )}
         </div>
 
-        {/* ================= 2. SHOPEE DELIVERY ADDRESS CARD ================= */}
-        <div 
-          className="bg-white rounded-sm shadow-xs border border-slate-200 overflow-hidden animate-order-slide-up"
+        {/* ================= 2. DELIVERY ADDRESS CARD (MATCHING CHECKOUT) ================= */}
+        <div
+          className="bg-white rounded-[14px] apple-squircle-card border border-slate-200 shadow-2xs overflow-hidden animate-order-slide-up"
           style={{ animationDelay: '40ms' }}
         >
           {/* Signature envelope ribbon strip */}
           <div className="h-[3px] w-full bg-[repeating-linear-gradient(45deg,#6fa6d6,#6fa6d6_33px,transparent_0,transparent_41px,#f18d9b_0,#f18d9b_74px,transparent_0,transparent_82px)]" />
 
-          <div className="p-4 sm:p-6 space-y-2">
-            <div className="flex items-center gap-2 text-black font-bold text-sm sm:text-base">
-              <MapPin className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
-              <span>ที่อยู่ในการจัดส่ง</span>
+          <div className="p-4 sm:p-6">
+            {/* Header: Pin + ที่อยู่ในการจัดส่ง */}
+            <div className="flex items-center gap-2 mb-3.5">
+              <svg className="w-4 h-4 sm:w-5 sm:h-5 text-black shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                <path fillRule="evenodd" clipRule="evenodd" d="M12 2C8.134 2 5 5.134 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.866-3.134-7-7-7zm0 9.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5z" />
+              </svg>
+              <h2 className="text-sm sm:text-base font-bold text-black tracking-tight">
+                ที่อยู่ในการจัดส่ง
+              </h2>
             </div>
 
-            <div className="pt-1 pl-6 sm:pl-7 text-xs sm:text-sm space-y-1">
-              <div className="font-bold text-slate-900">
-                {customerName} • {customerTel}
-              </div>
-              <div className="text-slate-600 leading-relaxed">
-                {fullAddress || 'ไม่ได้ระบุที่อยู่จัดส่ง'}
+            {/* Display Mode matching Checkout layout */}
+            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-6 pt-1">
+              <div className="flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-8 flex-1">
+                {/* Name & Phone (Bold) */}
+                <div className="sm:w-60 shrink-0 space-y-0.5">
+                  <div className="font-bold text-slate-900 text-xs sm:text-sm leading-tight">
+                    {formatCustomerPhoneAndName(customerName, customerTel).displayName}
+                  </div>
+                  <div className="font-bold text-slate-900 text-xs sm:text-sm leading-tight">
+                    {formatCustomerPhoneAndName(customerName, customerTel).formattedTel}
+                  </div>
+                </div>
+
+                {/* Full Address */}
+                <div className="flex-1 text-xs sm:text-sm text-slate-700 leading-relaxed flex items-center gap-2.5 flex-wrap">
+                  {fullAddress ? (
+                    <>
+                      <span>{fullAddress}</span>
+                      <span className="text-[10px] text-red-600 border border-red-600 px-2 py-0.5 rounded-full shrink-0 font-medium select-none">
+                        ค่าเริ่มต้น
+                      </span>
+                    </>
+                  ) : (
+                    <span className="text-slate-400 italic">
+                      ไม่ได้ระบุที่อยู่จัดส่ง
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* ================= 3. SHOPEE ORDERED ITEMS CARD ================= */}
-        <div 
-          className="bg-white rounded-sm shadow-xs border border-slate-200 overflow-hidden animate-order-slide-up"
+        {/* ================= 3. ORDERED ITEMS CARD (MATCHING CHECKOUT) ================= */}
+        <div
+          className="bg-white rounded-[14px] apple-squircle-card border border-slate-200 shadow-2xs overflow-hidden animate-order-slide-up"
           style={{ animationDelay: '80ms' }}
         >
-          {/* Seamless Card Header matching checkout style */}
-          <div className="px-5 sm:px-6 pt-4 pb-2 flex items-center justify-between border-b border-slate-200">
+          {/* Table Header Row */}
+          <div className="px-4 sm:px-6 py-3 sm:py-3.5 flex items-center justify-between border-b border-slate-100">
             <div className="flex items-center gap-3">
               <h2 className="text-sm sm:text-base font-bold text-slate-900 tracking-tight">
                 รายการสินค้า
@@ -542,7 +545,7 @@ export default function OrderDetailPage({ forcedDocNo }: OrderDetailPageProps = 
               <span className="text-center">หน่วย</span>
               <span className="text-center">ราคาต่อหน่วย</span>
               <span className="text-center text-[#FF6B00] font-semibold">ราคารวม</span>
-              <span className="text-right pr-2 text-[#FF0000] font-semibold">ยอดมัดจำ</span>
+              <span className="text-right pr-0 text-[#FF0000] font-semibold">ยอดมัดจำ</span>
             </div>
           </div>
 
@@ -567,7 +570,7 @@ export default function OrderDetailPage({ forcedDocNo }: OrderDetailPageProps = 
                     <div key={item.Trade_Id || idx} className="p-4 space-y-3">
                       {/* Product Info Row: Image + Name */}
                       <div className="flex items-center gap-3.5">
-                        <div className="w-14 h-14 bg-white border border-slate-200 rounded shrink-0 flex items-center justify-center overflow-hidden shadow-2xs">
+                        <div className="w-14 h-14 bg-white border border-slate-100 rounded-[10px] apple-squircle-sm shrink-0 flex items-center justify-center overflow-hidden shadow-2xs">
                           <ProductImage
                             src={imageSrc}
                             alt={item.Trade_Name}
@@ -578,7 +581,7 @@ export default function OrderDetailPage({ forcedDocNo }: OrderDetailPageProps = 
                         </div>
 
                         <div className="min-w-0 flex-1 space-y-1">
-                          <h4 className="font-bold text-slate-900 text-xs line-clamp-2 leading-snug">
+                          <h4 className="font-bold text-slate-900 text-xs sm:text-sm line-clamp-2 leading-snug">
                             {item.Trade_Name}
                           </h4>
                           {item.Trade_NameEN && (
@@ -586,7 +589,7 @@ export default function OrderDetailPage({ forcedDocNo }: OrderDetailPageProps = 
                               {item.Trade_NameEN}
                             </p>
                           )}
-                          <div className="flex items-center gap-2 flex-wrap text-[10px] text-slate-500">
+                          <div className="flex items-center gap-2 flex-wrap text-[11px] sm:text-xs text-slate-500">
                             <span>SKU: <span className="text-slate-600">{item.Trade_Id}</span></span>
                             <span>•</span>
                             <span>หน่วย: <strong className="text-slate-700">{item.Unit_Name || 'หน่วย'}</strong></span>
@@ -594,63 +597,63 @@ export default function OrderDetailPage({ forcedDocNo }: OrderDetailPageProps = 
                         </div>
                       </div>
 
-                      {/* 4-Column Stats Row: จำนวน: | ราคาต่อหน่วย: | ราคารวม: | ยอดมัดจำ: */}
-                      <div className="grid grid-cols-4 gap-1.5 items-start text-center pt-2 px-1 pb-2">
-                        {/* Col 1: จำนวน: */}
-                        <div className="flex flex-col items-center justify-start">
+                      {/* 4-Column Stats Row: จำนวน | ราคา/หน่วย | ราคารวม | ยอดมัดจำ */}
+                      <div className="grid grid-cols-4 gap-1 items-start text-center pt-2 px-0.5 pb-2">
+                        {/* Col 1: จำนวน */}
+                        <div className="flex flex-col items-center justify-start min-w-0">
                           <div className="h-5 flex items-center justify-center">
-                            <span className="text-[11px] font-bold text-slate-800 leading-none">
-                              จำนวน:
+                            <span className="text-[11px] sm:text-xs font-bold text-slate-700 leading-none truncate">
+                              จำนวน
                             </span>
                           </div>
                           <div className="h-7 flex items-center justify-center mt-1">
-                            <span className="font-bold text-xs text-slate-900 tabular-nums">
+                            <span className="font-bold text-xs sm:text-sm text-slate-900 tabular-nums">
                               {item.Qty.toLocaleString()}
                             </span>
                           </div>
                         </div>
 
-                        {/* Col 2: ราคาต่อหน่วย: */}
-                        <div className="flex flex-col items-center justify-start">
+                        {/* Col 2: ราคา/หน่วย */}
+                        <div className="flex flex-col items-center justify-start min-w-0">
                           <div className="h-5 flex items-center justify-center">
-                            <span className="text-[11px] font-bold text-slate-800 leading-none">
-                              ราคาต่อหน่วย:
+                            <span className="text-[11px] sm:text-xs font-bold text-slate-700 leading-none truncate">
+                              ราคา/หน่วย
                             </span>
                           </div>
                           <div className="h-7 flex items-center justify-center mt-1">
-                            <span className="block text-xs font-bold text-slate-900 tabular-nums">
+                            <span className="block text-xs sm:text-sm font-bold text-slate-900 tabular-nums">
                               ฿{unitPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </span>
                           </div>
                         </div>
 
-                        {/* Col 3: ราคารวม: */}
-                        <div className="flex flex-col items-center justify-start">
+                        {/* Col 3: ราคารวม */}
+                        <div className="flex flex-col items-center justify-start min-w-0">
                           <div className="h-5 flex items-center justify-center">
-                            <span className="text-[11px] font-bold text-[#FF6B00] leading-none">
-                              ราคารวม:
+                            <span className="text-[11px] sm:text-xs font-bold text-[#FF6B00] leading-none truncate">
+                              ราคารวม
                             </span>
                           </div>
                           <div className="h-7 flex items-center justify-center mt-1">
-                            <span className="block text-xs font-bold text-[#FF6B00] tabular-nums">
+                            <span className="block text-xs sm:text-sm font-bold text-[#FF6B00] tabular-nums">
                               ฿{lineTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </span>
                           </div>
                         </div>
 
-                        {/* Col 4: ยอดมัดจำ: */}
-                        <div className="flex flex-col items-center justify-start">
+                        {/* Col 4: ยอดมัดจำ */}
+                        <div className="flex flex-col items-center justify-start min-w-0">
                           <div className="h-5 flex items-center justify-center">
-                            <span className="text-[11px] font-bold text-[#FF0000] leading-none">
-                              ยอดมัดจำ:
+                            <span className="text-[11px] sm:text-xs font-bold text-[#FF0000] leading-none truncate">
+                              ยอดมัดจำ
                             </span>
                           </div>
                           <div className="h-7 flex flex-col items-center justify-center mt-1">
-                            <span className="block text-xs font-bold text-[#FF0000] tabular-nums leading-tight">
+                            <span className="block text-xs sm:text-sm font-bold text-[#FF0000] tabular-nums leading-tight">
                               ฿{lineDeposit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </span>
                             {unitDeposit > 0 && item.Qty > 1 && (
-                              <span className="text-[11px] sm:text-xs text-[#FF0000] font-medium leading-none mt-0.5">
+                              <span className="text-[10px] sm:text-xs text-[#FF0000] font-medium leading-none mt-0.5 truncate">
                                 (฿{formatDepositPrice(unitDeposit)}/{item.Unit_Name || 'หน่วย'})
                               </span>
                             )}
@@ -687,11 +690,11 @@ export default function OrderDetailPage({ forcedDocNo }: OrderDetailPageProps = 
                       : '/images/ubr_beverage_logo.png';
 
                     return (
-                      <div key={item.Trade_Id || idx} className="px-5 sm:px-6 py-5">
+                      <div key={item.Trade_Id || idx} className="px-6 py-5">
                         <div className="flex items-center justify-between">
                           {/* Product Image & Info */}
                           <div className="flex items-center gap-3.5 min-w-0 flex-1 pr-4">
-                            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white border border-slate-200 rounded shrink-0 flex items-center justify-center overflow-hidden">
+                            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white border border-slate-100 rounded-[10px] apple-squircle-sm shrink-0 flex items-center justify-center overflow-hidden shadow-2xs">
                               <ProductImage
                                 src={imageSrc}
                                 alt={item.Trade_Name}
@@ -745,12 +748,12 @@ export default function OrderDetailPage({ forcedDocNo }: OrderDetailPageProps = 
                             </div>
 
                             {/* 5. ยอดมัดจำ */}
-                            <div className="text-right pr-2">
+                            <div className="text-right pr-0">
                               <div className="font-bold text-[#FF0000] text-xs sm:text-base tabular-nums">
                                 ฿{lineDeposit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                               </div>
                               {unitDeposit > 0 && item.Qty > 1 && (
-                                <div className="text-xs sm:text-[13px] text-[#FF0000] font-medium">
+                                <div className="text-xs text-[#FF0000] font-medium">
                                   (฿{formatDepositPrice(unitDeposit)}/{item.Unit_Name || 'หน่วย'})
                                 </div>
                               )}
@@ -769,158 +772,222 @@ export default function OrderDetailPage({ forcedDocNo }: OrderDetailPageProps = 
             </div>
           </div>
 
-          {/* Remark section inside item card */}
-          {(order.shipping?.Customer_Remark || order.Fn_Remark) && (
-            <div className="p-4 sm:px-6 bg-amber-50/40 border-t border-slate-200 flex items-start text-xs text-slate-700">
-              <div>
-                <strong className="font-bold text-slate-900">หมายเหตุคำสั่งซื้อ: </strong>
-                <span>{order.shipping?.Customer_Remark || order.Fn_Remark}</span>
+          {/* Card Bottom Bar: Order Remark (Shopee Style) & Order Total */}
+          <div className="border-t border-dashed border-slate-200 px-4 sm:px-6 py-3.5 sm:py-4 flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4 bg-white">
+            <div className="flex-1 flex items-center gap-2.5 max-w-xl">
+              <span className="text-xs sm:text-sm font-bold text-slate-700 whitespace-nowrap">
+                หมายเหตุ:
+              </span>
+              <div className="flex-1 px-4 py-2 rounded-full bg-slate-50 border border-slate-200 text-slate-900 text-xs sm:text-sm">
+                {order.shipping?.Customer_Remark || order.Fn_Remark || '-'}
               </div>
             </div>
-          )}
+
+            <div className="flex items-center justify-end text-right shrink-0">
+              <span className="text-xs sm:text-sm text-slate-600">
+                คำสั่งซื้อทั้งหมด ({totalItemsCount} ชิ้น)
+              </span>
+            </div>
+          </div>
         </div>
 
-        {/* ================= 4. PAYMENT METHOD & SLIP UPLOAD CARD ================= */}
-        <div 
-          className="bg-white rounded-sm shadow-xs border border-slate-200 p-4 sm:p-6 space-y-4 animate-order-slide-up"
+        {/* Navigation Action Bar: "< รายการสั่งซื้อทั้งหมด" (Matching Checkout) */}
+        <div
+          className="flex items-center justify-between gap-4 pt-1 animate-order-slide-up"
           style={{ animationDelay: '100ms' }}
-        >
-          <div className="flex items-center justify-between border-b border-slate-200 pb-3">
-            <div className="flex items-center gap-2 text-slate-900 font-bold text-sm sm:text-base">
-              <CreditCard className="w-4 h-4 sm:w-5 sm:h-5 text-slate-700" />
-              <span>ข้อมูลและการชำระเงิน</span>
-            </div>
-          </div>
-
-          {/* If PromptPay */}
-          {order.money_sts === 'T' ? (
-            <div className="space-y-4">
-              {/* Slip already uploaded (Clean unboxed row matching COD style) */}
-              {order.FILE_NAME_PIC ? (
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3.5 py-1">
-                  <div className="flex items-center gap-3.5">
-                    <SlipVerifiedIllustration className="w-10 h-10 sm:w-12 sm:h-12 shrink-0" />
-                    <div>
-                      <div className="text-xs sm:text-sm font-bold text-slate-900">
-                        <span>ชำระเงินแล้ว</span>
-                      </div>
-                      {order.Due_Date_Pay && (
-                        <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5">
-                          ชำระเงินเมื่อ:{' '}
-                          <strong className="text-emerald-700 font-semibold">
-                            {formatOrderDate(order.Due_Date_Pay)}
-                          </strong>
-                        </p>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2 w-full sm:w-auto">
-                    <button
-                      type="button"
-                      onClick={openSlipModal}
-                      className="w-full sm:w-auto px-5 py-2 rounded-full bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold text-xs shadow-2xs hover:shadow-xs transition-all flex items-center justify-center cursor-pointer shrink-0 select-none active:scale-95"
-                    >
-                      <span>ดูสลิป</span>
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                /* No slip yet: Show prompt to upload with Vector Illustration (Clean unboxed row) */
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3.5 py-1">
-                  <div className="flex items-center gap-3.5">
-                    <PaymentQrIllustration className="w-10 h-10 sm:w-12 sm:h-12 shrink-0" />
-                    <div>
-                      <div className="text-xs sm:text-sm font-bold text-slate-900">
-                        <span>ชำระผ่าน QR PromptPay</span>
-                      </div>
-                      <p className="text-[11px] sm:text-xs text-slate-600 mt-0.5">
-                        <strong className="text-[#FF0000] font-bold">ยอดมัดจำ: ฿{deposit.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} บาท</strong> กรุณาสแกน QR Code เพื่อชำระเงิน
-                      </p>
-                    </div>
-                  </div>
-
-                  <Link
-                    href={`/orders/${encodeURIComponent(order.Fn_Doc_No)}/payment`}
-                    className="w-full sm:w-auto px-5 py-2.5 rounded-sm bg-[#800020] hover:bg-[#6b001b] active:bg-[#570016] text-white font-bold text-xs shadow-2xs hover:shadow transition-all flex items-center justify-center gap-1.5 shrink-0"
-                  >
-                    <QrCode className="w-4 h-4 text-white" />
-                    <span>สแกน QR Code ชำระเงิน</span>
-                  </Link>
-                </div>
-              )}
-            </div>
-          ) : (
-            /* If COD with Vector Illustration (Clean unboxed row) */
-            <div className="flex items-center gap-3 sm:gap-3.5 py-1 text-slate-800">
-              <CodIllustration className="w-10 h-10 sm:w-12 sm:h-12 shrink-0" />
-              <div className="text-xs sm:text-sm font-bold text-slate-900 flex items-center gap-2">
-                <span>ชำระเงินปลายทาง (Cash on Delivery)</span>
-                <span className="text-[10px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-blue-600 text-white tracking-wider">
-                  COD
-                </span>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* ================= 5. FINANCIAL SUMMARY CARD (SHOPEE STYLE) ================= */}
-        <div 
-          className="bg-white rounded-sm shadow-xs border border-slate-200 p-5 sm:p-6 space-y-3 animate-order-slide-up"
-          style={{ animationDelay: '120ms' }}
-        >
-          <div className="border-b border-slate-200 pb-2.5">
-            <h3 className="font-bold text-sm text-slate-900">
-              สรุปยอดคำสั่งซื้อ
-            </h3>
-          </div>
-
-          <div className="space-y-2.5 text-xs sm:text-sm text-slate-600">
-            {/* ยอดรวมทั้งสิ้น */}
-            <div className="flex justify-between items-center">
-              <span className="font-bold text-[#FF6B00]">ยอดรวมทั้งสิ้น (Grand Total)</span>
-              <span className="text-base sm:text-lg font-black text-[#FF6B00] tabular-nums">
-                ฿{totalAmount.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </span>
-            </div>
-
-            {/* ข้อมูลมัดจำ / คงเหลือ */}
-            <div className="flex justify-between items-center pt-2 border-t border-dashed border-slate-200">
-              <span className="font-bold text-[#FF0000]">ยอดมัดจำที่ต้องชำระ (Deposit)</span>
-              <span className="text-base sm:text-xl font-black text-[#FF0000] tabular-nums">
-                ฿{deposit.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </span>
-            </div>
-
-            <div className="flex justify-between items-center text-slate-500">
-              <span>ยอดคงเหลือชำระเมื่อรับมอบ / Remaining</span>
-              <span className="font-bold text-slate-800 tabular-nums">
-                ฿{remaining.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </span>
-            </div>
-
-          </div>
-        </div>
-
-        {/* ================= 6. ACTION TOOLBAR WITH PO DOWNLOAD BUTTON ================= */}
-        <div 
-          className="bg-white rounded-sm shadow-xs border border-slate-200 p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-3 animate-order-slide-up"
-          style={{ animationDelay: '140ms' }}
         >
           <Link
             href="/orders/history"
-            className="text-xs font-bold text-[#800020] hover:text-[#6b001b] transition-colors"
+            className="inline-flex items-center gap-1.5 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-full border border-slate-200 bg-white hover:bg-slate-50 text-xs sm:text-sm font-semibold text-slate-700 shadow-2xs transition-colors min-h-[38px]"
           >
-            <span>รายการสั่งซื้อทั้งหมด</span>
+            <span>&lt; รายการสั่งซื้อทั้งหมด</span>
           </Link>
 
-          <div className="flex items-center gap-3 w-full sm:w-auto flex-wrap justify-end">
+          <div className="text-xs sm:text-sm text-slate-400 font-medium flex items-center gap-1">
+            <span>ทั้งหมด {totalItemsCount} ชิ้น ในรายการสั่งซื้อ</span>
+          </div>
+        </div>
+
+        {/* ================= 4. STANDALONE PAYMENT METHOD CARD (MATCHING CHECKOUT) ================= */}
+        <div
+          className="bg-white rounded-[14px] apple-squircle-card border border-slate-200 shadow-2xs overflow-hidden animate-order-slide-up"
+          style={{ animationDelay: '120ms' }}
+        >
+          <div className="p-4 sm:p-6">
+            {/* Desktop View (>= sm): Single horizontal row perfectly centered */}
+            <div className="hidden sm:flex sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-4 flex-wrap">
+                <h3 className="text-base font-bold text-slate-900 whitespace-nowrap">
+                  วิธีการชำระเงิน
+                </h3>
+
+                {isCod ? (
+                  <div className="w-fit inline-flex items-center gap-2 px-3 py-1.5 rounded-[12px] apple-squircle-sm border border-slate-200 bg-white text-slate-700 text-sm font-medium shadow-2xs select-none shrink-0 whitespace-nowrap">
+                    <img
+                      src="/images/cod_logo.png"
+                      alt="COD"
+                      className="h-4.5 w-auto object-contain shrink-0"
+                    />
+                    <span className="whitespace-nowrap font-semibold">เก็บเงินปลายทาง</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-3">
+                    <div className="w-fit inline-flex items-center gap-2 px-3 py-1.5 rounded-[12px] apple-squircle-sm border border-slate-200 bg-white text-slate-700 text-sm font-medium shadow-2xs select-none shrink-0 whitespace-nowrap">
+                      <img
+                        src="/images/thai_qr_payment.svg"
+                        alt="Thai QR Payment"
+                        className="w-5 h-5 object-contain rounded-[2px] shrink-0"
+                      />
+                      <span className="whitespace-nowrap font-semibold">QR พร้อมเพย์</span>
+                    </div>
+
+                    {order.FILE_NAME_PIC && (
+                      <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full whitespace-nowrap">
+                        <span>แนบสลิปแล้ว</span>
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {!isCod && (
+                <div className="flex items-center gap-2.5 shrink-0">
+                  {order.FILE_NAME_PIC ? (
+                    <button
+                      type="button"
+                      onClick={openSlipModal}
+                      className="px-5 py-2.5 rounded-full bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold text-xs sm:text-sm shadow-2xs hover:shadow-xs transition-all flex items-center justify-center cursor-pointer shrink-0 select-none active:scale-95 min-h-[40px]"
+                    >
+                      <span>ดูสลิป</span>
+                    </button>
+                  ) : (
+                    <Link
+                      href={`/orders/${encodeURIComponent(order.Fn_Doc_No)}/payment`}
+                      className="px-5 py-2.5 rounded-full bg-black hover:bg-neutral-800 active:bg-neutral-900 active:scale-[0.98] text-white font-bold text-xs sm:text-sm shadow-2xs hover:shadow transition-all flex items-center justify-center gap-1.5 shrink-0 min-h-[40px]"
+                    >
+                      <QrCode className="w-4 h-4 text-white" />
+                      <span>สแกน QR Code ชำระเงิน</span>
+                    </Link>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Mobile View (< sm): Balanced card without redundant status badge */}
+            <div className="flex flex-col gap-3.5 sm:hidden">
+              {/* Row 1: Title (left) & Method Badge (right) */}
+              <div className="flex items-center justify-between gap-2">
+                <h3 className="text-sm font-bold text-slate-900 whitespace-nowrap">
+                  วิธีการชำระเงิน
+                </h3>
+                {isCod ? (
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[10px] apple-squircle-sm border border-slate-200 bg-white text-slate-700 text-xs font-semibold shadow-2xs shrink-0">
+                    <img
+                      src="/images/cod_logo.png"
+                      alt="COD"
+                      className="h-4 w-auto object-contain shrink-0"
+                    />
+                    <span className="font-semibold">เก็บเงินปลายทาง</span>
+                  </div>
+                ) : (
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[10px] apple-squircle-sm border border-slate-200 bg-white text-slate-700 text-xs font-semibold shadow-2xs shrink-0">
+                    <img
+                      src="/images/thai_qr_payment.svg"
+                      alt="Thai QR"
+                      className="w-4 h-4 object-contain rounded-[2px] shrink-0"
+                    />
+                    <span className="font-semibold">QR พร้อมเพย์</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Row 2: Action Button */}
+              {!isCod && (
+                <div className="pt-2.5 border-t border-slate-100 flex items-center justify-between gap-2.5">
+                  {order.FILE_NAME_PIC ? (
+                    <>
+                      <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-full whitespace-nowrap">
+                        <span>แนบสลิปแล้ว</span>
+                      </span>
+                      <button
+                        type="button"
+                        onClick={openSlipModal}
+                        className="px-5 py-2 rounded-full bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold text-xs sm:text-sm shadow-2xs transition-all flex items-center justify-center cursor-pointer active:scale-95 shrink-0 min-h-[38px]"
+                      >
+                        <span>ดูสลิป</span>
+                      </button>
+                    </>
+                  ) : (
+                    <Link
+                      href={`/orders/${encodeURIComponent(order.Fn_Doc_No)}/payment`}
+                      className="w-full px-5 py-2.5 rounded-full bg-black hover:bg-neutral-800 active:bg-neutral-900 active:scale-[0.98] text-white font-bold text-xs sm:text-sm shadow-2xs hover:shadow transition-all flex items-center justify-center gap-2 min-h-[42px]"
+                    >
+                      <QrCode className="w-4 h-4 text-white shrink-0" />
+                      <span>สแกน QR Code ชำระเงิน</span>
+                    </Link>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* ================= 5. STANDALONE FINANCIAL SUMMARY CARD (MATCHING CHECKOUT) ================= */}
+        <div
+          className="bg-white rounded-[14px] apple-squircle-card border border-slate-200 shadow-2xs overflow-hidden animate-order-slide-up"
+          style={{ animationDelay: '140ms' }}
+        >
+          {/* Financial Breakdown */}
+          <div className="p-4 sm:p-6 bg-white space-y-3">
+            <h3 className="font-bold text-sm sm:text-base text-slate-900">
+              สรุปยอดคำสั่งซื้อ
+            </h3>
+
+            <div className="space-y-2.5 text-xs sm:text-sm">
+              {/* 1. ยอดรวมทั้งสิ้น (Grand Total) */}
+              <div className="flex justify-between items-center font-bold text-[#FF6B00]">
+                <span className="text-xs sm:text-sm">ยอดรวมทั้งสิ้น (Grand Total)</span>
+                <span className="text-sm sm:text-lg font-black text-[#FF6B00] tabular-nums">
+                  ฿{totalAmount.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </span>
+              </div>
+
+              {/* 2. ยอดมัดจำที่ต้องชำระ (Deposit) */}
+              <div className="flex justify-between items-center pt-2.5 border-t border-dashed border-slate-200">
+                <span className="font-bold text-xs sm:text-sm text-[#FF0000]">ยอดมัดจำที่ต้องชำระ (Deposit)</span>
+                <span className="text-base sm:text-xl font-black text-[#FF0000] tabular-nums">
+                  ฿{deposit.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </span>
+              </div>
+
+              {/* 3. ยอดคงเหลือชำระเมื่อรับมอบ / Remaining */}
+              <div className="flex justify-between items-center text-slate-500">
+                <span className="text-xs sm:text-sm">ยอดคงเหลือชำระเมื่อรับมอบ / Remaining</span>
+                <span className="font-bold text-xs sm:text-sm text-slate-800 tabular-nums">
+                  ฿{remaining.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom Action Footer inside Summary Card matching Checkout pattern */}
+          <div className="border-t border-dashed border-slate-200 p-4 sm:px-6 sm:py-5 flex items-center justify-between gap-2.5 bg-white">
             <Link
               href="/"
-              className="px-5 py-2.5 rounded-sm bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs transition-colors"
+              className="flex-1 sm:flex-initial min-w-0 px-4 sm:px-6 py-2.5 rounded-full bg-slate-100 hover:bg-slate-200 active:scale-[0.98] text-slate-800 font-bold text-xs sm:text-sm transition-all text-center min-h-[42px] inline-flex items-center justify-center whitespace-nowrap"
             >
               สั่งซื้อสินค้าอื่นๆ
             </Link>
+
+            {(docStsCode === '3' || docStsCode === '0') && (
+              <Link
+                href={`/orders/${encodeURIComponent(order.Fn_Doc_No)}/purchase-order-viewer`}
+                className="flex-1 sm:flex-initial min-w-0 px-4 sm:px-6 py-2.5 rounded-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 active:scale-[0.98] text-white font-bold text-xs sm:text-sm shadow-2xs hover:shadow transition-all text-center min-h-[42px] inline-flex items-center justify-center whitespace-nowrap ml-auto sm:ml-0"
+                title="เปิดดูและพิมพ์ใบสั่งซื้อ A4"
+              >
+                ดูใบสั่งซื้อ
+              </Link>
+            )}
           </div>
         </div>
 
@@ -929,27 +996,25 @@ export default function OrderDetailPage({ forcedDocNo }: OrderDetailPageProps = 
       {/* Modal for viewing uploaded slip with smooth open/close animations */}
       {showSlipModal && order.FILE_NAME_PIC && (
         <div
-          className={`fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4 backdrop-blur-xs overflow-hidden touch-none transition-opacity duration-200 ease-out ${
-            slipModalVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'
-          }`}
+          className={`fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4 backdrop-blur-xs overflow-hidden touch-none transition-opacity duration-200 ease-out ${slipModalVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'
+            }`}
           onClick={closeSlipModal}
           role="dialog"
           aria-modal="true"
         >
           <div
-            className={`bg-white rounded-sm max-w-lg w-full overflow-hidden shadow-2xl p-4 space-y-3 transform transition-all duration-200 ease-out ${
-              slipModalVisible
-                ? 'opacity-100 scale-100 translate-y-0'
-                : 'opacity-0 scale-95 translate-y-2'
-            }`}
+            className={`bg-white apple-squircle-modal max-w-lg w-full overflow-hidden shadow-2xl p-4 space-y-3 transform transition-all duration-200 ease-out ${slipModalVisible
+              ? 'opacity-100 scale-100 translate-y-0'
+              : 'opacity-0 scale-95 translate-y-2'
+              }`}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-              <h4 className="font-bold text-sm text-slate-900">หลักฐานสลิปการโอนเงิน</h4>
+              <h4 className="font-bold text-sm sm:text-base text-slate-900">หลักฐานสลิปการโอนเงิน</h4>
               <button
                 type="button"
                 onClick={closeSlipModal}
-                className="w-7 h-7 flex items-center justify-center rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 text-base font-bold transition-colors cursor-pointer"
+                className="w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 active:scale-90 text-lg font-bold transition-all cursor-pointer"
                 title="ปิดหน้าต่าง"
                 aria-label="ปิดหน้าต่าง"
               >
@@ -966,7 +1031,7 @@ export default function OrderDetailPage({ forcedDocNo }: OrderDetailPageProps = 
                       : `/uploads/slips/${order.Fn_Doc_No || docNo}/${order.FILE_NAME_PIC}`
                 }
                 alt="Payment Slip"
-                className="max-w-full max-h-full object-contain rounded-xs"
+                className="max-w-full max-h-full object-contain rounded-[10px] apple-squircle-sm"
                 onError={(e) => {
                   const target = e.currentTarget;
                   if (!target.src.includes(`/uploads/slips/${order.FILE_NAME_PIC}`)) {

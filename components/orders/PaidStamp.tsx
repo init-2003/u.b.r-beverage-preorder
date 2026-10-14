@@ -77,7 +77,7 @@ export default function PaidStamp({
 
     return (
       <div
-        className={`select-none inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-[3px] border-[1.8px] ${borderColor} ${bgColor} ${textColor} transform -rotate-2 hover:rotate-0 transition-transform duration-150 relative overflow-hidden shadow-2xs ${className}`}
+        className={`select-none inline-flex items-center gap-1.5 px-2.5 py-0.5 apple-squircle-xs border-[1.8px] ${borderColor} ${bgColor} ${textColor} transform -rotate-2 hover:rotate-0 transition-transform duration-150 relative overflow-hidden shadow-2xs ${className}`}
         style={{
           boxShadow: `0 1px 2px 0 ${shadowColor}, inset 0 0 0 1px ${shadowColor}`,
         }}
@@ -279,7 +279,7 @@ export default function PaidStamp({
     >
       {/* Outer border container */}
       <div
-        className={`relative rounded-sm border-[3px] ${theme.border} ${theme.bg} ${theme.text} shadow-xs ${sizeClasses[size]}`}
+        className={`relative apple-squircle-sm border-[3px] ${theme.border} ${theme.bg} ${theme.text} shadow-xs ${sizeClasses[size]}`}
         style={{
           boxShadow: `inset 0 0 0 1px ${theme.shadow}`,
         }}

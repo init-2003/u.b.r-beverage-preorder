@@ -112,6 +112,46 @@ export default function CartDropdown() {
     };
   }, [isOpen, isClosing]);
 
+  // Prevent background scrolling while cart dropdown is open
+  useEffect(() => {
+    if (!isOpen || isClosing) return;
+
+    const handleWheel = (e: WheelEvent) => {
+      const target = e.target as HTMLElement | null;
+      const isInside = dropdownRef.current && dropdownRef.current.contains(target);
+      if (!isInside) {
+        if (e.cancelable) e.preventDefault();
+      } else {
+        const scrollable = target?.closest('.overflow-y-auto') as HTMLElement | null;
+        if (scrollable) {
+          const { scrollTop, scrollHeight, clientHeight } = scrollable;
+          if (
+            (e.deltaY < 0 && scrollTop <= 0) ||
+            (e.deltaY > 0 && scrollTop + clientHeight >= scrollHeight - 1)
+          ) {
+            if (e.cancelable) e.preventDefault();
+          }
+        }
+      }
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      const target = e.target as HTMLElement | null;
+      const isInside = dropdownRef.current && dropdownRef.current.contains(target);
+      if (!isInside) {
+        if (e.cancelable) e.preventDefault();
+      }
+    };
+
+    window.addEventListener('wheel', handleWheel, { passive: false });
+    window.addEventListener('touchmove', handleTouchMove, { passive: false });
+
+    return () => {
+      window.removeEventListener('wheel', handleWheel);
+      window.removeEventListener('touchmove', handleTouchMove);
+    };
+  }, [isOpen, isClosing]);
+
   // Clean up timer on unmount
   useEffect(() => {
     return () => {
@@ -162,7 +202,7 @@ export default function CartDropdown() {
           <div className="absolute -top-[7px] right-[13px] sm:right-[16px] w-3.5 h-3.5 bg-white rotate-45 border-t border-l border-slate-200 z-20 shadow-[-2px_-2px_3px_rgba(0,0,0,0.04)]" />
 
           {/* Popover Card */}
-          <div className="relative bg-white rounded-sm shadow-xl border border-slate-200 overflow-hidden text-slate-800 z-10">
+          <div className="relative bg-white rounded-[14px] apple-squircle-card shadow-xl border border-slate-200 overflow-hidden text-slate-800 z-10">
             {items.length === 0 ? (
               /* ========================================================= */
               /* EMPTY STATE: 100% Matching User's Image Reference         */
@@ -196,7 +236,7 @@ export default function CartDropdown() {
                 </div>
 
                 {/* Items List (Shopee style single row per item) */}
-                <div className="max-h-80 overflow-y-auto divide-y divide-slate-100/80">
+                <div className="max-h-80 overflow-y-auto divide-y divide-slate-100/80 overscroll-contain">
                   {items.map((item) => (
                     <Link
                       key={item.tradeId}
@@ -245,7 +285,7 @@ export default function CartDropdown() {
                   <button
                     type="button"
                     onClick={handleGoToCart}
-                    className="py-2 px-5 rounded-full bg-[#800020] hover:bg-[#6b001b] active:bg-[#570016] text-white font-bold text-xs shadow-xs transition-all cursor-pointer active:scale-95 shrink-0"
+                    className="py-2.5 px-5 min-h-[38px] rounded-full bg-[#800020] hover:bg-[#6b001b] active:bg-[#570016] text-white font-bold text-xs sm:text-sm shadow-xs transition-all cursor-pointer active:scale-[0.98] shrink-0"
                   >
                     ไปที่ตะกร้า
                   </button>

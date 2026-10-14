@@ -77,9 +77,9 @@ function AddressContent() {
           </div>
         )}
 
-        {/* Card: ข้อมูลที่อยู่จัดส่งสินค้า */}
-        <div id="address-card" className="bg-white rounded-sm border border-slate-100/80 shadow-[0_1px_1px_0_rgba(0,0,0,0.05)] overflow-hidden">
-          <div className="p-5 sm:p-6">
+        {/* Card: ข้อมูลที่อยู่จัดส่งสินค้า (Apple-squircle card bounded on both mobile and desktop) */}
+        <div id="address-card" className="bg-white rounded-[14px] apple-squircle-card border border-slate-200 shadow-xs overflow-hidden">
+          <div className="p-4 sm:p-6">
             <div className="flex items-start justify-between gap-4">
               {/* รายละเอียดที่อยู่จัดส่งสินค้า */}
               <div className="max-w-xl text-sm text-slate-700 leading-relaxed space-y-1.5">
@@ -97,16 +97,17 @@ function AddressContent() {
                     รหัสไปรษณีย์ {profile.customerZip}
                   </p>
                 )}
-                <p className="text-slate-500 text-xs">ไทย</p>
-                <p className="text-slate-500 text-xs">
-                  Tel: {profile?.customerTel || '-'}
-                </p>
+                {profile?.customerTel && (
+                  <p className="text-slate-600 text-xs sm:text-sm">
+                    {profile.customerTel}
+                  </p>
+                )}
 
                 <div className="pt-2">
                   <button
                     type="button"
                     onClick={() => openEdit('address')}
-                    className="text-xs font-semibold text-blue-600 hover:text-blue-700 hover:underline cursor-pointer transition-colors"
+                    className="inline-flex items-center min-h-[36px] py-1 text-xs sm:text-sm font-semibold text-blue-600 hover:text-blue-700 hover:underline cursor-pointer transition-colors"
                   >
                     แก้ไขที่อยู่จัดส่งสินค้า
                   </button>

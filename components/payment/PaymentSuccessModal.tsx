@@ -21,8 +21,10 @@ export default function PaymentSuccessModal({ docNo }: PaymentSuccessModalProps)
   };
 
   useEffect(() => {
-    const prevOverflow = document.body.style.overflow;
+    const prevBodyOverflow = document.body.style.overflow;
+    const prevHtmlOverflow = document.documentElement.style.overflow;
     document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
 
     let animItem: AnimationItem | null = null;
 
@@ -48,7 +50,8 @@ export default function PaymentSuccessModal({ docNo }: PaymentSuccessModalProps)
 
     return () => {
       clearTimeout(timer);
-      document.body.style.overflow = prevOverflow;
+      document.body.style.overflow = prevBodyOverflow;
+      document.documentElement.style.overflow = prevHtmlOverflow;
       if (animItem) {
         animItem.destroy();
       }
@@ -62,7 +65,7 @@ export default function PaymentSuccessModal({ docNo }: PaymentSuccessModalProps)
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="bg-white rounded-sm p-6 sm:p-8 max-w-sm w-full text-center shadow-2xl border border-slate-100 flex flex-col items-center animate-in zoom-in-95 duration-200"
+        className="bg-white apple-squircle-modal rounded-[14px] p-6 sm:p-8 max-w-sm w-full text-center shadow-2xl border border-slate-100 flex flex-col items-center animate-in zoom-in-95 duration-200"
       >
         {/* Lottie Animation Container */}
         <div

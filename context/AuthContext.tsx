@@ -48,7 +48,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       sessionStorage.removeItem('ubr_direct_checkout');
       sessionStorage.removeItem('ubr_cached_orders');
     } catch {}
-    if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
       window.location.href = '/login';
     }
   };
@@ -100,6 +100,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Multi-tab sync: Check auth state when switching back to this tab (focus / visibilitychange)
     const handleVisibilityOrFocus = async () => {
       if (document.visibilityState === 'hidden') return;
+      // ตรวจสอบเฉพาะกรณีที่ผู้ใช้กำลังเข้าสู่ระบบอยู่เท่านั้น (ถ้ายังไม่ล็อกอิน ไม่ต้องทำอะไร)
+      if (!customerRef.current) return;
 
       // 1. Check if a logout occurred in another tab
       const lastLogout = Number(localStorage.getItem(LOGOUT_STORAGE_KEY) || '0');
@@ -109,16 +111,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       // 2. If this tab currently thinks user is logged in, verify session with backend
-      if (customerRef.current) {
-        try {
-          const res = await fetch('/api/auth/me');
-          const data = await res.json();
-          if (!data.authenticated) {
-            handleRemoteLogout();
-          }
-        } catch {
-          // Ignore network errors to prevent unnecessary logouts
+      try {
+        const res = await fetch('/api/auth/me');
+        const data = await res.json();
+        if (!data.authenticated) {
+          handleRemoteLogout();
         }
+      } catch {
+        // Ignore network errors to prevent unnecessary logouts
       }
     };
 

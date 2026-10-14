@@ -4,220 +4,241 @@ import Link from 'next/link';
 
 export default function CookiePolicyPage() {
   return (
-    <div className="w-full flex-1 bg-white">
-      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
-      <div className="max-w-4xl mx-auto">
-        {/* Main Document Container */}
-        <div className="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
-          {/* Top Brand Accent Stripe */}
-          <div className="h-1 bg-[#800020] w-full" />
+    <div className="w-full flex-1 bg-white py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
+      {/* Formal Document Container (สไตล์เอกสาร Word / Plain Document) */}
+      <div className="max-w-4xl mx-auto bg-white text-slate-800 leading-relaxed text-sm sm:text-[15px]">
+        {/* Document Header (จัดกึ่งกลางสไตล์หัวเอกสารทางการ) */}
+        <div className="text-center pb-6 sm:pb-8 border-b border-slate-300 space-y-1.5">
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
+            นโยบายการใช้งานคุกกี้ (Cookie Policy)
+          </h1>
+          <p className="text-base sm:text-lg font-semibold text-slate-800">
+            ห้างหุ้นส่วนจำกัด อุบลรุ่งเรืองเบฟเวอเรจ
+          </p>
+          <p className="text-xs sm:text-sm text-slate-500 pt-1">
+            มีผลบังคับใช้: 23 กันยายน 2569 &nbsp;|&nbsp; ปรับปรุงล่าสุด: 23 กันยายน 2569
+          </p>
+        </div>
 
-          {/* Header Section */}
-          <div className="p-6 sm:p-8 md:p-10 border-b border-slate-100 bg-gradient-to-b from-slate-50/60 to-white">
-            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-              <div>
-                <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 font-[Prompt] tracking-tight">
-                  นโยบายการใช้งานคุกกี้
-                </h1>
-                <p className="text-xs sm:text-sm text-slate-500 mt-1">
-                  Cookie Policy &bull; ข้อกำหนดและรายละเอียดการจัดเก็บคุกกี้บนระบบสั่งจองสินค้า
-                </p>
-              </div>
-              <div className="text-xs text-slate-400 sm:text-right shrink-0 space-y-0.5 pt-1">
-                <div>มีผลบังคับใช้: <span className="text-slate-600 font-medium">23 กันยายน 2569</span></div>
-                <div>ปรับปรุงล่าสุด: <span className="text-slate-600 font-medium">23 กันยายน 2569</span></div>
-              </div>
-            </div>
-          </div>
+        {/* Document Body */}
+        <div className="pt-6 sm:pt-8 space-y-6 sm:space-y-7">
+          {/* Introduction */}
+          <p className="text-justify leading-relaxed">
+            <strong>ห้างหุ้นส่วนจำกัด อุบลรุ่งเรืองเบฟเวอเรจ</strong> (&quot;เรา&quot;) ใช้คุกกี้และเทคโนโลยีที่คล้ายกันบนเว็บไซต์นี้ เพื่อสนับสนุนการทำงานของระบบสั่งจองสินค้าออนไลน์ รักษาความปลอดภัยของเซสชันการเข้าสู่ระบบ และส่งมอบประสบการณ์การใช้งานที่ราบรื่น เอกสารฉบับนี้จัดทำขึ้นเพื่อให้ท่านเข้าใจถึงลักษณะการใช้งาน ประเภทของคุกกี้ ตลอดจนสิทธิและวิธีการจัดการคุกกี้ของท่านตามพระราชบัญญัติคุ้มครองข้อมูลส่วนบุคคล พ.ศ. 2562 (PDPA)
+          </p>
 
-          {/* Document Content */}
-          <div className="p-6 sm:p-8 md:p-10 space-y-8 text-slate-700 leading-relaxed text-sm sm:text-base">
-            {/* Intro */}
-            <div className="bg-slate-50/70 border border-slate-100 rounded-lg p-4 sm:p-5 text-sm text-slate-700">
-              <strong className="text-slate-900 font-medium">หจก. อุบลรุ่งเรืองเบฟเวอเรจ</strong> (&quot;เรา&quot;) ใช้คุกกี้และเทคโนโลยีที่คล้ายกันบนเว็บไซต์นี้
-              เพื่อสนับสนุนการทำงานของระบบสั่งจองสินค้าออนไลน์ รักษาความปลอดภัยของเซสชันการเข้าสู่ระบบ
-              และส่งมอบประสบการณ์การใช้งานที่ราบรื่น เอกสารนี้จัดทำขึ้นเพื่อให้ท่านเข้าใจถึงลักษณะการใช้งาน
-              ประเภทของคุกกี้ และสิทธิในการจัดการคุกกี้ของท่านตาม พ.ร.บ. คุ้มครองข้อมูลส่วนบุคคล พ.ศ. 2562 (PDPA)
-            </div>
+          {/* Section 1 */}
+          <section className="space-y-2">
+            <h2 className="text-base sm:text-lg font-bold text-slate-900">
+              1. คุกกี้ (Cookies) คืออะไร?
+            </h2>
+            <p className="text-justify leading-relaxed text-slate-700">
+              คุกกี้ คือไฟล์ข้อความขนาดเล็กที่จัดเก็บบนอุปกรณ์คอมพิวเตอร์ แท็บเล็ต หรือสมาร์ทโฟนของท่านผ่านเว็บเบราว์เซอร์เมื่อท่านเข้าสู่เว็บไซต์ โดยคุกกี้จะบันทึกข้อมูลการตั้งค่า สถานะการยืนยันตัวตน และพฤติกรรมการใช้งาน เพื่อช่วยให้เว็บไซต์สามารถจดจำอุปกรณ์ของท่านและอำนวยความสะดวกในการใช้งานระบบได้อย่างต่อเนื่องและปลอดภัย
+            </p>
+          </section>
 
-            {/* Section 1 */}
-            <section className="space-y-3">
-              <div className="border-l-4 border-[#800020] pl-3 py-0.5">
-                <h2 className="text-base sm:text-lg font-bold text-slate-900 font-[Prompt]">
-                  1. คุกกี้ (Cookies) คืออะไร?
-                </h2>
-              </div>
-              <p className="text-slate-600 leading-relaxed text-sm sm:text-[15px] pl-1">
-                คุกกี้ คือไฟล์ข้อความขนาดเล็กที่จัดเก็บบนอุปกรณ์คอมพิวเตอร์ แท็บเล็ต หรือสมาร์ทโฟนของท่านผ่านเว็บเบราว์เซอร์
-                เมื่อท่านเข้าสู่เว็บไซต์ คุกกี้จะบันทึกข้อมูลการตั้งค่า สถานะการยืนยันตัวตน และพฤติกรรมการใช้งาน
-                ซึ่งช่วยให้เว็บไซต์จดจำผู้ใช้และอำนวยความสะดวกในการใช้งานอย่างต่อเนื่อง
-              </p>
-            </section>
+          {/* Section 2 */}
+          <section className="space-y-3">
+            <h2 className="text-base sm:text-lg font-bold text-slate-900">
+              2. ประเภทของคุกกี้ที่เราใช้งาน
+            </h2>
+            <p className="text-slate-700">
+              เราจัดหมวดหมู่คุกกี้ตามวัตถุประสงค์การใช้งานและมาตรฐานความปลอดภัย โดยมีรายละเอียดดังแสดงในตารางต่อไปนี้:
+            </p>
 
-            {/* Section 2 */}
-            <section className="space-y-4">
-              <div className="border-l-4 border-[#800020] pl-3 py-0.5">
-                <h2 className="text-base sm:text-lg font-bold text-slate-900 font-[Prompt]">
-                  2. ประเภทของคุกกี้ที่เราใช้งาน
-                </h2>
-              </div>
-              <p className="text-slate-600 text-sm sm:text-[15px] pl-1">
-                เราจัดหมวดหมู่คุกกี้ตามวัตถุประสงค์การใช้งานและมาตรฐานความปลอดภัย ดังนี้:
-              </p>
-
-              <div className="space-y-3.5">
-                {/* 2.1 Strictly Necessary */}
-                <div className="rounded-lg border border-slate-200 overflow-hidden bg-white">
-                  <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 bg-slate-50 border-b border-slate-200">
-                    <h3 className="font-bold text-slate-900 text-sm sm:text-[15px] font-[Prompt]">
-                      2.1 คุกกี้ที่จำเป็นอย่างยิ่ง (Strictly Necessary Cookies)
-                    </h3>
-                    <span className="text-xs font-semibold text-[#800020]">
+            {/* Word-Style Table: ประเภทคุกกี้ */}
+            <div className="overflow-x-auto my-3">
+              <table className="w-full border-collapse border border-slate-400 text-xs sm:text-sm text-slate-800">
+                <thead>
+                  <tr className="bg-slate-100 text-slate-900">
+                    <th className="border border-slate-400 px-3 py-2.5 text-center font-bold w-12 sm:w-16">
+                      ลำดับ
+                    </th>
+                    <th className="border border-slate-400 px-3.5 py-2.5 text-left font-bold w-48 sm:w-56">
+                      ประเภทคุกกี้
+                    </th>
+                    <th className="border border-slate-400 px-3.5 py-2.5 text-left font-bold">
+                      วัตถุประสงค์และลักษณะการทำงาน
+                    </th>
+                    <th className="border border-slate-400 px-3 py-2.5 text-center font-bold w-28 sm:w-36">
+                      สถานะความจำเป็น
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td className="border border-slate-400 px-3 py-3 text-center align-top font-medium">
+                      1
+                    </td>
+                    <td className="border border-slate-400 px-3.5 py-3 align-top font-semibold">
+                      คุกกี้ที่จำเป็นอย่างยิ่ง
+                      <div className="text-xs font-normal text-slate-600">
+                        (Strictly Necessary Cookies)
+                      </div>
+                    </td>
+                    <td className="border border-slate-400 px-3.5 py-3 align-top text-slate-700 leading-relaxed">
+                      มีความจำเป็นต่อการทำงานพื้นฐานของระบบสั่งจองสินค้า เช่น การจัดการเซสชันผู้ใช้งานเพื่อยืนยันตัวตนในการเข้าสู่ระบบ (Session Authentication), การตรวจสอบสิทธิ์การเข้าถึงข้อมูลคำสั่งซื้อ และการรักษาความมั่นคงปลอดภัยของระบบ
+                    </td>
+                    <td className="border border-slate-400 px-3 py-3 text-center align-top font-semibold text-slate-900">
                       จำเป็นต่อระบบ
-                    </span>
-                  </div>
-                  <div className="p-4 sm:p-5 space-y-2.5">
-                    <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                      คุกกี้ประเภทนี้มีความจำเป็นต่อการทำงานพื้นฐานของระบบ เช่น การรักษาความปลอดภัยของระบบสั่งจองสินค้า,
-                      การจัดการเซสชันผู้ใช้งานเพื่อยืนยันตัวตนในการเข้าสู่ระบบ (Session Authentication),
-                      การตรวจสอบสิทธิ์การเข้าถึงข้อมูลคำสั่งซื้อ และการป้องกันการโจมตีทางไซเบอร์
-                    </p>
-                    <div className="pt-2 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 text-xs">
-                      <span className="text-slate-500">
-                        ลักษณะ: จัดการเซสชันการยืนยันตัวตนและความปลอดภัยของระบบ
-                      </span>
-                      <span className="text-[#800020] font-semibold">
-                        ไม่สามารถปิดการใช้งานได้
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* 2.2 Functionality */}
-                <div className="rounded-lg border border-slate-200 overflow-hidden bg-white">
-                  <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 bg-slate-50 border-b border-slate-200">
-                    <h3 className="font-bold text-slate-900 text-sm sm:text-[15px] font-[Prompt]">
-                      2.2 คุกกี้เพื่อการทำงานของระบบ (Functionality Cookies)
-                    </h3>
-                    <span className="text-xs text-slate-500">
+                      <div className="text-xs font-normal text-slate-500">
+                        (ไม่สามารถปิดได้)
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="border border-slate-400 px-3 py-3 text-center align-top font-medium">
+                      2
+                    </td>
+                    <td className="border border-slate-400 px-3.5 py-3 align-top font-semibold">
+                      คุกกี้เพื่อการทำงานของระบบ
+                      <div className="text-xs font-normal text-slate-600">
+                        (Functionality Cookies)
+                      </div>
+                    </td>
+                    <td className="border border-slate-400 px-3.5 py-3 align-top text-slate-700 leading-relaxed">
+                      ช่วยจดจำการตั้งค่าและตัวเลือกของท่าน เช่น บันทึกสถานะการยอมรับข้อตกลง การแสดงผลหน้าจอ หรือการตั้งค่าตัวกรองสินค้า เพื่อให้ท่านสามารถใช้งานเว็บไซต์ได้อย่างสะดวกสบายในครั้งถัดไป
+                    </td>
+                    <td className="border border-slate-400 px-3 py-3 text-center align-top text-slate-700">
                       ทางเลือก
-                    </span>
-                  </div>
-                  <div className="p-4 sm:p-5">
-                    <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                      ช่วยจดจำการตั้งค่าและตัวเลือกของท่าน เช่น บันทึกสถานะการยอมรับข้อตกลง การแสดงผลหน้าจอ
-                      หรือการตั้งค่าตัวกรองสินค้า เพื่อให้ท่านสามารถใช้งานเว็บไซต์ได้อย่างสะดวกในครั้งถัดไป
-                    </p>
-                  </div>
-                </div>
-
-                {/* 2.3 Analytics */}
-                <div className="rounded-lg border border-slate-200 overflow-hidden bg-white">
-                  <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 bg-slate-50 border-b border-slate-200">
-                    <h3 className="font-bold text-slate-900 text-sm sm:text-[15px] font-[Prompt]">
-                      2.3 คุกกี้เพื่อการวิเคราะห์และวัดผล (Analytics Cookies)
-                    </h3>
-                    <span className="text-xs text-slate-500">
+                      <div className="text-xs font-normal text-slate-500">
+                        (ตั้งค่าเปิด-ปิดได้)
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="border border-slate-400 px-3 py-3 text-center align-top font-medium">
+                      3
+                    </td>
+                    <td className="border border-slate-400 px-3.5 py-3 align-top font-semibold">
+                      คุกกี้เพื่อการวิเคราะห์และวัดผล
+                      <div className="text-xs font-normal text-slate-600">
+                        (Analytics Cookies)
+                      </div>
+                    </td>
+                    <td className="border border-slate-400 px-3.5 py-3 align-top text-slate-700 leading-relaxed">
+                      ช่วยให้เราทราบสถิติปริมาณการเข้าใช้งานหน้าเว็บและประสิทธิภาพการตอบสนองของระบบ เพื่อนำข้อมูลเชิงสถิติไปปรับปรุงความเร็ว ความเสถียร และพัฒนาการให้บริการให้ดียิ่งขึ้น
+                    </td>
+                    <td className="border border-slate-400 px-3 py-3 text-center align-top text-slate-700">
                       ทางเลือก
-                    </span>
-                  </div>
-                  <div className="p-4 sm:p-5">
-                    <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                      ช่วยให้เราทราบถึงสถิติการเข้าชมหน้าเว็บ ปริมาณการใช้งาน และการตอบสนองของระบบ
-                      เพื่อนำข้อมูลเชิงสถิติไปปรับปรุงประสิทธิภาพ ความเร็ว และความเสถียรของเว็บไซต์
-                    </p>
-                  </div>
-                </div>
-
-                {/* 2.4 Marketing */}
-                <div className="rounded-lg border border-slate-200 overflow-hidden bg-white">
-                  <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 bg-slate-50 border-b border-slate-200">
-                    <h3 className="font-bold text-slate-900 text-sm sm:text-[15px] font-[Prompt]">
-                      2.4 คุกกี้เพื่อการตลาด (Marketing Cookies)
-                    </h3>
-                    <span className="text-xs text-slate-500">
+                      <div className="text-xs font-normal text-slate-500">
+                        (ตั้งค่าเปิด-ปิดได้)
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="border border-slate-400 px-3 py-3 text-center align-top font-medium">
+                      4
+                    </td>
+                    <td className="border border-slate-400 px-3.5 py-3 align-top font-semibold">
+                      คุกกี้เพื่อการตลาด
+                      <div className="text-xs font-normal text-slate-600">
+                        (Marketing Cookies)
+                      </div>
+                    </td>
+                    <td className="border border-slate-400 px-3.5 py-3 align-top text-slate-700 leading-relaxed">
+                      ใช้สำหรับนำเสนอข่าวสาร โปรโมชันสินค้าเครื่องดื่ม หรือสิทธิประโยชน์ที่เกี่ยวข้องกับความต้องการของท่าน โดยไม่มีการเปิดเผยข้อมูลส่วนบุคคลระบุตัวตนแก่บุคคลภายนอกที่ไม่เกี่ยวข้อง
+                    </td>
+                    <td className="border border-slate-400 px-3 py-3 text-center align-top text-slate-700">
                       ทางเลือก
-                    </span>
-                  </div>
-                  <div className="p-4 sm:p-5">
-                    <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                      ใช้สำหรับนำเสนอข่าวสาร โปรโมชันสินค้าเครื่องดื่ม หรือสิทธิประโยชน์ที่เกี่ยวข้องกับพฤติกรรมและความต้องการของท่าน
-                      โดยไม่มีการเปิดเผยข้อมูลส่วนบุคคลระบุตัวตนแก่บุคคลภายนอกที่ไม่เกี่ยวข้อง
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            {/* Section 3 */}
-            <section className="space-y-3">
-              <div className="border-l-4 border-[#800020] pl-3 py-0.5">
-                <h2 className="text-base sm:text-lg font-bold text-slate-900 font-[Prompt]">
-                  3. การจัดการและการปิดการใช้งานคุกกี้
-                </h2>
-              </div>
-              <div className="space-y-3 pl-1 text-slate-600 text-sm sm:text-[15px] leading-relaxed">
-                <p>
-                  ท่านสามารถเลือกยอมรับหรือปฏิเสธคุกกี้ที่มิใช่คุกกี้จำเป็นได้ตามความต้องการ
-                  นอกจากนี้ ท่านสามารถตั้งค่าหรือลบประวัติคุกกี้ได้โดยตรงผ่านโปรแกรมเว็บเบราว์เซอร์ของท่าน:
-                </p>
-                <div className="bg-slate-50 rounded-lg p-4 border border-slate-200 text-xs sm:text-sm space-y-2 text-slate-700">
-                  <div>
-                    <strong className="text-slate-900">Google Chrome:</strong> การตั้งค่า &gt; ความเป็นส่วนตัวและความปลอดภัย &gt; คุกกี้และข้อมูลอื่นของไซต์
-                  </div>
-                  <div>
-                    <strong className="text-slate-900">Microsoft Edge:</strong> การตั้งค่า &gt; คุกกี้และสิทธิ์ของไซต์ &gt; จัดการและลบคุกกี้
-                  </div>
-                  <div>
-                    <strong className="text-slate-900">Apple Safari:</strong> การตั้งค่า (Preferences) &gt; ความเป็นส่วนตัว (Privacy) &gt; บล็อกคุกกี้ทั้งหมด
-                  </div>
-                </div>
-                <p className="text-xs text-slate-500">
-                  หมายเหตุ: หากท่านปิดการใช้งานคุกกี้ที่จำเป็นอย่างยิ่ง ระบบอาจไม่สามารถจดจำสถานะการเข้าสู่ระบบ
-                  หรือฟังก์ชันการสั่งจองสินค้าอาจทำงานได้อย่างไม่สมบูรณ์
-                </p>
-              </div>
-            </section>
-
-            {/* Section 4 */}
-            <section className="space-y-3">
-              <div className="border-l-4 border-[#800020] pl-3 py-0.5">
-                <h2 className="text-base sm:text-lg font-bold text-slate-900 font-[Prompt]">
-                  4. การเชื่อมโยงกับนโยบายความเป็นส่วนตัว
-                </h2>
-              </div>
-              <p className="text-slate-600 leading-relaxed text-sm sm:text-[15px] pl-1">
-                การเก็บรวบรวม การประมวลผล และการคุ้มครองข้อมูลส่วนบุคคลของท่านที่เกิดขึ้นผ่านการใช้งานเว็บไซต์
-                อยู่ภายใต้ข้อกำหนดของ{' '}
-                <Link
-                  href="/privacy-policy"
-                  className="text-[#800020] hover:text-[#570016] font-semibold underline underline-offset-2 transition-colors"
-                >
-                  นโยบายความเป็นส่วนตัว (Privacy Policy)
-                </Link>
-                {' '}ของ หจก. อุบลรุ่งเรืองเบฟเวอเรจ โปรดศึกษาเพื่อรับทราบสิทธิของท่านภายใต้กฎหมาย PDPA
-              </p>
-            </section>
-
-            {/* Contact / Footer Note */}
-            <div className="pt-4">
-              <div className="bg-slate-50 rounded-lg border border-slate-200 p-5 sm:p-6 text-xs sm:text-sm text-slate-600 space-y-2">
-                <div className="font-bold text-slate-900 font-[Prompt] text-sm sm:text-base">
-                  ช่องทางการติดต่อสอบถาม
-                </div>
-                <p className="text-slate-600">
-                  หากท่านมีข้อสงสัย ข้อเสนอแนะ หรือต้องการสอบถามข้อมูลเพิ่มเติมเกี่ยวกับการใช้งานคุกกี้ กรุณาติดต่อ:
-                </p>
-                <div className="text-slate-700 pt-1 space-y-0.5">
-                  <div className="font-semibold text-slate-900">หจก. อุบลรุ่งเรืองเบฟเวอเรจ (สำนักงานใหญ่)</div>
-                  <div>โทรศัพท์: 045-263-380</div>
-                </div>
-              </div>
+                      <div className="text-xs font-normal text-slate-500">
+                        (ตั้งค่าเปิด-ปิดได้)
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
-          </div>
+          </section>
+
+          {/* Section 3 */}
+          <section className="space-y-3">
+            <h2 className="text-base sm:text-lg font-bold text-slate-900">
+              3. การจัดการและการปิดการใช้งานคุกกี้
+            </h2>
+            <p className="text-slate-700">
+              ท่านสามารถเลือกยอมรับหรือปฏิเสธคุกกี้ที่มิใช่คุกกี้จำเป็นได้ผ่านแบนเนอร์แจ้งเตือนการใช้งานคุกกี้ หรือท่านสามารถตั้งค่า ลบ หรือปฏิเสธคุกกี้ได้โดยตรงผ่านเมนูการตั้งค่าของโปรแกรมเว็บเบราว์เซอร์ ดังนี้:
+            </p>
+
+            {/* Word-Style Table: เบราว์เซอร์ */}
+            <div className="overflow-x-auto my-3">
+              <table className="w-full border-collapse border border-slate-400 text-xs sm:text-sm text-slate-800">
+                <thead>
+                  <tr className="bg-slate-100 text-slate-900">
+                    <th className="border border-slate-400 px-3.5 py-2.5 text-left font-bold w-44 sm:w-52">
+                      เว็บเบราว์เซอร์
+                    </th>
+                    <th className="border border-slate-400 px-3.5 py-2.5 text-left font-bold">
+                      ขั้นตอนการตั้งค่าและลบคุกกี้
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td className="border border-slate-400 px-3.5 py-2.5 font-semibold align-top">
+                      Google Chrome
+                    </td>
+                    <td className="border border-slate-400 px-3.5 py-2.5 align-top">
+                      การตั้งค่า (Settings) &gt; ความเป็นส่วนตัวและความปลอดภัย (Privacy & Security) &gt; คุกกี้และข้อมูลอื่นของไซต์ (Third-party cookies)
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="border border-slate-400 px-3.5 py-2.5 font-semibold align-top">
+                      Microsoft Edge
+                    </td>
+                    <td className="border border-slate-400 px-3.5 py-2.5 align-top">
+                      การตั้งค่า (Settings) &gt; คุกกี้และสิทธิ์ของไซต์ (Cookies and site permissions) &gt; จัดการและลบคุกกี้และข้อมูลไซต์
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="border border-slate-400 px-3.5 py-2.5 font-semibold align-top">
+                      Apple Safari
+                    </td>
+                    <td className="border border-slate-400 px-3.5 py-2.5 align-top">
+                      การตั้งค่า (Preferences / Settings) &gt; ความเป็นส่วนตัว (Privacy) &gt; บล็อกคุกกี้ทั้งหมด (Block all cookies)
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <p className="text-xs text-slate-500 italic">
+              * หมายเหตุ: หากท่านปิดการใช้งานคุกกี้ที่จำเป็นอย่างยิ่ง ระบบอาจไม่สามารถจดจำสถานะการเข้าสู่ระบบ และการสั่งจองสินค้าอาจทำงานได้อย่างไม่สมบูรณ์
+            </p>
+          </section>
+
+          {/* Section 4 */}
+          <section className="space-y-2">
+            <h2 className="text-base sm:text-lg font-bold text-slate-900">
+              4. การเชื่อมโยงกับนโยบายความเป็นส่วนตัว
+            </h2>
+            <p className="text-justify leading-relaxed text-slate-700">
+              การเก็บรวบรวม ใช้ และประมวลผลข้อมูลส่วนบุคคลของท่านที่เกิดขึ้นผ่านการใช้งานเว็บไซต์นี้ อยู่ภายใต้ข้อกำหนดของ{' '}
+              <Link
+                href="/privacy-policy"
+                className="text-slate-900 font-semibold underline underline-offset-2 hover:text-[#800020] transition-colors"
+              >
+                นโยบายความเป็นส่วนตัว (Privacy Policy)
+              </Link>
+              {' '}ของ ห้างหุ้นส่วนจำกัด อุบลรุ่งเรืองเบฟเวอเรจ โปรดศึกษาเพื่อรับทราบสิทธิและมาตรการคุ้มครองข้อมูลของท่านตามกฎหมาย PDPA
+            </p>
+          </section>
+
+          {/* Section 5: Contact Info */}
+          <section className="pt-4 border-t border-slate-300 space-y-1.5 text-xs sm:text-sm text-slate-700">
+            <div className="font-bold text-slate-900 text-sm sm:text-base">
+              ช่องทางการติดต่อสอบถาม
+            </div>
+            <p>
+              หากท่านมีข้อสงสัย ข้อเสนอแนะ หรือต้องการสอบถามข้อมูลเพิ่มเติมเกี่ยวกับการใช้งานคุกกี้ กรุณาติดต่อ:
+            </p>
+            <div className="pt-1 text-slate-800">
+              <div className="font-semibold">ห้างหุ้นส่วนจำกัด อุบลรุ่งเรืองเบฟเวอเรจ (สำนักงานใหญ่)</div>
+              <div>โทรศัพท์: 045-263-380</div>
+            </div>
+          </section>
         </div>
       </div>
     </div>
-  </div>
   );
 }

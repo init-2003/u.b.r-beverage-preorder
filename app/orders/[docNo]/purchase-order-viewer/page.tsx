@@ -217,12 +217,12 @@ export default function ViewPurchaseOrderPage() {
             type="button"
             onClick={handleDownload}
             disabled={downloading}
-            className={`w-20 sm:w-28 h-8 sm:h-9 inline-flex items-center justify-center bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white rounded-full text-xs sm:text-sm font-bold shadow-sm hover:shadow transition-all cursor-pointer ${downloading ? 'opacity-70 cursor-not-allowed' : ''
+            className={`min-h-[36px] sm:min-h-[40px] px-3.5 sm:px-5 inline-flex items-center justify-center bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white rounded-full text-xs sm:text-sm font-bold shadow-sm hover:shadow transition-all cursor-pointer ${downloading ? 'opacity-70 cursor-not-allowed' : ''
               }`}
           >
             {downloading ? (
               <span className="inline-flex items-center gap-1">
-                <Loader2 className="w-3 h-3 animate-spin" />
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
                 <span className="text-[11px] sm:text-xs">โหลด...</span>
               </span>
             ) : (
@@ -232,7 +232,7 @@ export default function ViewPurchaseOrderPage() {
           <button
             type="button"
             onClick={handlePrint}
-            className="w-20 sm:w-28 h-8 sm:h-9 inline-flex items-center justify-center bg-[#1d4ed8] hover:bg-[#1e40af] active:bg-[#1e3a8a] text-white rounded-full text-xs sm:text-sm font-bold shadow-sm hover:shadow transition-all cursor-pointer"
+            className="min-h-[36px] sm:min-h-[40px] px-4 sm:px-6 inline-flex items-center justify-center bg-[#1d4ed8] hover:bg-[#1e40af] active:bg-[#1e3a8a] text-white rounded-full text-xs sm:text-sm font-bold shadow-sm hover:shadow transition-all cursor-pointer"
           >
             <span>พิมพ์</span>
           </button>

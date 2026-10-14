@@ -26,10 +26,16 @@ export async function POST(req: NextRequest) {
     const { username: cleanUser, password: cleanPass, rememberMe } = validation.data;
     const pool = await getDbPool();
 
-    // ค้นหาลูกค้าตาม Cus_User หรือ Customer_Id
+    const cleanUserUpper = cleanUser.toUpperCase();
+    const phoneDigits = cleanUser.replace(/\D/g, '');
+    const hasPhone = phoneDigits.length >= 9 && phoneDigits.length <= 12 ? 1 : 0;
+
+    // ค้นหาลูกค้าตาม Cus_User, Customer_Id (ไม่สนตัวพิมพ์เล็ก-ใหญ่) หรือค้นหาตามเบอร์โทรศัพท์
     const result = await pool
       .request()
-      .input('username', cleanUser)
+      .input('usernameUpper', cleanUserUpper)
+      .input('hasPhone', hasPhone)
+      .input('phoneDigits', phoneDigits)
       .query(`
         SELECT TOP 1 
           Customer_Id, 
@@ -43,8 +49,9 @@ export async function POST(req: NextRequest) {
           Customer_Sts
         FROM Customer 
         WHERE (
-          RTRIM(LTRIM(Cus_User)) = @username 
-          OR RTRIM(LTRIM(Customer_Id)) = @username 
+          UPPER(RTRIM(LTRIM(Cus_User))) = @usernameUpper 
+          OR UPPER(RTRIM(LTRIM(Customer_Id))) = @usernameUpper 
+          OR (@hasPhone = 1 AND REPLACE(REPLACE(REPLACE(Customer_Tel, ' ', ''), '-', ''), ',', '') LIKE '%' + @phoneDigits + '%')
         )
       `);
 
@@ -67,7 +74,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (cleanPass !== storedPass) {
+    const isPassMatch =
+      cleanPass === storedPass ||
+      cleanPass.toLowerCase() === storedPass.toLowerCase();
+
+    if (!isPassMatch) {
       return NextResponse.json(
         { success: false, message: 'รหัสผ่านไม่ถูกต้อง' },
         { status: 401 }

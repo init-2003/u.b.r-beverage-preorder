@@ -8,6 +8,12 @@ import { matchRateLimitPolicy } from '@/lib/rate-limit-config';
 
 export function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
+
+  // 0. ข้าม Next.js internals ทั้งหมด (_next/hmr, _next/static, _next/image, ฯลฯ)
+  if (pathname.startsWith('/_next')) {
+    return NextResponse.next();
+  }
+
   const customerToken = request.cookies.get('ubr_customer_token')?.value;
   const customerId = extractCustomerIdFromToken(customerToken);
   const isAuthenticated = Boolean(customerId);
@@ -21,9 +27,8 @@ export function proxy(request: NextRequest) {
       request.nextUrl.search.includes('cususer=');
 
     if (isAuthenticated && !hasLoginParams) {
-      // ล็อกอินอยู่แล้ว และไม่ได้ส่งพารามิเตอร์มาล็อกอินใหม่ พาไปหน้าหลัก หรือหน้าที่ต้องการ
-      const redirectTarget = request.nextUrl.searchParams.get('redirect') || '/';
-      return NextResponse.redirect(new URL(redirectTarget, request.url));
+      // ล็อกอินอยู่แล้ว และไม่ได้ส่งพารามิเตอร์มาล็อกอินใหม่ พาไปหน้าหลัก (/) เสมอ
+      return NextResponse.redirect(new URL('/', request.url));
     }
     return NextResponse.next();
   }
@@ -85,9 +90,6 @@ export function proxy(request: NextRequest) {
   // บังคับว่าต้องเข้าสู่ระบบก่อนเท่านั้น หากยังไม่เข้าสู่ระบบจะส่งไปหน้า /login
   if (!isAuthenticated) {
     const loginUrl = new URL('/login', request.url);
-    if (pathname !== '/') {
-      loginUrl.searchParams.set('redirect', pathname + request.nextUrl.search);
-    }
     return NextResponse.redirect(loginUrl);
   }
 
@@ -97,6 +99,6 @@ export function proxy(request: NextRequest) {
 // Intercept pages and APIs, excluding static assets
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|apple-icon.png|icon.png|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ttf|woff|woff2)$).*)',
+    '/((?!_next|favicon.ico|apple-icon.png|icon.png|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ttf|woff|woff2)$).*)',
   ],
 };

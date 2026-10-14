@@ -61,7 +61,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
               ref={ref}
               id={inputId}
               placeholder=" "
-              className={`peer w-full rounded-md bg-white border text-slate-900 text-sm sm:text-[15px] transition-colors duration-150 focus:outline-none ${
+              className={`peer w-full apple-squircle-input bg-white border text-slate-900 text-base sm:text-[15px] transition-colors duration-150 focus:outline-none ${
                 leftIcon ? 'pl-10' : 'pl-3.5'
               } ${rightIcon ? 'pr-11' : 'pr-3.5'} py-3.5 sm:py-3.5 ${
                 error
@@ -126,7 +126,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
               ref={ref}
               id={inputId}
               placeholder={effectivePlaceholder}
-              className={`w-full py-2.5 sm:py-3 bg-transparent text-slate-900 ${placeholderColor} text-sm sm:text-[15px] focus:outline-none ${
+              className={`w-full py-2.5 sm:py-3 bg-transparent text-slate-900 ${placeholderColor} text-base sm:text-[15px] focus:outline-none ${
                 leftIcon ? 'pl-1' : 'px-1'
               } ${rightIcon ? 'pr-10' : ''} ${className}`}
               {...props}
@@ -157,7 +157,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
             ref={ref}
             id={inputId}
             placeholder={effectivePlaceholder}
-            className={`w-full rounded-sm bg-slate-50 border text-slate-900 ${placeholderColor} text-xs sm:text-sm transition-all focus:bg-white focus:outline-none focus:ring-2 ${
+            className={`w-full apple-squircle-input bg-slate-50 border text-slate-900 ${placeholderColor} text-base sm:text-sm transition-all focus:bg-white focus:outline-none focus:ring-2 ${
               leftIcon ? 'pl-10' : 'pl-3.5'
             } ${rightIcon ? 'pr-10' : 'pr-3.5'} py-2.5 ${
               error

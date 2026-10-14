@@ -6,12 +6,12 @@ import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { useCart } from '@/context/CartContext';
 import { useBreadcrumb } from '@/context/BreadcrumbContext';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, ChevronRight } from 'lucide-react';
 import { EmptyCheckoutIllustration } from '@/components/EmptyCheckoutIllustration';
 import { CheckoutIllustration } from '@/components/CheckoutIllustration';
 import { WineLoading } from '@/components/WineLoading';
 import { ProductImage } from '@/components/ui/ProductImage';
-import { QuantityInput } from '@/components/ui';
+import { QuantityInput, Modal } from '@/components/ui';
 import { formatDepositPrice } from '@/lib/deposit';
 
 interface PreOrderItem {
@@ -241,27 +241,6 @@ function PreOrderContent() {
     backHref = `/products/${encodeURIComponent(productId)}`;
   }
 
-  // Form states
-  const [recipientName, setRecipientName] = useState('');
-  const [recipientTel, setRecipientTel] = useState('');
-  const [recipientAddress, setRecipientAddress] = useState('');
-  const [recipientZip, setRecipientZip] = useState('');
-  const [remark, setRemark] = useState('');
-
-  // Helper: check if current load is a browser reload/refresh (F5)
-  const checkIsReload = (): boolean => {
-    if (typeof window === 'undefined' || !window.performance) return false;
-    try {
-      const navEntries = performance.getEntriesByType('navigation') as PerformanceNavigationTiming[];
-      if (navEntries.length > 0) {
-        return navEntries[0].type === 'reload';
-      }
-      return (window.performance as any)?.navigation?.type === 1;
-    } catch {
-      return false;
-    }
-  };
-
   // Helper: clear all draft checkout states from session storage
   const clearCheckoutDraftStorage = () => {
     if (typeof window === 'undefined') return;
@@ -269,12 +248,31 @@ function PreOrderContent() {
       sessionStorage.removeItem('ubr_checkout_is_editing_address');
       sessionStorage.removeItem('ubr_checkout_temp_address');
       sessionStorage.removeItem('ubr_checkout_payment_method');
+      sessionStorage.removeItem('ubr_checkout_remark');
+      sessionStorage.removeItem('ubr_checkout_was_reloaded');
       localStorage.removeItem('ubr_checkout_payment_method');
+      localStorage.removeItem('ubr_checkout_remark');
     } catch { }
   };
 
+  // Form states
+  const [recipientName, setRecipientName] = useState('');
+  const [recipientTel, setRecipientTel] = useState('');
+  const [recipientAddress, setRecipientAddress] = useState('');
+  const [recipientZip, setRecipientZip] = useState('');
+  const [remark, setRemark] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        return sessionStorage.getItem('ubr_checkout_remark') || '';
+      } catch { }
+    }
+    return '';
+  });
+  const [isRemarkModalOpen, setIsRemarkModalOpen] = useState(false);
+  const [tempRemark, setTempRemark] = useState('');
+
   const [paymentMethod, setPaymentMethod] = useState<'M' | 'T' | null>(() => {
-    if (typeof window !== 'undefined' && checkIsReload()) {
+    if (typeof window !== 'undefined') {
       try {
         const saved = sessionStorage.getItem('ubr_checkout_payment_method');
         if (saved === 'M' || saved === 'T') return saved;
@@ -283,9 +281,9 @@ function PreOrderContent() {
     return null;
   });
 
-  // Address edit state (Shopee style) - restored ONLY on browser reload (F5)
+  // Address edit state (Shopee style) - restored from session storage
   const [isEditingAddress, setIsEditingAddress] = useState<boolean>(() => {
-    if (typeof window !== 'undefined' && checkIsReload()) {
+    if (typeof window !== 'undefined') {
       try {
         return sessionStorage.getItem('ubr_checkout_is_editing_address') === 'true';
       } catch { }
@@ -294,7 +292,7 @@ function PreOrderContent() {
   });
 
   const [tempName, setTempName] = useState<string>(() => {
-    if (typeof window !== 'undefined' && checkIsReload()) {
+    if (typeof window !== 'undefined') {
       try {
         const saved = sessionStorage.getItem('ubr_checkout_temp_address');
         if (saved) {
@@ -307,7 +305,7 @@ function PreOrderContent() {
   });
 
   const [tempTel, setTempTel] = useState<string>(() => {
-    if (typeof window !== 'undefined' && checkIsReload()) {
+    if (typeof window !== 'undefined') {
       try {
         const saved = sessionStorage.getItem('ubr_checkout_temp_address');
         if (saved) {
@@ -320,7 +318,7 @@ function PreOrderContent() {
   });
 
   const [tempAddress, setTempAddress] = useState<string>(() => {
-    if (typeof window !== 'undefined' && checkIsReload()) {
+    if (typeof window !== 'undefined') {
       try {
         const saved = sessionStorage.getItem('ubr_checkout_temp_address');
         if (saved) {
@@ -333,7 +331,7 @@ function PreOrderContent() {
   });
 
   const [tempZip, setTempZip] = useState<string>(() => {
-    if (typeof window !== 'undefined' && checkIsReload()) {
+    if (typeof window !== 'undefined') {
       try {
         const saved = sessionStorage.getItem('ubr_checkout_temp_address');
         if (saved) {
@@ -346,7 +344,7 @@ function PreOrderContent() {
   });
 
   const [saveToProfile, setSaveToProfile] = useState<boolean>(() => {
-    if (typeof window !== 'undefined' && checkIsReload()) {
+    if (typeof window !== 'undefined') {
       try {
         const saved = sessionStorage.getItem('ubr_checkout_temp_address');
         if (saved) {
@@ -358,32 +356,34 @@ function PreOrderContent() {
     return true;
   });
 
-  // Clear drafts if fresh navigation, or listen for in-app exit vs full browser reload
+  // Restore draft state on mount (ensuring client hydration sync)
   useEffect(() => {
     try {
-      localStorage.removeItem('ubr_checkout_payment_method');
+      const savedRemark = sessionStorage.getItem('ubr_checkout_remark');
+      if (savedRemark) setRemark(savedRemark);
 
-      if (!checkIsReload()) {
-        clearCheckoutDraftStorage();
-        setPaymentMethod(null);
-        setIsEditingAddress(false);
-      }
+      const savedPayment = sessionStorage.getItem('ubr_checkout_payment_method');
+      if (savedPayment === 'M' || savedPayment === 'T') setPaymentMethod(savedPayment);
 
-      const savedRemark = localStorage.getItem('ubr_checkout_remark');
-      if (savedRemark) {
-        setRemark(savedRemark);
+      const savedIsEditing = sessionStorage.getItem('ubr_checkout_is_editing_address');
+      if (savedIsEditing === 'true') setIsEditingAddress(true);
+
+      const savedTemp = sessionStorage.getItem('ubr_checkout_temp_address');
+      if (savedTemp) {
+        const parsed = JSON.parse(savedTemp);
+        if (parsed) {
+          if (typeof parsed.tempName === 'string') setTempName(parsed.tempName);
+          if (typeof parsed.tempTel === 'string') setTempTel(parsed.tempTel);
+          if (typeof parsed.tempAddress === 'string') setTempAddress(parsed.tempAddress);
+          if (typeof parsed.tempZip === 'string') setTempZip(parsed.tempZip);
+          if (typeof parsed.saveToProfile === 'boolean') setSaveToProfile(parsed.saveToProfile);
+        }
       }
     } catch { }
 
-    let isBrowserUnloading = false;
-    const handleBeforeUnload = () => {
-      isBrowserUnloading = true;
-    };
-    window.addEventListener('beforeunload', handleBeforeUnload);
-
     return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-      if (!isBrowserUnloading) {
+      // If unmounting because user navigated away to another page (in Next.js or browser)
+      if (typeof window !== 'undefined' && window.location.pathname !== '/checkout') {
         clearCheckoutDraftStorage();
       }
     };
@@ -401,7 +401,12 @@ function PreOrderContent() {
   const handleRemarkChange = (val: string) => {
     setRemark(val);
     try {
-      localStorage.setItem('ubr_checkout_remark', val);
+      if (val.trim()) {
+        sessionStorage.setItem('ubr_checkout_remark', val);
+      } else {
+        sessionStorage.removeItem('ubr_checkout_remark');
+      }
+      localStorage.removeItem('ubr_checkout_remark');
     } catch {
       // ignore storage access errors
     }
@@ -446,7 +451,11 @@ function PreOrderContent() {
     } catch { }
   };
 
+  // Address modal error state
+  const [addressError, setAddressError] = useState('');
+
   const handleStartEditAddress = () => {
+    setAddressError('');
     const nextName = tempName || recipientName;
     const nextTel = tempTel || recipientTel;
     const nextAddress = tempAddress || recipientAddress;
@@ -476,6 +485,7 @@ function PreOrderContent() {
   };
 
   const handleCancelEditAddress = () => {
+    setAddressError('');
     setIsEditingAddress(false);
     setTempName(recipientName);
     setTempTel(recipientTel);
@@ -519,9 +529,10 @@ function PreOrderContent() {
 
   const handleSaveAddress = async () => {
     if (!tempName.trim() || !tempTel.trim() || !tempAddress.trim()) {
-      setErrorMsg('กรุณาระบุชื่อผู้รับ เบอร์โทรศัพท์ และที่อยู่จัดส่งให้ครบถ้วน');
+      setAddressError('กรุณาระบุชื่อผู้รับ เบอร์โทรศัพท์ และที่อยู่จัดส่งให้ครบถ้วน');
       return;
     }
+    setAddressError('');
     setErrorMsg('');
     setRecipientName(tempName.trim());
     setRecipientTel(tempTel.trim());
@@ -736,6 +747,7 @@ function PreOrderContent() {
           sessionStorage.removeItem('ubr_checkout_payment_method');
           sessionStorage.removeItem('ubr_checkout_is_editing_address');
           sessionStorage.removeItem('ubr_checkout_temp_address');
+          sessionStorage.removeItem('ubr_checkout_remark');
           localStorage.removeItem('ubr_checkout_payment_method');
           localStorage.removeItem('ubr_checkout_remark');
         } catch { }
@@ -767,15 +779,15 @@ function PreOrderContent() {
   }
 
   return (
-    <div className="flex-1 flex flex-col bg-white py-6 sm:py-8">
-      <div className="max-w-[1600px] mx-auto w-full px-4 sm:px-6 lg:px-8 space-y-6 flex-1 flex flex-col">
+    <div className="flex-1 flex flex-col bg-white pt-5 sm:pt-8 pb-16 sm:pb-24">
+      <div className="max-w-[1600px] mx-auto w-full px-4 sm:px-6 lg:px-8 space-y-3 sm:space-y-6 flex-1 flex flex-col">
 
         {/* Page Title Header (แสดงเฉพาะเมื่อมีสินค้า) */}
         {!loadingProduct && orderItems.length > 0 && (
-          <div className="pb-3 border-b border-slate-200/80 animate-checkout-slide-up">
-            <div className="flex items-center gap-3 sm:gap-3.5">
-              <CheckoutIllustration className="w-12 h-12 sm:w-14 sm:h-14 shrink-0 drop-shadow-xs" />
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+          <div className="px-0 pb-2.5 sm:pb-3 border-b border-slate-200/80 animate-checkout-slide-up">
+            <div className="flex items-center gap-2.5 sm:gap-3.5">
+              <CheckoutIllustration className="w-10 h-10 sm:w-14 sm:h-14 shrink-0 drop-shadow-xs" />
+              <h1 className="text-xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
                 ยืนยันการสั่งซื้อ
               </h1>
             </div>
@@ -787,7 +799,7 @@ function PreOrderContent() {
             <WineLoading size="md" />
           </div>
         ) : orderItems.length === 0 ? (
-          <div className="bg-white rounded-lg border border-slate-100 shadow-[0_1px_2px_0_rgba(0,0,0,0.04)] py-16 sm:py-24 px-4 text-center flex flex-col items-center justify-center space-y-4 animate-checkout-slide-up">
+          <div className="bg-white rounded-[14px] apple-squircle-card border border-slate-100 shadow-[0_1px_2px_0_rgba(0,0,0,0.04)] py-16 sm:py-24 px-4 text-center flex flex-col items-center justify-center space-y-4 animate-checkout-slide-up">
             <div className="flex items-center justify-center">
               <EmptyCheckoutIllustration className="w-36 h-36 sm:w-40 sm:h-40" />
             </div>
@@ -812,23 +824,23 @@ function PreOrderContent() {
         ) : (
           <>
             {errorMsg && (
-              <div className="p-4 rounded-sm bg-red-50 border border-red-200 text-red-700 text-xs flex items-center gap-3">
+              <div className="p-3.5 sm:p-4 rounded-[14px] apple-squircle-card bg-red-50 border border-red-200 text-red-700 text-xs flex items-center gap-3 animate-checkout-slide-up">
                 <AlertCircle className="w-5 h-5 shrink-0 text-red-600" />
                 <span>{errorMsg}</span>
               </div>
             )}
 
-            <form onSubmit={handleSubmitOrder} className="space-y-6">
+            <form onSubmit={handleSubmitOrder} className="space-y-3 sm:space-y-6">
 
-              {/* Delivery Address Card (Shopee Style) */}
+              {/* Delivery Address Card with crisp border and apple-squircle rounded corners */}
               <div
-                className="bg-white border border-slate-100/80 rounded-sm shadow-[0_1px_1px_0_rgba(0,0,0,0.05)] overflow-hidden animate-checkout-slide-up"
+                className="bg-white rounded-[14px] apple-squircle-card border border-slate-200 shadow-2xs overflow-hidden animate-checkout-slide-up"
                 style={{ animationDelay: '40ms' }}
               >
                 {/* Decorative envelope ribbon strip */}
                 <div className="h-[3px] w-full bg-[repeating-linear-gradient(45deg,#6fa6d6,#6fa6d6_33px,transparent_0,transparent_41px,#f18d9b_0,#f18d9b_74px,transparent_0,transparent_82px)]" />
 
-                <div className="p-5 sm:px-7 sm:py-6">
+                <div className="p-4 sm:p-6">
                   {/* Header: Pin + ที่อยู่ในการจัดส่ง */}
                   <div className="flex items-center justify-between mb-3.5">
                     <div className="flex items-center gap-2">
@@ -843,177 +855,198 @@ function PreOrderContent() {
                     <button
                       type="button"
                       onClick={handleStartEditAddress}
-                      disabled={isEditingAddress}
-                      className={`text-xs sm:text-sm font-semibold text-blue-600 hover:text-blue-700 hover:underline cursor-pointer transition-all duration-200 ${isEditingAddress ? 'opacity-0 scale-95 pointer-events-none' : 'opacity-100 scale-100'
-                        }`}
+                      className="px-3.5 py-1.5 text-xs sm:text-sm font-semibold text-blue-600 hover:text-blue-700 hover:bg-blue-50/70 rounded-full cursor-pointer min-h-[36px] inline-flex items-center justify-center transition-all duration-200"
                     >
                       เปลี่ยน
                     </button>
                   </div>
 
-                  {/* Display Mode matching Reference Image */}
-                  <div
-                    className={!isEditingAddress ? 'address-accordion-open' : 'address-accordion-closed'}
-                    aria-hidden={isEditingAddress}
-                  >
-                    <div className="min-h-0 overflow-hidden">
-                      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-6 pt-1">
-                        <div className="flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-8 flex-1">
-                          {/* Name & Phone (Bold) */}
-                          <div className="sm:w-60 shrink-0 space-y-0.5">
-                            <div className="font-bold text-slate-900 text-xs sm:text-sm leading-tight">
-                              {formatCustomerPhoneAndName(recipientName, recipientTel).displayName}
-                            </div>
-                            <div className="font-bold text-slate-900 text-xs sm:text-sm leading-tight">
-                              {formatCustomerPhoneAndName(recipientName, recipientTel).formattedTel}
-                            </div>
-                          </div>
-
-                          {/* Full Address */}
-                          <div className="flex-1 text-xs sm:text-sm text-slate-700 leading-relaxed flex items-center gap-2.5 flex-wrap">
-                            {recipientAddress ? (
-                              <>
-                                <span>
-                                  {[
-                                    recipientAddress.trim(),
-                                    recipientZip && !recipientAddress.includes(recipientZip) ? recipientZip.trim() : '',
-                                  ].filter(Boolean).join(', ')}
-                                </span>
-                                <span className="text-[10px] text-red-600 border border-red-600 px-1.5 py-0.5 rounded-[2px] shrink-0 font-medium select-none">
-                                  ค่าเริ่มต้น
-                                </span>
-                              </>
-                            ) : (
-                              <span className="text-slate-400 italic">
-                                ยังไม่ได้ระบุที่อยู่จัดส่งสินค้า กรุณากด &quot;เปลี่ยน&quot; เพื่อระบุที่อยู่จัดส่ง
-                              </span>
-                            )}
-                          </div>
+                  {/* Address Display Mode */}
+                  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-6 pt-1">
+                    <div className="flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-8 flex-1">
+                      {/* Name & Phone (Bold) */}
+                      <div className="sm:w-60 shrink-0 space-y-0.5">
+                        <div className="font-bold text-slate-900 text-xs sm:text-sm leading-tight">
+                          {formatCustomerPhoneAndName(recipientName, recipientTel).displayName}
+                        </div>
+                        <div className="font-bold text-slate-900 text-xs sm:text-sm leading-tight">
+                          {formatCustomerPhoneAndName(recipientName, recipientTel).formattedTel}
                         </div>
                       </div>
-                    </div>
-                  </div>
 
-                  {/* Inline Edit Mode */}
-                  <div
-                    className={isEditingAddress ? 'address-accordion-open' : 'address-accordion-closed'}
-                    aria-hidden={!isEditingAddress}
-                  >
-                    <div className="min-h-0 overflow-hidden">
-                      <div className="pt-3 border-t border-slate-100 space-y-4">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                          <div>
-                            <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                              ชื่อ-นามสกุล / ชื่อร้านค้า <span className="text-red-600">*</span>
-                            </label>
-                            <input
-                              type="text"
-                              value={tempName}
-                              onChange={(e) => {
-                                setTempName(e.target.value);
-                                syncTempAddressToStorage({ tempName: e.target.value });
-                              }}
-                              placeholder="เช่น สมชาย ใจดี หรือ ร้านต้นมะกรูด"
-                              className="w-full px-3.5 py-2 rounded-lg bg-slate-50 border border-slate-300 text-slate-900 text-xs sm:text-sm focus:bg-white focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-colors"
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                              เบอร์โทรศัพท์ติดต่อ <span className="text-red-600">*</span>
-                            </label>
-                            <input
-                              type="tel"
-                              value={tempTel}
-                              onChange={(e) => {
-                                setTempTel(e.target.value);
-                                syncTempAddressToStorage({ tempTel: e.target.value });
-                              }}
-                              placeholder="เช่น 081-2345678"
-                              className="w-full px-3.5 py-2 rounded-lg bg-slate-50 border border-slate-300 text-slate-900 text-xs sm:text-sm focus:bg-white focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-colors"
-                            />
-                          </div>
-                        </div>
-
-                        <div>
-                          <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                            ที่อยู่จัดส่งสินค้าโดยละเอียด <span className="text-red-600">*</span>
-                          </label>
-                          <textarea
-                            rows={2}
-                            value={tempAddress}
-                            onChange={(e) => {
-                              setTempAddress(e.target.value);
-                              syncTempAddressToStorage({ tempAddress: e.target.value });
-                            }}
-                            placeholder="ระบุบ้านเลขที่, ซอย, ถนน, ตำบล, อำเภอ, จังหวัด"
-                            className="w-full p-3 rounded-lg bg-slate-50 border border-slate-300 text-slate-900 text-xs sm:text-sm focus:bg-white focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-colors"
-                          />
-                        </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
-                          <div>
-                            <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                              รหัสไปรษณีย์
-                            </label>
-                            <input
-                              type="text"
-                              maxLength={5}
-                              value={tempZip}
-                              onChange={(e) => {
-                                setTempZip(e.target.value);
-                                syncTempAddressToStorage({ tempZip: e.target.value });
-                              }}
-                              placeholder="รหัสไปรษณีย์ 5 หลัก"
-                              className="w-full px-3.5 py-2 rounded-lg bg-slate-50 border border-slate-300 text-slate-900 text-xs sm:text-sm focus:bg-white focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-colors"
-                            />
-                          </div>
-
-                          <div className="sm:pt-5">
-                            <label className="inline-flex items-center gap-2 cursor-pointer select-none text-xs text-slate-600">
-                              <input
-                                type="checkbox"
-                                checked={saveToProfile}
-                                onChange={(e) => {
-                                  setSaveToProfile(e.target.checked);
-                                  syncTempAddressToStorage({ saveToProfile: e.target.checked });
-                                }}
-                                className="w-4 h-4 rounded border-slate-300 text-black focus:ring-black accent-black cursor-pointer"
-                              />
-                              <span>บันทึกเป็นที่อยู่เริ่มต้นในบัญชีของฉัน</span>
-                            </label>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-100">
-                          <button
-                            type="button"
-                            onClick={handleCancelEditAddress}
-                            className="px-4 py-2 rounded-full text-xs font-bold text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
-                          >
-                            ยกเลิก
-                          </button>
-                          <button
-                            type="button"
-                            onClick={handleSaveAddress}
-                            className="px-6 py-2 rounded-full bg-black hover:bg-neutral-800 text-white text-xs font-bold shadow-2xs transition-colors cursor-pointer"
-                          >
-                            บันทึกที่อยู่
-                          </button>
-                        </div>
+                      {/* Full Address */}
+                      <div className="flex-1 text-xs sm:text-sm text-slate-700 leading-relaxed flex items-center gap-2.5 flex-wrap">
+                        {recipientAddress ? (
+                          <>
+                            <span>
+                              {[
+                                recipientAddress.trim(),
+                                recipientZip && !recipientAddress.includes(recipientZip) ? recipientZip.trim() : '',
+                              ].filter(Boolean).join(', ')}
+                            </span>
+                            <span className="text-[10px] text-red-600 border border-red-600 px-2 py-0.5 rounded-full shrink-0 font-medium select-none">
+                              ค่าเริ่มต้น
+                            </span>
+                          </>
+                        ) : (
+                          <span className="text-slate-400 italic">
+                            ยังไม่ได้ระบุที่อยู่จัดส่งสินค้า กรุณากด &quot;เปลี่ยน&quot; เพื่อระบุที่อยู่จัดส่ง
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Items Card (Single Unified Card) */}
+              {/* Edit Address Modal */}
+              <Modal
+                isOpen={isEditingAddress}
+                onClose={handleCancelEditAddress}
+                maxWidth="max-w-[560px]"
+                padding="p-0"
+                className="overflow-hidden"
+              >
+                {/* Modal Header */}
+                <div className="flex items-center px-6 pt-6 pb-2 pr-14">
+                  <h3 className="text-base font-bold text-slate-900 leading-snug">
+                    แก้ไขที่อยู่จัดส่งสินค้า
+                  </h3>
+                </div>
+
+                {/* Modal Body Form */}
+                <div
+                  className="px-6 py-2 space-y-4 max-h-[calc(85vh-140px)] overflow-y-auto"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && (e.target as HTMLElement)?.tagName !== 'TEXTAREA') {
+                      e.preventDefault();
+                      handleSaveAddress();
+                    }
+                  }}
+                >
+                  {addressError && (
+                    <div className="p-3 bg-red-50 border border-red-200/60 text-red-600 rounded-[10px] text-xs font-medium flex items-center gap-2 animate-fade-in">
+                      <AlertCircle className="w-4 h-4 shrink-0" />
+                      <span>{addressError}</span>
+                    </div>
+                  )}
+
+                  {/* 1. ชื่อ-นามสกุล / ชื่อร้านค้า */}
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                      ชื่อ-นามสกุล / ชื่อร้านค้า <span className="text-red-600">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={tempName}
+                      onChange={(e) => {
+                        setTempName(e.target.value);
+                        syncTempAddressToStorage({ tempName: e.target.value });
+                        if (addressError) setAddressError('');
+                      }}
+                      placeholder="ระบุชื่อ-นามสกุล หรือชื่อร้านค้า"
+                      className="w-full px-3.5 py-2.5 rounded-[10px] apple-squircle-sm bg-slate-50 border border-slate-300 text-slate-900 text-sm focus:bg-white focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-colors"
+                    />
+                  </div>
+
+                  {/* 2. ที่อยู่จัดส่งสินค้าโดยละเอียด */}
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                      ที่อยู่จัดส่งสินค้าโดยละเอียด <span className="text-red-600">*</span>
+                    </label>
+                    <textarea
+                      rows={3}
+                      value={tempAddress}
+                      onChange={(e) => {
+                        setTempAddress(e.target.value);
+                        syncTempAddressToStorage({ tempAddress: e.target.value });
+                        if (addressError) setAddressError('');
+                      }}
+                      placeholder="ระบุเลขที่ อาคาร หมู่บ้าน ถนน ซอย ตำบล/แขวง อำเภอ/เขต จังหวัด"
+                      className="w-full p-3 rounded-[10px] apple-squircle-sm bg-slate-50 border border-slate-300 text-slate-900 text-sm focus:bg-white focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-colors resize-none"
+                    />
+                  </div>
+
+                  {/* 3 & 4. รหัสไปรษณีย์ & เบอร์โทรศัพท์ติดต่อ */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                        รหัสไปรษณีย์
+                      </label>
+                      <input
+                        type="text"
+                        maxLength={5}
+                        value={tempZip}
+                        onChange={(e) => {
+                          setTempZip(e.target.value);
+                          syncTempAddressToStorage({ tempZip: e.target.value });
+                        }}
+                        placeholder="เช่น 34000"
+                        className="w-full px-3.5 py-2.5 rounded-[10px] apple-squircle-sm bg-slate-50 border border-slate-300 text-slate-900 text-sm focus:bg-white focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-colors"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                        เบอร์โทรศัพท์ติดต่อ <span className="text-red-600">*</span>
+                      </label>
+                      <input
+                        type="tel"
+                        value={tempTel}
+                        onChange={(e) => {
+                          setTempTel(e.target.value);
+                          syncTempAddressToStorage({ tempTel: e.target.value });
+                          if (addressError) setAddressError('');
+                        }}
+                        placeholder="เช่น 0801234567"
+                        className="w-full px-3.5 py-2.5 rounded-[10px] apple-squircle-sm bg-slate-50 border border-slate-300 text-slate-900 text-sm focus:bg-white focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-colors"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Checkbox: บันทึกเป็นที่อยู่เริ่มต้นในบัญชีของฉัน */}
+                  <div className="pt-1">
+                    <label className="inline-flex items-center gap-2.5 cursor-pointer select-none text-xs sm:text-sm text-slate-700">
+                      <input
+                        type="checkbox"
+                        checked={saveToProfile}
+                        onChange={(e) => {
+                          setSaveToProfile(e.target.checked);
+                          syncTempAddressToStorage({ saveToProfile: e.target.checked });
+                        }}
+                        className="w-4 h-4 rounded border-slate-300 text-black focus:ring-black accent-black cursor-pointer"
+                      />
+                      <span>บันทึกเป็นที่อยู่เริ่มต้นในบัญชีของฉัน</span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Modal Footer Actions */}
+                <div className="flex items-center justify-end gap-3 px-6 pb-6 pt-3 bg-white">
+                  <button
+                    type="button"
+                    onClick={handleCancelEditAddress}
+                    className="px-4 py-2.5 rounded-full text-xs sm:text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-200/60 transition-colors cursor-pointer"
+                  >
+                    ยกเลิก
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSaveAddress}
+                    className="px-6 py-2.5 rounded-full bg-black hover:bg-neutral-800 text-white text-xs sm:text-sm font-bold shadow-xs transition-colors cursor-pointer"
+                  >
+                    ยืนยัน
+                  </button>
+                </div>
+              </Modal>
+
+              {/* Items Card with crisp border and apple-squircle rounded corners */}
               <div
-                className="bg-white rounded-sm shadow-[0_1px_1px_0_rgba(0,0,0,0.05)] border border-slate-100/80 overflow-hidden animate-checkout-slide-up"
+                className="bg-white rounded-[14px] apple-squircle-card border border-slate-200 shadow-2xs overflow-hidden animate-checkout-slide-up"
                 style={{ animationDelay: '80ms' }}
               >
                 {/* Table Header Row */}
-                <div className="px-5 sm:px-6 py-3.5 flex items-center justify-between border-b border-slate-100">
+                <div className="px-4 sm:px-6 py-3 sm:py-3.5 flex items-center justify-between border-b border-slate-100">
                   <div className="flex items-center gap-3">
                     <h2 className="text-sm sm:text-base font-bold text-slate-900 tracking-tight">
                       รายการสินค้า
@@ -1025,7 +1058,7 @@ function PreOrderContent() {
                     <span className="text-center">หน่วย</span>
                     <span className="text-center">ราคาต่อหน่วย</span>
                     <span className="text-center text-[#FF6B00] font-semibold">ราคารวม</span>
-                    <span className="text-right pr-2 text-[#FF0000] font-semibold">ยอดมัดจำ</span>
+                    <span className="text-right pr-0 text-[#FF0000] font-semibold">ยอดมัดจำ</span>
                   </div>
                 </div>
                 {/* MOBILE VIEW (< 640px) */}
@@ -1041,7 +1074,7 @@ function PreOrderContent() {
                         <div key={item.tradeId} className="p-4 space-y-3">
                           {/* Product Info Row: Image + Name */}
                           <div className="flex items-center gap-3.5">
-                            <div className="w-14 h-14 bg-white border border-slate-100 rounded shrink-0 flex items-center justify-center overflow-hidden shadow-2xs">
+                            <div className="w-14 h-14 bg-white border border-slate-100 rounded-[10px] apple-squircle-sm shrink-0 flex items-center justify-center overflow-hidden shadow-2xs">
                               <ProductImage
                                 src={item.image || '/images/ubr_beverage_logo.png'}
                                 alt={item.tradeName}
@@ -1068,22 +1101,22 @@ function PreOrderContent() {
                             </div>
                           </div>
 
-                          {/* 4-Column Stats Row: จำนวน: | ราคาต่อหน่วย: | ราคารวม: | ยอดมัดจำ: */}
-                          <div className={`grid grid-cols-4 gap-1.5 items-start text-center pt-2 px-1 transition-all ${item.qty <= 0 ? 'pb-8' : 'pb-2'}`}>
-                            {/* Col 1: จำนวน: (Quantity Stepper) */}
-                            <div className="flex flex-col items-center justify-start">
+                          {/* 4-Column Stats Row: จำนวน | ราคา/หน่วย | ราคารวม | ยอดมัดจำ */}
+                          <div className={`grid grid-cols-4 gap-1 sm:gap-1.5 items-start text-center pt-2 px-0.5 sm:px-1 transition-all ${item.qty <= 0 ? 'pb-8' : 'pb-2'}`}>
+                            {/* Col 1: จำนวน (Quantity Stepper) */}
+                            <div className="flex flex-col items-center justify-start min-w-0">
                               <div className="h-5 flex items-center justify-center">
-                                <span className="text-[11px] font-bold text-slate-800 leading-none">
-                                  จำนวน:
+                                <span className="text-[11px] sm:text-xs font-bold text-slate-800 leading-none truncate">
+                                  จำนวน
                                 </span>
                               </div>
-                              <div className="h-7 flex items-center justify-center mt-1">
+                              <div className="h-8 flex items-center justify-center mt-1">
                                 <div className="relative inline-flex flex-col items-center">
-                                  <div className={`inline-flex items-center border ${item.qty <= 0 ? 'border-red-400 ring-1 ring-red-400/30' : 'border-slate-300'} rounded-none bg-white overflow-hidden shadow-2xs h-7`}>
+                                  <div className={`inline-flex items-center border ${item.qty <= 0 ? 'border-red-400 ring-1 ring-red-400/30' : 'border-slate-300'} rounded-[8px] apple-squircle-xs bg-white overflow-hidden shadow-2xs h-8`}>
                                     <button
                                       type="button"
                                       onClick={() => handleUpdateItemQty(item.tradeId, Math.max(0, item.qty - 1))}
-                                      className="w-6 h-full flex items-center justify-center text-slate-700 hover:bg-black hover:text-white active:bg-slate-800 font-bold text-xs cursor-pointer select-none transition-colors rounded-none"
+                                      className="w-7.5 h-full flex items-center justify-center text-slate-700 hover:bg-black hover:text-white active:bg-slate-800 font-normal text-sm cursor-pointer select-none transition-colors"
                                       aria-label="ลดจำนวน"
                                     >
                                       -
@@ -1092,12 +1125,12 @@ function PreOrderContent() {
                                       value={item.qty}
                                       onChange={(val) => handleUpdateItemQty(item.tradeId, val)}
                                       min={1}
-                                      className="w-8 h-full text-center font-black text-xs text-slate-900 border-x border-slate-200 outline-none rounded-none"
+                                      className="w-9 h-full text-center font-normal text-xs text-slate-900 border-x border-slate-200 outline-none"
                                     />
                                     <button
                                       type="button"
                                       onClick={() => handleUpdateItemQty(item.tradeId, item.qty + 1)}
-                                      className="w-6 h-full flex items-center justify-center text-slate-700 hover:bg-black hover:text-white active:bg-slate-800 font-bold text-xs cursor-pointer select-none transition-colors rounded-none"
+                                      className="w-7.5 h-full flex items-center justify-center text-slate-700 hover:bg-black hover:text-white active:bg-slate-800 font-normal text-sm cursor-pointer select-none transition-colors"
                                       aria-label="เพิ่มจำนวน"
                                     >
                                       +
@@ -1112,47 +1145,47 @@ function PreOrderContent() {
                               </div>
                             </div>
 
-                            {/* Col 2: ราคาต่อหน่วย: */}
-                            <div className="flex flex-col items-center justify-start">
+                            {/* Col 2: ราคา/หน่วย */}
+                            <div className="flex flex-col items-center justify-start min-w-0">
                               <div className="h-5 flex items-center justify-center">
-                                <span className="text-[11px] font-bold text-slate-800 leading-none">
-                                  ราคาต่อหน่วย:
+                                <span className="text-[11px] sm:text-xs font-bold text-slate-800 leading-none truncate">
+                                  ราคา/หน่วย
                                 </span>
                               </div>
-                              <div className="h-7 flex items-center justify-center mt-1">
-                                <span className="block text-xs font-bold text-slate-900 tabular-nums">
+                              <div className="h-8 flex items-center justify-center mt-1">
+                                <span className="block text-xs sm:text-sm font-bold text-slate-900 tabular-nums truncate">
                                   ฿{item.salePrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                 </span>
                               </div>
                             </div>
 
-                            {/* Col 3: ราคารวม: */}
-                            <div className="flex flex-col items-center justify-start">
+                            {/* Col 3: ราคารวม */}
+                            <div className="flex flex-col items-center justify-start min-w-0">
                               <div className="h-5 flex items-center justify-center">
-                                <span className="text-[11px] font-bold text-[#FF6B00] leading-none">
-                                  ราคารวม:
+                                <span className="text-[11px] sm:text-xs font-bold text-[#FF6B00] leading-none truncate">
+                                  ราคารวม
                                 </span>
                               </div>
-                              <div className="h-7 flex items-center justify-center mt-1">
-                                <span className="block text-xs font-bold text-[#FF6B00] tabular-nums">
+                              <div className="h-8 flex items-center justify-center mt-1">
+                                <span className="block text-xs sm:text-sm font-bold text-[#FF6B00] tabular-nums truncate">
                                   ฿{itemLineTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                 </span>
                               </div>
                             </div>
 
-                            {/* Col 4: ยอดมัดจำ: */}
-                            <div className="flex flex-col items-center justify-start">
+                            {/* Col 4: ยอดมัดจำ */}
+                            <div className="flex flex-col items-center justify-start min-w-0">
                               <div className="h-5 flex items-center justify-center">
-                                <span className="text-[11px] font-bold text-[#FF0000] leading-none">
-                                  ยอดมัดจำ:
+                                <span className="text-[11px] sm:text-xs font-bold text-[#FF0000] leading-none truncate">
+                                  ยอดมัดจำ
                                 </span>
                               </div>
-                              <div className="h-7 flex flex-col items-center justify-center mt-1">
-                                <span className="block text-xs font-bold text-[#FF0000] tabular-nums leading-tight">
+                              <div className="h-8 flex flex-col items-center justify-center mt-1">
+                                <span className="block text-xs sm:text-sm font-bold text-[#FF0000] tabular-nums leading-tight truncate">
                                   ฿{lineDeposit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                 </span>
                                 {unitDeposit > 0 && item.qty > 1 && (
-                                  <span className="text-[11px] sm:text-xs text-[#FF0000] font-medium leading-none mt-0.5">
+                                  <span className="text-[10px] sm:text-xs text-[#FF0000] font-medium leading-none mt-0.5 truncate">
                                     (฿{formatDepositPrice(unitDeposit)}/{item.unitName || 'หน่วย'})
                                   </span>
                                 )}
@@ -1177,12 +1210,12 @@ function PreOrderContent() {
                         const lineDeposit = unitDeposit * item.qty;
 
                         return (
-                          <div key={item.tradeId} className="px-5 sm:px-6 py-5">
+                          <div key={item.tradeId} className="px-6 py-5">
                             <div className="flex items-center justify-between">
 
                               {/* Product Image & Info */}
                               <div className="flex items-center gap-3.5 min-w-0 flex-1 pr-4">
-                                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white border border-slate-100 rounded shrink-0 flex items-center justify-center overflow-hidden">
+                                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white border border-slate-100 rounded-[10px] apple-squircle-sm shrink-0 flex items-center justify-center overflow-hidden shadow-2xs">
                                   <ProductImage
                                     src={item.image || '/images/ubr_beverage_logo.png'}
                                     alt={item.tradeName}
@@ -1212,11 +1245,11 @@ function PreOrderContent() {
                                 {/* 1. จำนวน */}
                                 <div className="flex flex-col items-center justify-center">
                                   <div className="relative inline-flex flex-col items-center">
-                                    <div className={`inline-flex items-center border ${item.qty <= 0 ? 'border-red-400 ring-1 ring-red-400/30' : 'border-slate-300'} rounded-none bg-white overflow-hidden shadow-2xs`}>
+                                    <div className={`inline-flex items-center border ${item.qty <= 0 ? 'border-red-400 ring-1 ring-red-400/30' : 'border-slate-300'} rounded-[8px] apple-squircle-xs bg-white overflow-hidden shadow-2xs`}>
                                       <button
                                         type="button"
                                         onClick={() => handleUpdateItemQty(item.tradeId, Math.max(0, item.qty - 1))}
-                                        className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-slate-700 hover:bg-black hover:text-white active:bg-slate-800 font-bold text-xs sm:text-sm cursor-pointer select-none transition-colors rounded-none"
+                                        className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-slate-700 hover:bg-black hover:text-white active:bg-slate-800 font-normal text-xs sm:text-sm cursor-pointer select-none transition-colors"
                                         aria-label="ลดจำนวน"
                                       >
                                         -
@@ -1225,12 +1258,12 @@ function PreOrderContent() {
                                         value={item.qty}
                                         onChange={(val) => handleUpdateItemQty(item.tradeId, val)}
                                         min={1}
-                                        className="w-8 sm:w-10 h-7 sm:h-8 text-center font-black text-xs sm:text-sm text-slate-900 border-x border-slate-200 outline-none rounded-none"
+                                        className="w-8 sm:w-10 h-7 sm:h-8 text-center font-normal text-xs sm:text-sm text-slate-900 border-x border-slate-200 outline-none"
                                       />
                                       <button
                                         type="button"
                                         onClick={() => handleUpdateItemQty(item.tradeId, item.qty + 1)}
-                                        className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-slate-700 hover:bg-black hover:text-white active:bg-slate-800 font-bold text-xs sm:text-sm cursor-pointer select-none transition-colors rounded-none"
+                                        className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-slate-700 hover:bg-black hover:text-white active:bg-slate-800 font-normal text-xs sm:text-sm cursor-pointer select-none transition-colors"
                                         aria-label="เพิ่มจำนวน"
                                       >
                                         +
@@ -1266,7 +1299,7 @@ function PreOrderContent() {
                                 </div>
 
                                 {/* 5. รวมมัดจำ */}
-                                <div className="text-right pr-2">
+                                <div className="text-right pr-0">
                                   <div className="font-bold text-[#FF0000] text-xs sm:text-base tabular-nums">
                                     ฿{lineDeposit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                   </div>
@@ -1288,19 +1321,40 @@ function PreOrderContent() {
                 </div>
 
                 {/* Card Bottom Bar: Order Remark (Shopee Style) & Order Total */}
-                <div className="border-t border-dashed border-slate-200 px-5 sm:px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white">
-                  <div className="flex-1 flex items-center gap-2.5 max-w-xl">
+                <div className="border-t border-dashed border-slate-200 px-4 sm:px-6 py-3.5 sm:py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 bg-white">
+                  {/* Desktop Inline Remark (>= sm) */}
+                  <div className="hidden sm:flex flex-1 items-center gap-2.5 max-w-xl">
                     <span className="text-xs sm:text-sm font-bold text-slate-700 whitespace-nowrap">
-                      หมายเหตุคำสั่งซื้อ:
+                      หมายเหตุ:
                     </span>
                     <input
                       type="text"
-                      placeholder="ฝากข้อความถึงร้านค้า หรือระบุหมายเหตุคำสั่งซื้อ (ไม่บังคับ)"
+                      placeholder="ระบุหมายเหตุคำสั่งซื้อ (ไม่บังคับ)"
                       value={remark}
                       onChange={(e) => handleRemarkChange(e.target.value)}
                       maxLength={200}
-                      className="flex-1 px-3 py-1.5 rounded-lg bg-slate-50 hover:bg-white focus:bg-white border border-slate-200 text-slate-900 text-xs sm:text-sm focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-colors placeholder:text-slate-400"
+                      className="flex-1 px-4 py-2 rounded-full bg-slate-50 hover:bg-white focus:bg-white border border-slate-200 text-slate-900 text-sm focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-colors placeholder:text-slate-400"
                     />
+                  </div>
+
+                  {/* Mobile Modal Trigger Pill (< sm) */}
+                  <div className="sm:hidden flex-1 flex items-center gap-2.5">
+                    <span className="text-xs font-bold text-slate-700 whitespace-nowrap">
+                      หมายเหตุ:
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTempRemark(remark);
+                        setIsRemarkModalOpen(true);
+                      }}
+                      className="flex-1 px-4 py-2 rounded-full bg-slate-50 hover:bg-slate-100 border border-slate-200 text-left text-xs text-slate-700 flex items-center justify-between cursor-pointer transition-colors min-h-[38px]"
+                    >
+                      <span className={`truncate ${remark ? 'text-slate-900 font-medium' : 'text-slate-400'}`}>
+                        {remark || 'ระบุหมายเหตุคำสั่งซื้อ (ไม่บังคับ)'}
+                      </span>
+                      <ChevronRight className="w-3.5 h-3.5 text-slate-400 shrink-0 ml-1.5" />
+                    </button>
                   </div>
 
                   <div className="flex items-center justify-end text-right shrink-0">
@@ -1311,6 +1365,63 @@ function PreOrderContent() {
                 </div>
               </div>
 
+              {/* Mobile Remark Modal */}
+              <Modal
+                isOpen={isRemarkModalOpen}
+                onClose={() => setIsRemarkModalOpen(false)}
+                maxWidth="max-w-[460px]"
+                padding="p-0"
+                className="overflow-hidden"
+              >
+                {/* Modal Header */}
+                <div className="flex items-center px-6 pt-6 pb-2 pr-14">
+                  <h3 className="text-base font-bold text-slate-900 leading-snug">
+                    ระบุหมายเหตุคำสั่งซื้อ
+                  </h3>
+                </div>
+
+                {/* Modal Body */}
+                <div className="px-6 py-2 space-y-3">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                      ข้อความถึงร้านค้า (ไม่บังคับ)
+                    </label>
+                    <textarea
+                      rows={4}
+                      value={tempRemark}
+                      onChange={(e) => setTempRemark(e.target.value)}
+                      maxLength={200}
+                      placeholder="ระบุหมายเหตุคำสั่งซื้อ (ไม่บังคับ)"
+                      className="w-full p-3.5 rounded-[12px] apple-squircle-sm bg-slate-50 border border-slate-300 text-slate-900 text-sm focus:bg-white focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-colors resize-none placeholder:text-slate-400"
+                    />
+                    <div className="flex justify-end mt-1 text-[11px] text-slate-400">
+                      <span>{tempRemark.length}/200</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Modal Footer Actions */}
+                <div className="flex items-center justify-end gap-3 px-6 pb-6 pt-3 bg-white">
+                  <button
+                    type="button"
+                    onClick={() => setIsRemarkModalOpen(false)}
+                    className="px-4 py-2.5 rounded-full text-xs sm:text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-200/60 transition-colors cursor-pointer"
+                  >
+                    ยกเลิก
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleRemarkChange(tempRemark);
+                      setIsRemarkModalOpen(false);
+                    }}
+                    className="px-6 py-2.5 rounded-full bg-black hover:bg-neutral-800 text-white text-xs sm:text-sm font-bold shadow-xs transition-colors cursor-pointer"
+                  >
+                    ยืนยัน
+                  </button>
+                </div>
+              </Modal>
+
               {/* Bottom Action Bar: "< เลือกดูสินค้าต่อ" */}
               <div
                 className="flex items-center justify-between gap-4 pt-1 animate-checkout-slide-up"
@@ -1319,80 +1430,80 @@ function PreOrderContent() {
                 <Link
                   href={backHref}
                   onClick={clearCheckoutDraftStorage}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-sm border border-slate-200 bg-white hover:bg-slate-50 text-xs font-semibold text-slate-700 shadow-[0_1px_1px_0_rgba(0,0,0,0.03)] transition-colors"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-slate-200 bg-white hover:bg-slate-50 text-xs font-semibold text-slate-700 shadow-2xs transition-colors"
                 >
                   <span>&lt; เลือกดูสินค้าต่อ</span>
                 </Link>
 
                 <div className="text-xs text-slate-400 font-medium flex items-center gap-1">
-                  <span>ทั้งหมด {totalItemsCount} ชิ้น ในรายการสั่งจอง</span>
+                  <span>ทั้งหมด {totalItemsCount} ชิ้น ในรายการสั่งซื้อ</span>
                 </div>
               </div>
 
-              {/* 2. Shopee Full-Width Payment & Order Summary Card (Exact Match to Reference Image) */}
+              {/* 2. Payment Method Card with crisp border and apple-squircle rounded corners */}
               <div
-                className="bg-white border border-slate-100/80 rounded-sm shadow-[0_1px_1px_0_rgba(0,0,0,0.05)] overflow-hidden animate-checkout-slide-up"
+                className="bg-white rounded-[14px] apple-squircle-card border border-slate-200 shadow-2xs overflow-hidden animate-checkout-slide-up"
                 style={{ animationDelay: '120ms' }}
               >
-
-                {/* Top Section: วิธีการชำระเงิน & Horizontal Selection Tabs */}
-                <div className="p-5 sm:px-7 sm:py-6">
+                <div className="p-4 sm:p-6">
                   <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8">
                     <h3 className="text-sm sm:text-base font-bold text-slate-900 whitespace-nowrap min-w-[120px]">
                       วิธีการชำระเงิน
                     </h3>
 
                     {/* Horizontal Button Tabs: QR พร้อมเพย์ and เก็บเงินปลายทาง only */}
-                    <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 flex-1">
-                      {/* Option 1: QR พร้อมเพย์ (T) */}
-                      <button
-                        type="button"
-                        onClick={() => handleSelectPaymentMethod('T')}
-                        className={`relative px-3 sm:px-3.5 py-2 text-xs sm:text-sm font-medium rounded-sm border transition-all cursor-pointer select-none overflow-hidden inline-flex items-center gap-2 ${paymentMethod === 'T'
-                          ? 'border-emerald-600 text-emerald-700 bg-white shadow-2xs font-semibold'
-                          : 'border-slate-200 text-slate-700 bg-white hover:border-slate-300'
-                          }`}
-                      >
-                        <img
-                          src="/images/thai_qr_payment.svg"
-                          alt="Thai QR Payment"
-                          className="w-5 h-5 object-contain rounded-[2px] shrink-0"
-                        />
-                        <span>QR พร้อมเพย์</span>
-                        {paymentMethod === 'T' && (
-                          <span className="absolute bottom-0 right-0 w-[18px] h-[18px] overflow-hidden pointer-events-none">
-                            <span className="absolute bottom-0 right-0 w-0 h-0 border-b-[18px] border-b-emerald-600 border-l-[18px] border-l-transparent" />
-                            <svg className="w-2.5 h-2.5 text-white absolute bottom-[1.5px] right-[1.5px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5">
-                              <polyline points="20 6 9 17 4 12" />
-                            </svg>
-                          </span>
-                        )}
-                      </button>
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 flex-1 w-full">
+                      <div className="grid grid-cols-2 sm:flex sm:items-center gap-2.5 sm:gap-3 w-full sm:w-auto">
+                        {/* Option 1: QR พร้อมเพย์ (T) */}
+                        <button
+                          type="button"
+                          onClick={() => handleSelectPaymentMethod('T')}
+                          className={`relative w-full sm:w-auto min-h-[42px] px-2.5 sm:px-4 py-2 text-xs sm:text-sm font-medium rounded-[12px] apple-squircle-sm border transition-all cursor-pointer select-none overflow-hidden flex items-center justify-center gap-1.5 sm:gap-2 ${paymentMethod === 'T'
+                            ? 'border-emerald-600 text-emerald-700 bg-white shadow-2xs font-semibold'
+                            : 'border-slate-200 text-slate-700 bg-white hover:border-slate-300'
+                            }`}
+                        >
+                          <img
+                            src="/images/thai_qr_payment.svg"
+                            alt="Thai QR Payment"
+                            className="w-5 h-5 object-contain rounded-[2px] shrink-0"
+                          />
+                          <span className="truncate">QR พร้อมเพย์</span>
+                          {paymentMethod === 'T' && (
+                            <span className="absolute bottom-0 right-0 w-[18px] h-[18px] overflow-hidden pointer-events-none">
+                              <span className="absolute bottom-0 right-0 w-0 h-0 border-b-[18px] border-b-emerald-600 border-l-[18px] border-l-transparent" />
+                              <svg className="w-2.5 h-2.5 text-white absolute bottom-[1.5px] right-[1.5px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5">
+                                <polyline points="20 6 9 17 4 12" />
+                              </svg>
+                            </span>
+                          )}
+                        </button>
 
-                      {/* Option 2: เก็บเงินปลายทาง (M) */}
-                      <button
-                        type="button"
-                        onClick={() => handleSelectPaymentMethod('M')}
-                        className={`relative px-3 sm:px-3.5 py-2 text-xs sm:text-sm font-medium rounded-sm border transition-all cursor-pointer select-none overflow-hidden inline-flex items-center gap-2 ${paymentMethod === 'M'
-                          ? 'border-emerald-600 text-emerald-700 bg-white shadow-2xs font-semibold'
-                          : 'border-slate-200 text-slate-700 bg-white hover:border-slate-300'
-                          }`}
-                      >
-                        <img
-                          src="/images/cod_logo.png"
-                          alt="COD"
-                          className="h-4 sm:h-4.5 w-auto object-contain shrink-0"
-                        />
-                        <span>เก็บเงินปลายทาง</span>
-                        {paymentMethod === 'M' && (
-                          <span className="absolute bottom-0 right-0 w-[18px] h-[18px] overflow-hidden pointer-events-none">
-                            <span className="absolute bottom-0 right-0 w-0 h-0 border-b-[18px] border-b-emerald-600 border-l-[18px] border-l-transparent" />
-                            <svg className="w-2.5 h-2.5 text-white absolute bottom-[1.5px] right-[1.5px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5">
-                              <polyline points="20 6 9 17 4 12" />
-                            </svg>
-                          </span>
-                        )}
-                      </button>
+                        {/* Option 2: เก็บเงินปลายทาง (M) */}
+                        <button
+                          type="button"
+                          onClick={() => handleSelectPaymentMethod('M')}
+                          className={`relative w-full sm:w-auto min-h-[42px] px-2.5 sm:px-4 py-2 text-xs sm:text-sm font-medium rounded-[12px] apple-squircle-sm border transition-all cursor-pointer select-none overflow-hidden flex items-center justify-center gap-1.5 sm:gap-2 ${paymentMethod === 'M'
+                            ? 'border-emerald-600 text-emerald-700 bg-white shadow-2xs font-semibold'
+                            : 'border-slate-200 text-slate-700 bg-white hover:border-slate-300'
+                            }`}
+                        >
+                          <img
+                            src="/images/cod_logo.png"
+                            alt="COD"
+                            className="h-4 sm:h-4.5 w-auto object-contain shrink-0"
+                          />
+                          <span className="truncate">เก็บเงินปลายทาง</span>
+                          {paymentMethod === 'M' && (
+                            <span className="absolute bottom-0 right-0 w-[18px] h-[18px] overflow-hidden pointer-events-none">
+                              <span className="absolute bottom-0 right-0 w-0 h-0 border-b-[18px] border-b-emerald-600 border-l-[18px] border-l-transparent" />
+                              <svg className="w-2.5 h-2.5 text-white absolute bottom-[1.5px] right-[1.5px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5">
+                                <polyline points="20 6 9 17 4 12" />
+                              </svg>
+                            </span>
+                          )}
+                        </button>
+                      </div>
 
                       {!paymentMethod && (
                         <span className="text-xs text-rose-500 font-medium whitespace-nowrap sm:ml-1">
@@ -1401,14 +1512,16 @@ function PreOrderContent() {
                       )}
                     </div>
                   </div>
-
                 </div>
+              </div>
 
-                {/* Middle Divider: Solid line separating payment methods from financial summary */}
-                <div className="border-t border-slate-100" />
-
-                {/* Financial Summary matching Image 1 */}
-                <div className="px-6 sm:px-8 py-5 bg-white space-y-3">
+              {/* 3. Order Summary & Submit Card with crisp border and apple-squircle rounded corners */}
+              <div
+                className="bg-white rounded-[14px] apple-squircle-card border border-slate-200 shadow-2xs overflow-hidden animate-checkout-slide-up"
+                style={{ animationDelay: '140ms' }}
+              >
+                {/* Financial Summary */}
+                <div className="p-4 sm:p-6 bg-white space-y-3">
                   <h3 className="font-bold text-sm sm:text-base text-slate-900">
                     สรุปยอดคำสั่งซื้อ
                   </h3>
@@ -1447,18 +1560,18 @@ function PreOrderContent() {
                 <div className="border-t border-dashed border-slate-200" />
 
                 {/* Bottom Action Footer: Button on right */}
-                <div className="px-6 sm:px-8 py-5 flex justify-end bg-white">
+                <div className="p-4 sm:px-6 sm:py-5 flex justify-end bg-white">
                   <button
                     type="submit"
                     disabled={submitting || hasZeroQty}
-                    className="w-full sm:w-auto px-12 sm:px-14 py-3.5 rounded-full bg-[#800020] hover:bg-[#6b001b] active:bg-[#570016] text-white font-bold text-base shadow-xs hover:shadow transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.99] whitespace-nowrap"
+                    className="w-full sm:w-auto px-12 sm:px-14 py-3.5 min-h-[48px] rounded-full bg-[#800020] hover:bg-[#6b001b] active:bg-[#570016] text-white font-bold text-sm sm:text-base shadow-xs hover:shadow transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] whitespace-nowrap"
                   >
                     {submitting ? (
                       <span>กำลังบันทึกคำสั่งจอง...</span>
                     ) : hasZeroQty ? (
                       <span>โปรดระบุจำนวนสินค้ามากกว่า 0</span>
                     ) : (
-                      <span>สั่งสินค้า</span>
+                      <span>สั่งซื้อ</span>
                     )}
                   </button>
                 </div>
