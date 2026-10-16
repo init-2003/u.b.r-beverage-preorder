@@ -5,7 +5,9 @@
 
 export const SELECTED_CATEGORY_STORAGE_KEY = 'ubr_selected_category';
 export const SELECTED_SUBMENU_ID_STORAGE_KEY = 'ubr_selected_submenu_id';
+export const SELECTED_TYPE_ID_STORAGE_KEY = 'ubr_selected_type_id';
 export const CATEGORY_CHANGE_EVENT = 'ubr_category_change';
+export const SIDEBAR_TOGGLE_EVENT = 'ubr_sidebar_toggle';
 
 export function getStoredCategory(): string {
   if (typeof window === 'undefined') return 'all';
@@ -30,18 +32,35 @@ export function getStoredSubMenuId(): number | undefined {
   }
 }
 
-export function setStoredCategory(category: string, subMenuId?: number): void {
+export function getStoredTypeId(): string | undefined {
+  if (typeof window === 'undefined') return undefined;
+  try {
+    const val = localStorage.getItem(SELECTED_TYPE_ID_STORAGE_KEY);
+    if (!val || val === 'all' || val === 'ทั้งหมด') return undefined;
+    return val;
+  } catch {
+    return undefined;
+  }
+}
+
+export function setStoredCategory(category: string, subMenuId?: number, typeId?: string): void {
   if (typeof window === 'undefined') return;
   try {
     if (!category || category === 'all' || category === 'ทั้งหมด') {
       localStorage.removeItem(SELECTED_CATEGORY_STORAGE_KEY);
       localStorage.removeItem(SELECTED_SUBMENU_ID_STORAGE_KEY);
+      localStorage.removeItem(SELECTED_TYPE_ID_STORAGE_KEY);
     } else {
       localStorage.setItem(SELECTED_CATEGORY_STORAGE_KEY, category);
       if (subMenuId && subMenuId > 0) {
         localStorage.setItem(SELECTED_SUBMENU_ID_STORAGE_KEY, String(subMenuId));
       } else {
         localStorage.removeItem(SELECTED_SUBMENU_ID_STORAGE_KEY);
+      }
+      if (typeId && typeId !== 'all' && typeId !== 'ทั้งหมด') {
+        localStorage.setItem(SELECTED_TYPE_ID_STORAGE_KEY, typeId);
+      } else {
+        localStorage.removeItem(SELECTED_TYPE_ID_STORAGE_KEY);
       }
     }
   } catch {}
@@ -52,6 +71,7 @@ export function setStoredCategory(category: string, subMenuId?: number): void {
         detail: {
           category: !category || category === 'all' || category === 'ทั้งหมด' ? 'all' : category,
           subMenuId,
+          typeId,
         },
       })
     );

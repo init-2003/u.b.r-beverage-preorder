@@ -14,7 +14,7 @@ export const CompanyLogo: React.FC<CompanyLogoProps> = ({
   showText = true,
   lightText = true,
   className = '',
-  loading = 'lazy',
+  loading = 'eager',
   suffix,
 }) => {
   const sizeClasses = {
@@ -32,6 +32,7 @@ export const CompanyLogo: React.FC<CompanyLogoProps> = ({
           alt="โลโก้ อุบลรุ่งเรือง เบฟเวอเรจ - U.B.R. Beverage"
           className={`${sizeClasses[size]} object-contain shrink-0 block`}
           loading={loading}
+          decoding="async"
         />
       </div>
       {showText && (

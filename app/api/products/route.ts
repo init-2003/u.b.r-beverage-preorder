@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
 
     // Zod: ตัดความยาว/ลบ control chars และ clamp page, limit (ค่า SQL ส่งผ่าน parameter เสมอ)
-    const { category, search, page, limit } = parseProductsQuery(searchParams);
+    const { category, search, page, limit, typeId, subMenuId } = parseProductsQuery(searchParams);
     const offset = (page - 1) * limit;
 
     // ตรวจสอบระดับราคาของลูกค้า ถ้า Login ให้ใช้ระดับของลูกค้า ถ้าไม่ Login ให้ใช้ระดับ 1
@@ -23,9 +23,25 @@ export async function GET(req: NextRequest) {
     // แสดงเฉพาะสินค้าที่เป็น Pre Order (productType = 'PREORDER') รองรับทั้ง productType และ Type_Name
     let whereClause = "WHERE (UPPER(RTRIM(LTRIM(ISNULL(t.productType, '')))) = 'PREORDER' OR RTRIM(LTRIM(t.Type_Name)) = 'Pre Order')";
 
-    const subMenuId = searchParams.get('subMenuId') ? parseInt(searchParams.get('subMenuId')!, 10) : null;
-
-    if (category && category !== 'ทั้งหมด' && category !== 'all' && category !== 'Pre Order' && category !== 'PREORDER') {
+    if (subMenuId && subMenuId > 0) {
+      whereClause += " AND (t.SubMenu_ID_Ref = @subMenuId)";
+      request.input('subMenuId', subMenuId);
+    } else if (typeId && typeId !== 'all' && typeId !== 'ทั้งหมด') {
+      whereClause += ` AND (
+        (t.SubMenu_ID_Ref > 0 AND sm.Type_ID = @typeId)
+        OR (
+          (t.SubMenu_ID_Ref IS NULL OR t.SubMenu_ID_Ref = 0)
+          AND (
+            RTRIM(LTRIM(ISNULL(t.Type_ID_Ref, ''))) = @typeId
+            OR (
+              (t.Type_ID_Ref IS NULL OR RTRIM(LTRIM(t.Type_ID_Ref)) = '' OR RTRIM(LTRIM(t.Type_ID_Ref)) = 'Pre Order')
+              AND tp_by_name.Type_Id = @typeId
+            )
+          )
+        )
+      )`;
+      request.input('typeId', typeId);
+    } else if (category && category !== 'ทั้งหมด' && category !== 'all' && category !== 'Pre Order' && category !== 'PREORDER') {
       if (category.toLowerCase().includes('macallan')) {
         whereClause += " AND (t.Trade_Name LIKE '%Macallan%' OR t.Trade_Name LIKE '%Maccallan%' OR t.Trade_Id_Main LIKE '%Macallan%')";
       } else if (category.toLowerCase().includes('glenrothes')) {
@@ -45,7 +61,7 @@ export async function GET(req: NextRequest) {
         const isSoju = cat.includes('โซจู') || cat.toLowerCase().includes('soju');
 
         whereClause += ` AND (
-          (t.SubMenu_ID_Ref > 0 AND t.SubMenu_ID_Ref = @subMenuId)
+          (t.SubMenu_ID_Ref > 0 AND t.SubMenu_ID_Ref = @subMenuIdParam)
           OR sm.SubMenu_NameTH = @categoryExact
           OR sm.SubMenu_NameTH LIKE @category
           OR t.Type_Name = @categoryExact 
@@ -63,11 +79,7 @@ export async function GET(req: NextRequest) {
         )`;
         request.input('category', `%${escapeSqlLike(category)}%`);
         request.input('categoryExact', category.trim());
-        if (subMenuId && !isNaN(subMenuId) && subMenuId > 0) {
-          request.input('subMenuId', subMenuId);
-        } else {
-          request.input('subMenuId', -1);
-        }
+        request.input('subMenuIdParam', -1);
       }
     }
 
@@ -76,11 +88,12 @@ export async function GET(req: NextRequest) {
       request.input('search', `%${escapeSqlLike(search)}%`);
     }
 
-    // นับจำนวนสินค้าทั้งหมดที่ตรงเงื่อนไข โดยเชื่อมกับ Type_SubMenu
+    // นับจำนวนสินค้าทั้งหมดที่ตรงเงื่อนไข โดยเชื่อมกับ Type_SubMenu และ [Type]
     const countQuery = `
       SELECT COUNT(*) AS total
       FROM Trade t
       LEFT JOIN Type_SubMenu sm ON t.SubMenu_ID_Ref = sm.SubMenu_ID
+      LEFT JOIN [Type] tp_by_name ON RTRIM(LTRIM(t.Type_Name)) = RTRIM(LTRIM(tp_by_name.Type_Name))
       ${whereClause}
     `;
     const countResult = await request.query(countQuery);
@@ -113,6 +126,7 @@ export async function GET(req: NextRequest) {
         ISNULL(t.Trade_deposit, 0) AS Trade_deposit
       FROM Trade t
       LEFT JOIN Type_SubMenu sm ON t.SubMenu_ID_Ref = sm.SubMenu_ID
+      LEFT JOIN [Type] tp_by_name ON RTRIM(LTRIM(t.Type_Name)) = RTRIM(LTRIM(tp_by_name.Type_Name))
       ${whereClause}
       ORDER BY 
         CASE WHEN t.Trade_Part_Image IS NOT NULL AND t.Trade_Part_Image <> '' THEN 0 ELSE 1 END,

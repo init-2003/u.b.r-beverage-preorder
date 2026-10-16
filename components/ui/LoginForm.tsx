@@ -5,7 +5,6 @@ import { useAuth } from '@/context/AuthContext';
 import { HelpCircle } from 'lucide-react';
 import { Button } from './Button';
 import { Input } from './Input';
-import { Alert } from './Alert';
 import { BouncingDots } from '@/components/loading-ui/bouncing-dots';
 
 export interface LoginFormProps {
@@ -192,9 +191,9 @@ export function LoginForm({
   };
 
   return (
-    <div className={`w-full ${className}`}>
+    <div suppressHydrationWarning className={`w-full ${className}`}>
       {/* Form */}
-      <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-6.5">
+      <form suppressHydrationWarning onSubmit={handleSubmit} className="space-y-9.5 sm:space-y-10">
         {/* Field 1: Cus_User */}
         <Input
           variant="floating"
@@ -243,6 +242,7 @@ export function LoginForm({
               className="group inline-flex items-center gap-2 cursor-pointer select-none text-xs sm:text-[13px] text-slate-700 hover:text-slate-900 transition-colors"
             >
               <input
+                suppressHydrationWarning
                 type="checkbox"
                 id="show-password-checkbox"
                 checked={showPassword}
@@ -278,6 +278,7 @@ export function LoginForm({
               className="group inline-flex items-center gap-2 cursor-pointer select-none text-xs sm:text-[13px] text-slate-700 hover:text-slate-900 transition-colors"
             >
               <input
+                suppressHydrationWarning
                 type="checkbox"
                 id="remember-me-checkbox"
                 checked={rememberMe}
@@ -349,12 +350,6 @@ export function LoginForm({
           </p>
         )}
 
-        {/* Error Alert — แสดงเหนือปุ่มเข้าสู่ระบบ เพื่อไม่ดันช่องกรอก (Input fields) ด้านบนลงมา */}
-        {formError && (
-          <Alert variant="error" className="shadow-xs">
-            {formError}
-          </Alert>
-        )}
 
         {/* Full Width Primary Brand Red Button */}
         <Button

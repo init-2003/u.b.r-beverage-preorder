@@ -129,6 +129,9 @@ export async function POST(req: NextRequest) {
     }
 
     response.cookies.set('ubr_customer_token', token, cookieOptions);
+    // รีเซ็ตสถานะ Sidebar ให้เปิด (Expanded: false) เป็นค่าเริ่มต้นเมื่อ Login
+    response.cookies.set('ubr_sidebar_collapsed', 'false', { path: '/', maxAge: 31536000, sameSite: 'lax' });
+    response.cookies.set('ubr_sidebar_collapsed_wide', 'false', { path: '/', maxAge: 31536000, sameSite: 'lax' });
 
     return response;
   } catch (error: any) {

@@ -37,17 +37,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     customerRef.current = customer;
   }, [customer]);
 
+  const resetSessionAndSidebarToDefault = () => {
+    try {
+      // 1. Reset sidebar to OPEN by default (cookies & session)
+      document.cookie = 'ubr_sidebar_collapsed=false; path=/; max-age=31536000; SameSite=Lax';
+      document.cookie = 'ubr_sidebar_collapsed_wide=false; path=/; max-age=31536000; SameSite=Lax';
+      sessionStorage.setItem('ubr_sidebar_collapsed', 'false');
+      sessionStorage.setItem('ubr_sidebar_collapsed_wide', 'false');
+
+      // 2. Reset scroll and draft flags
+      sessionStorage.setItem('ubr_home_scroll_y', '0');
+      sessionStorage.removeItem('ubr_navigating_away');
+      sessionStorage.removeItem('ubr_direct_checkout');
+      sessionStorage.removeItem('ubr_cart_selected_ids');
+      sessionStorage.removeItem('ubr_cached_orders');
+      sessionStorage.removeItem('ubr_active_order_doc_no');
+
+      // 3. Reset category filters to default (สินค้าทั้งหมด)
+      localStorage.removeItem('ubr_selected_category');
+      localStorage.removeItem('ubr_selected_submenu_id');
+      localStorage.removeItem('ubr_selected_type_id');
+
+      // 4. Clear cart items
+      localStorage.removeItem('ubr_cart_items');
+      localStorage.removeItem('ubr_cart_selected_trade_ids');
+
+      // 5. Reset orders active tab to "all" (ทั้งหมด)
+      sessionStorage.removeItem('ubr_orders_active_tab');
+      sessionStorage.setItem('ubr_orders_active_tab', 'all');
+      localStorage.removeItem('ubr_orders_active_tab');
+    } catch {}
+  };
+
   const handleRemoteLogout = () => {
     if (isLoggingOutRef.current) return;
     isLoggingOutRef.current = true;
     setCustomer(null);
-    try {
-      localStorage.removeItem('ubr_cart_items');
-      localStorage.removeItem('ubr_cart_selected_trade_ids');
-      sessionStorage.removeItem('ubr_cart_selected_ids');
-      sessionStorage.removeItem('ubr_direct_checkout');
-      sessionStorage.removeItem('ubr_cached_orders');
-    } catch {}
+    resetSessionAndSidebarToDefault();
     if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
       window.location.href = '/login';
     }
@@ -141,6 +167,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     loginTimestampRef.current = Date.now();
     try {
       localStorage.removeItem(LOGOUT_STORAGE_KEY);
+      resetSessionAndSidebarToDefault();
       if (typeof BroadcastChannel !== 'undefined') {
         const bc = new BroadcastChannel(AUTH_SYNC_CHANNEL);
         bc.postMessage({ type: 'LOGIN', customer: cus });
@@ -163,11 +190,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const timestamp = Date.now().toString();
       try {
         localStorage.setItem(LOGOUT_STORAGE_KEY, timestamp);
-        localStorage.removeItem('ubr_cart_items');
-        localStorage.removeItem('ubr_cart_selected_trade_ids');
-        sessionStorage.removeItem('ubr_cart_selected_ids');
-        sessionStorage.removeItem('ubr_direct_checkout');
-        sessionStorage.removeItem('ubr_cached_orders');
+        resetSessionAndSidebarToDefault();
         if (typeof BroadcastChannel !== 'undefined') {
           const bc = new BroadcastChannel(AUTH_SYNC_CHANNEL);
           bc.postMessage({ type: 'LOGOUT', timestamp });

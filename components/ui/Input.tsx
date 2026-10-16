@@ -50,14 +50,15 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
       );
 
       return (
-        <div className={`relative w-full ${containerClassName}`}>
-          <div className="relative flex items-center">
+        <div suppressHydrationWarning className={`relative w-full ${containerClassName}`}>
+          <div suppressHydrationWarning className="relative flex items-center">
             {leftIcon && (
               <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none z-10">
                 {leftIcon}
               </span>
             )}
             <input
+              suppressHydrationWarning
               ref={ref}
               id={inputId}
               placeholder=" "
@@ -95,7 +96,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
             )}
           </div>
           {error && !errorAsPlaceholder && (
-            <p className="absolute top-full left-1 mt-1 text-xs text-red-600 font-medium select-none pointer-events-none whitespace-nowrap">
+            <p className="absolute top-full left-1 mt-1.5 text-xs text-red-600 font-medium select-none pointer-events-none whitespace-nowrap">
               {error}
             </p>
           )}
@@ -108,13 +109,14 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
 
     if (variant === 'underline') {
       return (
-        <div className={`space-y-1 w-full ${containerClassName}`}>
+        <div suppressHydrationWarning className={`space-y-1 w-full ${containerClassName}`}>
           {label && (
             <label htmlFor={inputId} className="block text-xs font-bold text-slate-700">
               {label}
             </label>
           )}
           <div
+            suppressHydrationWarning
             className={`relative border-b-2 transition-colors flex items-center ${
               error
                 ? 'border-red-500'
@@ -123,6 +125,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
           >
             {leftIcon && <span className="pr-2 text-slate-400 shrink-0">{leftIcon}</span>}
             <input
+              suppressHydrationWarning
               ref={ref}
               id={inputId}
               placeholder={effectivePlaceholder}
@@ -141,19 +144,20 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
 
     // Default 'outline' variant
     return (
-      <div className={`space-y-1.5 w-full ${containerClassName}`}>
+      <div suppressHydrationWarning className={`space-y-1.5 w-full ${containerClassName}`}>
         {label && (
           <label htmlFor={inputId} className="block text-xs font-bold text-slate-700">
             {label}
           </label>
         )}
-        <div className="relative flex items-center">
+        <div suppressHydrationWarning className="relative flex items-center">
           {leftIcon && (
             <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
               {leftIcon}
             </span>
           )}
           <input
+            suppressHydrationWarning
             ref={ref}
             id={inputId}
             placeholder={effectivePlaceholder}

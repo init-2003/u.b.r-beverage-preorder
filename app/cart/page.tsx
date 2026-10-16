@@ -213,8 +213,8 @@ export default function CartPage() {
             </div>
           </div>
 
-          {/* Empty Cart Card */}
-          <div className="bg-white rounded-[14px] apple-squircle-card border border-slate-100 shadow-[0_1px_2px_0_rgba(0,0,0,0.04)] py-16 sm:py-24 px-4 text-center flex flex-col items-center justify-center space-y-4 animate-cart-slide-up">
+          {/* Empty Cart Card (Cardless Clean Layout) */}
+          <div className="py-16 sm:py-24 px-4 text-center flex flex-col items-center justify-center space-y-4 animate-cart-slide-up">
             <div className="flex items-center justify-center">
               <EmptyCartIllustration className="w-36 h-36 sm:w-40 sm:h-40" />
             </div>

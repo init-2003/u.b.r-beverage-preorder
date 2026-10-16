@@ -68,6 +68,23 @@ export interface SubMenuItem {
   Product_Count?: number;
 }
 
+export interface MenuSubItem {
+  subMenuId: number;
+  typeId: string;
+  subMenuNameTH: string;
+  subMenuNameEN?: string;
+  sortOrder?: number;
+  productCount: number;
+}
+
+export interface MenuTreeItem {
+  typeId: string;
+  typeName: string;
+  typeNameEN?: string;
+  productCount: number;
+  subMenus: MenuSubItem[];
+}
+
 /**
  * ข้อมูลสินค้าพรีออเดอร์สำหรับแสดงผลในหน้า Catalog & Detail
  * อ้างอิงจากตาราง Trade ใน MSSQL

@@ -128,7 +128,7 @@ function OrdersContent({
   const tabRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
   const tabsContainerRef = useRef<HTMLDivElement | null>(null);
 
-  // ซิงค์แท็บเริ่มต้นตาม Query Param ?tab=... หรือจาก sessionStorage
+  // ซิงค์แท็บเริ่มต้นตาม Query Param ?tab=... (หากไม่มี query param จะตั้งค่าเป็น "ทั้งหมด" เสมอ)
   useEffect(() => {
     const validTabs = ['all', 'to_pay', 'processing', 'receipt_issued', 'cancelled'];
     if (tabParam) {
@@ -144,15 +144,10 @@ function OrdersContent({
         } catch { }
       }
     } else {
-      // หากไม่มี query param ให้ดึงแท็บล่าสุดที่เลือกไว้จาก sessionStorage
+      // หากไม่มี query param ให้เลือกแท็บ "ทั้งหมด" (all) เสมอ
+      setFilterSts('all');
       try {
-        const savedTab = sessionStorage.getItem('ubr_orders_active_tab');
-        if (savedTab && validTabs.includes(savedTab)) {
-          setFilterSts(savedTab);
-          if (savedTab !== 'all') {
-            window.history.replaceState(null, '', `/orders/history?tab=${savedTab}`);
-          }
-        }
+        sessionStorage.setItem('ubr_orders_active_tab', 'all');
       } catch { }
     }
   }, [tabParam]);
@@ -419,7 +414,7 @@ function OrdersContent({
             <WineLoading size="md" />
           </div>
         ) : displayedOrders.length === 0 ? (
-          <div className="bg-white rounded-[14px] apple-squircle-card border border-slate-200 shadow-xs py-16 sm:py-20 px-4 text-center flex flex-col items-center justify-center space-y-4">
+          <div className="py-16 sm:py-20 px-4 text-center flex flex-col items-center justify-center space-y-4">
             <div className="flex items-center justify-center">
               <EmptyOrdersIllustration className="w-36 h-36 sm:w-40 sm:h-40" />
             </div>

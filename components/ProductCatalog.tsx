@@ -6,9 +6,9 @@ import { useRouter } from 'next/navigation';
 import { Product } from '@/types/preorder';
 import { Check, ShoppingCart } from 'lucide-react';
 import { EmptySearchIllustration } from './EmptySearchIllustration';
+import { EmptyCategoryIllustration } from './EmptyCategoryIllustration';
 import { useCart } from '@/context/CartContext';
 import DraggableCartButton from './DraggableCartButton';
-import { BannerCarousel } from './BannerCarousel';
 import { ProductImage } from '@/components/ui';
 import { ProductGridSkeleton } from './HomeSkeleton';
 import { formatDepositPrice } from '@/lib/deposit';
@@ -17,21 +17,27 @@ interface ProductCatalogProps {
   products: Product[];
   loadingProducts: boolean;
   selectedCategory?: string;
+  selectedTypeId?: string;
+  selectedSubMenuId?: number;
   onSelectCategory?: (cat: string) => void;
   searchQuery?: string;
   onSearchChange?: (query: string) => void;
   /** รีเซ็ต search + category ใน router.push เดียว (ห้ามยิง 2 push จาก searchParams snapshot เดียวกัน — push หลังทับ push แรก ทำให้ search ไม่ถูกลบ) */
   onResetFilters?: () => void;
+  isSidebarCollapsed?: boolean;
 }
 
 export default function ProductCatalog({
   products,
   loadingProducts,
   selectedCategory: propSelectedCategory,
+  selectedTypeId,
+  selectedSubMenuId,
   onSelectCategory,
   searchQuery: propSearchQuery,
   onSearchChange,
   onResetFilters,
+  isSidebarCollapsed = false,
 }: ProductCatalogProps) {
   const [internalCategory, setInternalCategory] = useState<string>('all');
   const [internalSearch, setInternalSearch] = useState<string>('');
@@ -52,6 +58,10 @@ export default function ProductCatalog({
   const [addedProductId, setAddedProductId] = useState<string | null>(null);
 
   const handleAddToCart = (product: Product) => {
+    setAddedProductId(product.id);
+    setTimeout(() => {
+      setAddedProductId((current) => (current === product.id ? null : current));
+    }, 1200);
     openAddedModal(
       {
         tradeId: product.id,
@@ -69,11 +79,31 @@ export default function ProductCatalog({
     );
   };
 
+  const handleProductCardClick = (productId: string) => {
+    if (typeof window !== 'undefined') {
+      try {
+        const currentY = Math.max(
+          0,
+          window.scrollY || window.pageYOffset || document.documentElement.scrollTop || 0
+        );
+        sessionStorage.setItem('ubr_home_scroll_y', String(currentY));
+        sessionStorage.setItem('ubr_navigating_away', '1');
+      } catch {}
+    }
+    router.push(`/products/${productId}`);
+  };
+
   const handleDirectOrder = (e: React.MouseEvent, product: Product) => {
     e.stopPropagation();
     e.preventDefault();
     if (typeof window !== 'undefined') {
       try {
+        const currentY = Math.max(
+          0,
+          window.scrollY || window.pageYOffset || document.documentElement.scrollTop || 0
+        );
+        sessionStorage.setItem('ubr_home_scroll_y', String(currentY));
+        sessionStorage.setItem('ubr_navigating_away', '1');
         sessionStorage.setItem(
           'ubr_direct_checkout',
           JSON.stringify({
@@ -92,7 +122,7 @@ export default function ProductCatalog({
     const cat = (activeCategory || '').trim().toLowerCase();
     const isAll = !cat || cat === 'all' || cat === 'ทั้งหมด' || cat === 'pre order' || cat === 'preorder' || cat === 'สินค้าเปิดจอง' || cat === 'สินค้านำเข้า';
 
-    let matchesCategory = isAll;
+    let matchesCategory = isAll || Boolean(selectedTypeId) || Boolean(selectedSubMenuId);
     if (!matchesCategory) {
       const isWhisky = cat.includes('วิสกี้') || cat.includes('whisky') || cat.includes('scotch');
       const isWine = cat.includes('ไวน์') || cat.includes('wine');
@@ -126,12 +156,7 @@ export default function ProductCatalog({
   });
 
   return (
-    <div className="space-y-8">
-
-      {/* Top Banner Carousel (Burgundy Luxury Theme) - ซ่อนเมื่อกำลังค้นหาสินค้า */}
-      {!activeSearch.trim() && (
-        <BannerCarousel />
-      )}
+    <div className="space-y-6">
 
       {/* Active Search Results Feedback */}
       {activeSearch && (
@@ -156,42 +181,58 @@ export default function ProductCatalog({
         </div>
       )}
 
-      {/* Product Cards Grid (Clean Crisp White Cards - 5 Columns on Desktop) */}
+      {/* Product Cards Grid: Smooth Skeleton during loadingProducts */}
       {loadingProducts ? (
-        <ProductGridSkeleton count={10} />
+        <ProductGridSkeleton
+          count={isSidebarCollapsed ? 10 : 8}
+          isSidebarCollapsed={isSidebarCollapsed}
+        />
       ) : filteredProducts.length === 0 ? (
-        <div className="min-h-[380px] sm:min-h-[440px] rounded-sm bg-white border border-slate-200 text-center flex flex-col items-center justify-center space-y-4 shadow-[0_1px_1px_0_rgba(0,0,0,0.05)] p-8 sm:p-12 my-2">
+        <div className="min-h-[380px] sm:min-h-[440px] text-center flex flex-col items-center justify-center space-y-4 p-8 sm:p-12 my-2">
           <div className="flex items-center justify-center mx-auto">
-            <EmptySearchIllustration className="w-36 h-36 sm:w-40 sm:h-40" />
+            {activeSearch ? (
+              <EmptySearchIllustration className="w-36 h-36 sm:w-40 sm:h-40" />
+            ) : (
+              <EmptyCategoryIllustration className="w-36 h-36 sm:w-40 sm:h-40" />
+            )}
           </div>
           <div className="space-y-1.5 max-w-sm mx-auto">
-            <h3 className="text-lg sm:text-xl font-bold text-slate-800">ไม่พบสินค้าที่ค้นหา</h3>
+            <h3 className="text-lg sm:text-xl font-bold text-slate-800">
+              {activeSearch ? 'ไม่พบสินค้าที่ค้นหา' : 'ยังไม่มีสินค้าในหมวดหมู่นี้'}
+            </h3>
             <p className="text-xs sm:text-sm text-slate-500">
-              ลองปรับเปลี่ยนคำค้นหา หรือเลือกดูหมวดหมู่อื่น
+              {activeSearch
+                ? 'ลองปรับเปลี่ยนคำค้นหา หรือเลือกดูหมวดหมู่อื่น'
+                : 'กรุณาเลือกดูหมวดหมู่อื่นดูก่อนหรือกดปุ่ม'}
             </p>
           </div>
-          {(activeSearch || (activeCategory && activeCategory !== 'all')) && (
-            <div className="pt-2">
-              <button
-                type="button"
-                onClick={() => {
-                  if (onResetFilters) {
-                    onResetFilters();
-                    return;
-                  }
-                  handleSearchInputChange('');
-                  if (onSelectCategory) onSelectCategory('all');
-                  setInternalCategory('all');
-                }}
-                className="inline-flex items-center justify-center px-6 py-2.5 rounded-full bg-[#800020] hover:bg-[#6b001b] active:bg-[#570016] text-white text-xs sm:text-sm font-bold shadow-xs transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
-              >
-                <span>ดูสินค้าทั้งหมด</span>
-              </button>
-            </div>
-          )}
+          <div className="pt-2">
+            <button
+              type="button"
+              onClick={() => {
+                if (onResetFilters) {
+                  onResetFilters();
+                  return;
+                }
+                handleSearchInputChange('');
+                if (onSelectCategory) onSelectCategory('all');
+                setInternalCategory('all');
+              }}
+              className="inline-flex items-center justify-center px-6 py-2.5 rounded-full bg-[#800020] hover:bg-[#6b001b] active:bg-[#570016] text-white text-xs sm:text-sm font-bold shadow-xs transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+            >
+              <span>ดูสินค้าทั้งหมด</span>
+            </button>
+          </div>
         </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3.5 sm:gap-4 lg:gap-5">
+        <div className="relative min-h-[380px]">
+          <div
+            className={`grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 ${
+              isSidebarCollapsed
+                ? 'lg:grid-cols-4 xl:grid-cols-5'
+                : 'lg:grid-cols-3 xl:grid-cols-4'
+            } gap-3.5 sm:gap-4 lg:gap-5`}
+          >
           {filteredProducts.map((product, index) => {
             const depositPercent = (product.depositPercent && product.depositPercent > 0)
               ? product.depositPercent
@@ -203,18 +244,20 @@ export default function ProductCatalog({
             return (
               <div
                 key={product.id}
+                data-first-product-card={index === 0 ? "true" : undefined}
                 className="animate-product-card-slide-up flex flex-col h-full"
                 style={{
                   animationDelay: `${Math.min(index, 14) * 35}ms`,
                 }}
               >
                 <div
-                  onClick={() => router.push(`/products/${product.id}`)}
+                  onClick={() => handleProductCardClick(product.id)}
                   className="apple-squircle-card bg-white border border-slate-200 shadow-xs hover:shadow-xl hover:shadow-slate-300/50 hover:border-slate-300 hover:scale-[1.03] hover:-translate-y-1 hover:z-20 flex flex-col justify-between group transition-all duration-300 ease-out relative cursor-pointer overflow-hidden will-change-transform h-full"
                 >
                   {/* Product Image Box (เต็ม Card บน ซ้าย ขวา) */}
                   <Link
                     href={`/products/${product.id}`}
+                    onClick={() => handleProductCardClick(product.id)}
                     className="w-full aspect-square relative overflow-hidden group/img block cursor-pointer bg-white shrink-0"
                   >
                     {/* PRE-ORDER Badge at Top-Left Corner (Non-bold, slightly larger) */}
@@ -260,7 +303,11 @@ export default function ProductCatalog({
                   <div className="p-3 sm:p-3.5 flex flex-col flex-1 justify-between">
                     {/* Product Name (Clean 2-line title) */}
                     <div className="space-y-1 mb-2">
-                      <Link href={`/products/${product.id}`} className="block group/title">
+                      <Link
+                        href={`/products/${product.id}`}
+                        onClick={() => handleProductCardClick(product.id)}
+                        className="block group/title"
+                      >
                         <h3 className="text-xs sm:text-sm font-semibold text-slate-800 line-clamp-2 min-h-[36px] sm:min-h-[40px] leading-snug" title={product.name}>
                           {product.name}
                         </h3>
@@ -323,6 +370,7 @@ export default function ProductCatalog({
               </div>
             );
           })}
+          </div>
         </div>
       )}
 

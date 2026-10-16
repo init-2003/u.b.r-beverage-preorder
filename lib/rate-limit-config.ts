@@ -162,6 +162,7 @@ export function matchRateLimitPolicy(
     normPath.startsWith('/api/products') ||
     normPath.startsWith('/api/categories') ||
     normPath.startsWith('/api/submenus') ||
+    normPath.startsWith('/api/menu-tree') ||
     normPath.startsWith('/api/carousel') ||
     normPath.startsWith('/api/bank-accounts')
   ) {

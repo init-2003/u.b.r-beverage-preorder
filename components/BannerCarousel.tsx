@@ -36,7 +36,7 @@ const SLIDE_DURATION = 5500; // ms
 // โลโก้ U.B.R. (พื้นหลังโปร่งใส) แสดงทับบนทุกสไลด์
 const LOGO_SRC = '/images/ubr_beverage_logo_transparent.png';
 
-export function BannerCarousel() {
+export const BannerCarousel = React.memo(function BannerCarousel() {
   const [slides, setSlides] = useState<SlideData[]>(DEFAULT_SLIDES);
 
   // Fetch banner slides dynamically from Web_Carousel database table
@@ -184,7 +184,8 @@ export function BannerCarousel() {
                 alt="U.B.R. Beverage"
                 width={240}
                 height={240}
-                loading="lazy"
+                loading="eager"
+                priority={i === 0}
                 className="absolute top-2.5 right-2.5 sm:top-4 sm:right-4 z-10 h-7 w-auto sm:h-9 lg:h-11 object-contain drop-shadow-[0_2px_6px_rgba(0,0,0,0.55)] pointer-events-none select-none"
               />
             </div>
@@ -266,6 +267,6 @@ export function BannerCarousel() {
       )}
     </div>
   );
-}
+});
 
 export default BannerCarousel;

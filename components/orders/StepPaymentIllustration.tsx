@@ -19,6 +19,33 @@ export function StepPaymentIllustration({
       className={className}
       aria-hidden="true"
     >
+      <style>{`
+        @keyframes stepCardFloat {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-2px); }
+        }
+        @keyframes stepBadgePulse {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.08); }
+        }
+        @keyframes stepSparkleTwinkle {
+          0%, 100% { transform: scale(1); opacity: 0.8; }
+          50% { transform: scale(1.3); opacity: 1; }
+        }
+        .step-payment-card-group {
+          animation: stepCardFloat 3s ease-in-out infinite;
+          transform-origin: center center;
+        }
+        .step-badge-group {
+          animation: stepBadgePulse 2.4s ease-in-out infinite;
+          transform-origin: 53px 51px;
+        }
+        .step-payment-sparkle {
+          animation: stepSparkleTwinkle 2.2s ease-in-out infinite;
+          transform-origin: 17px 23.5px;
+        }
+      `}</style>
+
       {/* Background Circular Aura & Base (Opaque white center to block the line behind) */}
       <circle cx="40" cy="40" r="38" fill="#FFFFFF" />
       <circle
@@ -49,101 +76,109 @@ export function StepPaymentIllustration({
         r="1.5"
         fill={isCompleted ? '#60A5FA' : '#F87171'}
       />
-      <path
-        d="M17 19L18.5 22L21.5 23.5L18.5 25L17 28L15.5 25L12.5 23.5L15.5 22L17 19Z"
-        fill="#F59E0B"
-      />
+      <g className="step-payment-sparkle">
+        <path
+          d="M17 19L18.5 22L21.5 23.5L18.5 25L17 28L15.5 25L12.5 23.5L15.5 22L17 19Z"
+          fill="#F59E0B"
+        />
+      </g>
 
       {/* Soft Ground Shadow */}
       <ellipse cx="40" cy="64" rx="20" ry="3.5" fill="#94A3B8" fillOpacity="0.25" />
 
       {/* ================= WALLET / PAYMENT CARD ================= */}
-      {/* Background Banknote peek */}
-      <rect
-        x="24"
-        y="22"
-        width="32"
-        height="18"
-        rx="2.5"
-        fill={isCompleted ? '#1D4ED8' : '#DC2626'}
-        transform="rotate(-5 24 22)"
-      />
-      <rect
-        x="26"
-        y="24"
-        width="28"
-        height="14"
-        rx="1.5"
-        fill={isCompleted ? '#60A5FA' : '#F87171'}
-        transform="rotate(-5 24 22)"
-      />
-
-      {/* Main Credit/Debit Card */}
-      <g>
+      <g className="step-payment-card-group">
+        {/* Background Banknote peek */}
         <rect
-          x="21"
-          y="28"
-          width="38"
-          height="25"
-          rx="4"
-          fill={isCompleted ? '#1E3A8A' : '#991B1B'}
+          x="24"
+          y="22"
+          width="32"
+          height="18"
+          rx="2.5"
+          fill={isCompleted ? '#1D4ED8' : '#DC2626'}
+          transform="rotate(-5 24 22)"
         />
-        {/* Card Gradient Strip / Header */}
         <rect
-          x="21"
-          y="33"
-          width="38"
-          height="6"
-          fill={isCompleted ? '#2563EB' : '#B91C1C'}
-        />
-        {/* EMV Chip */}
-        <rect
-          x="25"
-          y="41"
-          width="7"
-          height="6"
+          x="26"
+          y="24"
+          width="28"
+          height="14"
           rx="1.5"
-          fill="#FBBF24"
+          fill={isCompleted ? '#60A5FA' : '#F87171'}
+          transform="rotate(-5 24 22)"
         />
-        <line x1="28.5" y1="41" x2="28.5" y2="47" stroke="#D97706" strokeWidth="0.75" />
-        <line x1="25" y1="44" x2="32" y2="44" stroke="#D97706" strokeWidth="0.75" />
-        {/* Card Numbers / Dots */}
-        <circle cx="36" cy="44" r="1" fill="#FFFFFF" fillOpacity="0.7" />
-        <circle cx="39" cy="44" r="1" fill="#FFFFFF" fillOpacity="0.7" />
-        <circle cx="42" cy="44" r="1" fill="#FFFFFF" fillOpacity="0.7" />
-        <circle cx="45" cy="44" r="1" fill="#FFFFFF" fillOpacity="0.7" />
+
+        {/* Main Credit/Debit Card */}
+        <g>
+          <rect
+            x="21"
+            y="28"
+            width="38"
+            height="25"
+            rx="4"
+            fill={isCompleted ? '#1E3A8A' : '#991B1B'}
+          />
+          {/* Card Gradient Strip / Header */}
+          <rect
+            x="21"
+            y="33"
+            width="38"
+            height="6"
+            fill={isCompleted ? '#2563EB' : '#B91C1C'}
+          />
+          {/* EMV Chip */}
+          <rect
+            x="25"
+            y="41"
+            width="7"
+            height="6"
+            rx="1.5"
+            fill="#FBBF24"
+          />
+          <line x1="28.5" y1="41" x2="28.5" y2="47" stroke="#D97706" strokeWidth="0.75" />
+          <line x1="25" y1="44" x2="32" y2="44" stroke="#D97706" strokeWidth="0.75" />
+          {/* Card Numbers / Dots */}
+          <circle cx="36" cy="44" r="1" fill="#FFFFFF" fillOpacity="0.7" />
+          <circle cx="39" cy="44" r="1" fill="#FFFFFF" fillOpacity="0.7" />
+          <circle cx="42" cy="44" r="1" fill="#FFFFFF" fillOpacity="0.7" />
+          <circle cx="45" cy="44" r="1" fill="#FFFFFF" fillOpacity="0.7" />
+        </g>
       </g>
 
       {/* Status Badge Bubble (Bottom Right) */}
-      {isCompleted ? (
-        /* Blue Check Badge */
-        <g id="check-badge">
-          <circle cx="53" cy="51" r="9" fill="#FFFFFF" />
-          <circle cx="53" cy="51" r="7.5" fill="#2563EB" />
-          <path
-            d="M49.5 51L51.8 53.3L56.5 48.5"
-            stroke="#FFFFFF"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </g>
-      ) : (
-        /* Red/Amber Clock Badge */
-        <g id="clock-badge">
-          <circle cx="53" cy="51" r="9" fill="#FFFFFF" />
-          <circle cx="53" cy="51" r="7.5" fill="#EF4444" />
-          <circle cx="53" cy="51" r="6" fill="#DC2626" />
-          {/* Clock hands */}
-          <path
-            d="M53 48V51.2L55.5 52.8"
-            stroke="#FFFFFF"
-            strokeWidth="1.6"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </g>
-      )}
+      <g className="step-badge-group">
+        {isCompleted ? (
+          /* Blue Check Badge */
+          <g id="check-badge">
+            <circle cx="53" cy="51" r="9" fill="#FFFFFF" />
+            <circle cx="53" cy="51" r="7.5" fill="#2563EB" />
+            <path
+              d="M49.5 51L51.8 53.3L56.5 48.5"
+              stroke="#FFFFFF"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </g>
+        ) : (
+          /* Red/Amber Clock Badge */
+          <g id="clock-badge">
+            <circle cx="53" cy="51" r="9" fill="#FFFFFF" />
+            <circle cx="53" cy="51" r="7.5" fill="#EF4444" />
+            <circle cx="53" cy="51" r="6" fill="#DC2626" />
+            {/* Clock hands */}
+            <path
+              d="M53 48V51.2L55.5 52.8"
+              stroke="#FFFFFF"
+              strokeWidth="1.6"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </g>
+        )}
+      </g>
     </svg>
   );
 }
+
+export default StepPaymentIllustration;

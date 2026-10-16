@@ -308,8 +308,14 @@ export const OrderPatchPayloadSchema = z.object(
 export const ProductsQuerySchema = z.object({
   category: z.string().nullish().transform((v) => sanitizeString(v ?? '', 50)),
   search: z.string().nullish().transform((v) => sanitizeString(v ?? '', 100)),
+  typeId: z.string().nullish().transform((v) => sanitizeString(v ?? '', 20)),
+  subMenuId: z.string().nullish().transform((v) => {
+    if (!v) return null;
+    const num = parseInt(v, 10);
+    return isNaN(num) || num <= 0 ? null : num;
+  }),
   page: intParam(1, 1, 10000),
-  limit: intParam(24, 1, 60),
+  limit: intParam(24, 1, 100),
 });
 
 /** GET /api/orders */
@@ -323,6 +329,8 @@ export function parseProductsQuery(searchParams: URLSearchParams) {
   return ProductsQuerySchema.parse({
     category: searchParams.get('category'),
     search: searchParams.get('search'),
+    typeId: searchParams.get('typeId'),
+    subMenuId: searchParams.get('subMenuId'),
     page: searchParams.get('page'),
     limit: searchParams.get('limit'),
   });

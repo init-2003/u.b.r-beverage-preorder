@@ -9,32 +9,44 @@ import { ProductImage } from '@/components/ui/ProductImage';
 
 function EmptyCartIllustration() {
   return (
-    <div className="w-24 h-20 mx-auto flex items-center justify-center">
-      <svg viewBox="0 0 100 80" className="w-full h-full text-slate-400">
-        {/* Cart handle & frame */}
-        <path
-          d="M15 15 H28 L38 52 H76 L86 24 H30"
-          fill="none"
-          stroke="#94a3b8"
-          strokeWidth="4.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        {/* Basket body */}
-        <path
-          d="M31 24 H84 L75 50 H39 Z"
-          fill="#cbd5e1"
-        />
-        {/* Subtle cross (X) inside basket */}
-        <path
-          d="M54 33 L62 41 M62 33 L54 41"
-          stroke="#ffffff"
-          strokeWidth="3"
-          strokeLinecap="round"
-        />
-        {/* Wheels */}
-        <circle cx="43" cy="62" r="5" fill="#94a3b8" />
-        <circle cx="72" cy="62" r="5" fill="#94a3b8" />
+    <div className="w-24 h-20 mx-auto flex items-center justify-center select-none pointer-events-none">
+      <svg viewBox="0 0 100 80" className="w-full h-full text-slate-400" aria-hidden="true">
+        <style>{`
+          @keyframes miniCartFloat {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-3px); }
+          }
+          .mini-cart-group {
+            animation: miniCartFloat 3s ease-in-out infinite;
+            transform-origin: center center;
+          }
+        `}</style>
+        <g className="mini-cart-group">
+          {/* Cart handle & frame */}
+          <path
+            d="M15 15 H28 L38 52 H76 L86 24 H30"
+            fill="none"
+            stroke="#94a3b8"
+            strokeWidth="4.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          {/* Basket body */}
+          <path
+            d="M31 24 H84 L75 50 H39 Z"
+            fill="#cbd5e1"
+          />
+          {/* Subtle cross (X) inside basket */}
+          <path
+            d="M54 33 L62 41 M62 33 L54 41"
+            stroke="#ffffff"
+            strokeWidth="3"
+            strokeLinecap="round"
+          />
+          {/* Wheels */}
+          <circle cx="43" cy="62" r="5" fill="#94a3b8" />
+          <circle cx="72" cy="62" r="5" fill="#94a3b8" />
+        </g>
       </svg>
     </div>
   );

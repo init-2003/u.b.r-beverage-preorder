@@ -263,27 +263,27 @@ export default function DraggableCartButton({ totalQty }: DraggableCartButtonPro
       onPointerUp={handlePointerUp}
       onPointerCancel={handlePointerCancel}
       style={containerStyle}
-      className={`z-30 select-none cursor-grab active:cursor-grabbing rounded-full ${
+      className={`z-40 select-none cursor-pointer active:cursor-grabbing rounded-full group ${
         isDragging
-          ? 'scale-105 shadow-2xl opacity-95 ring-2 ring-neutral-400/40'
+          ? 'cursor-grabbing scale-105 shadow-2xl opacity-95 ring-2 ring-neutral-400/40'
           : 'scale-100 shadow-xl'
       }`}
-      title="ลากเพื่อย้ายตำแหน่ง (จะเด้งล็อคเข้ามุมอัตโนมัติ) หรือคลิกเพื่อดูตะกร้าสั่งจอง"
+      title="ดูสินค้าในตะกร้า (ลากเพื่อย้ายตำแหน่ง)"
     >
-      <div className="bg-black hover:bg-neutral-900 text-white px-5 py-3 sm:px-6 sm:py-3.5 rounded-full shadow-2xl border border-neutral-800 flex items-center gap-3 group relative overflow-hidden backdrop-blur-sm transition-all">
+      <div className="bg-black hover:bg-neutral-900 active:bg-neutral-800 text-white w-16 h-16 sm:w-auto sm:h-auto p-0 sm:px-5 sm:py-3 rounded-full shadow-2xl border border-neutral-800 flex items-center justify-center relative backdrop-blur-sm transition-all duration-200">
         {/* Glow effect on hover */}
-        <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+        <div className="absolute inset-0 rounded-full bg-gradient-to-r from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none overflow-hidden" />
 
         {/* Cart Icon with Gold Badge */}
-        <div className="relative shrink-0">
-          <ShoppingCart className="w-5 h-5 text-white" />
-          <span className="absolute -top-2.5 -right-2.5 bg-amber-400 text-slate-950 font-black text-[10px] w-5 h-5 rounded-full flex items-center justify-center border-2 border-black shadow-md">
+        <div className="relative shrink-0 flex items-center justify-center">
+          <ShoppingCart className="w-7 h-7 sm:w-5 sm:h-5 text-white" />
+          <span className="absolute -top-2.5 -right-2.5 bg-amber-400 text-slate-950 font-black text-xs sm:text-[10px] w-6 h-6 sm:w-5 sm:h-5 rounded-full flex items-center justify-center border-2 border-black shadow-md">
             {totalQty}
           </span>
         </div>
 
-        {/* Button Label */}
-        <span className="text-xs sm:text-sm font-bold text-white tracking-wide pr-1 select-none">
+        {/* Button Label: Hidden on mobile (< sm), Normally visible on Desktop (>= sm) */}
+        <span className="hidden sm:inline-block text-xs sm:text-sm font-bold text-white tracking-wide pl-3 pr-1 select-none whitespace-nowrap">
           ดูสินค้าในตะกร้า
         </span>
       </div>

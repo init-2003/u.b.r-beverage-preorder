@@ -17,8 +17,8 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: 'U.B.R Beverage Online Store',
-  description: 'ระบบ Pre-Order หจก.อุบลรุ่งเรืองเบฟเวอเรจ',
+  title: 'หจก. อุบลรุ่งเรืองเบฟเวอเรจ (Pre-order)',
+  description: 'ระบบสั่งจองสินค้าพรีออเดอร์ หจก. อุบลรุ่งเรืองเบฟเวอเรจ',
   icons: {
     icon: '/apple-icon.png',
     shortcut: '/apple-icon.png',
@@ -51,7 +51,8 @@ export default function RootLayout({
                     if (
                       msg.indexOf('ethereum') !== -1 ||
                       msg.indexOf('selectedAddress') !== -1 ||
-                      fn.indexOf('extension') !== -1
+                      msg.indexOf('extension') !== -1 ||
+                      msg.indexOf('gcruniqueid') !== -1
                     ) {
                       if (e.stopImmediatePropagation) e.stopImmediatePropagation();
                       if (e.preventDefault) e.preventDefault();
@@ -63,7 +64,8 @@ export default function RootLayout({
                     var reason = (e && e.reason) ? (e.reason.message || String(e.reason)) : '';
                     if (
                       reason.indexOf('ethereum') !== -1 ||
-                      reason.indexOf('selectedAddress') !== -1
+                      reason.indexOf('selectedAddress') !== -1 ||
+                      reason.indexOf('gcruniqueid') !== -1
                     ) {
                       if (e.stopImmediatePropagation) e.stopImmediatePropagation();
                       if (e.preventDefault) e.preventDefault();

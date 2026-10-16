@@ -19,6 +19,25 @@ export function StepReceiptIllustration({
       className={className}
       aria-hidden="true"
     >
+      <style>{`
+        @keyframes stepPaperFloat {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-2px); }
+        }
+        @keyframes stepReceiptSparkle {
+          0%, 100% { transform: scale(1); opacity: 0.8; }
+          50% { transform: scale(1.3); opacity: 1; }
+        }
+        .step-receipt-paper-group {
+          ${isCompleted ? 'animation: stepPaperFloat 3s ease-in-out infinite;' : ''}
+          transform-origin: center center;
+        }
+        .step-receipt-sparkle {
+          animation: stepReceiptSparkle 2.2s ease-in-out infinite;
+          transform-origin: 60px 20.5px;
+        }
+      `}</style>
+
       {/* Background Circular Aura & Base (Opaque white center to block the line behind) */}
       <circle cx="40" cy="40" r="38" fill="#FFFFFF" />
       <circle
@@ -40,10 +59,12 @@ export function StepReceiptIllustration({
         <>
           <circle cx="68" cy="22" r="2" fill="#10B981" fillOpacity="0.8" />
           <circle cx="14" cy="30" r="1.5" fill="#34D399" />
-          <path
-            d="M60 16L61.5 19L64.5 20.5L61.5 22L60 25L58.5 22L55.5 20.5L58.5 19L60 16Z"
-            fill="#F59E0B"
-          />
+          <g className="step-receipt-sparkle">
+            <path
+              d="M60 16L61.5 19L64.5 20.5L61.5 22L60 25L58.5 22L55.5 20.5L58.5 19L60 16Z"
+              fill="#F59E0B"
+            />
+          </g>
         </>
       )}
 
@@ -58,7 +79,7 @@ export function StepReceiptIllustration({
       />
 
       {/* ================= OFFICIAL RECEIPT / INVOICE PAPER ================= */}
-      <g opacity={isCompleted ? '1' : '0.55'}>
+      <g className="step-receipt-paper-group" opacity={isCompleted ? '1' : '0.55'}>
         {/* Main Paper Sheet */}
         <rect
           x="26"
@@ -168,3 +189,5 @@ export function StepReceiptIllustration({
     </svg>
   );
 }
+
+export default StepReceiptIllustration;

@@ -3,8 +3,8 @@ import { Suspense } from 'react';
 import LoginClient from './LoginClient';
 
 export const metadata: Metadata = {
-  title: 'เข้าสู่ระบบ U.B.R Beverage Online Store',
-  description: 'เข้าสู่ระบบสั่งจองสินค้า U.B.R Beverage Online Store',
+  title: 'หจก. อุบลรุ่งเรืองเบฟเวอเรจ (Pre-order)',
+  description: 'เข้าสู่ระบบสั่งจองสินค้า หจก. อุบลรุ่งเรืองเบฟเวอเรจ (Pre-order)',
 };
 
 export default function LoginPage() {

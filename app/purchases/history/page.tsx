@@ -244,7 +244,7 @@ function PurchasesContent() {
             <WineLoading size="md" />
           </div>
         ) : displayedOrders.length === 0 ? (
-          <div className="bg-white rounded-[14px] apple-squircle-card border border-slate-200 shadow-xs py-16 sm:py-20 px-4 text-center flex flex-col items-center justify-center space-y-4">
+          <div className="py-16 sm:py-20 px-4 text-center flex flex-col items-center justify-center space-y-4">
             <div className="flex items-center justify-center">
               <EmptyPaymentIllustration className="w-36 h-36 sm:w-40 sm:h-40" />
             </div>

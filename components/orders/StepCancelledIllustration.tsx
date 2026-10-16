@@ -15,6 +15,33 @@ export function StepCancelledIllustration({
       className={className}
       aria-hidden="true"
     >
+      <style>{`
+        @keyframes stepPaperFloat {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-2px); }
+        }
+        @keyframes cancelSealPulse {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.08); }
+        }
+        @keyframes cancelSparkle {
+          0%, 100% { transform: scale(1); opacity: 0.8; }
+          50% { transform: scale(1.25); opacity: 1; }
+        }
+        .step-cancel-paper-group {
+          animation: stepPaperFloat 3s ease-in-out infinite;
+          transform-origin: center center;
+        }
+        .step-cancel-seal-group {
+          animation: cancelSealPulse 2.6s ease-in-out infinite;
+          transform-origin: 47px 45px;
+        }
+        .step-cancel-sparkle {
+          animation: cancelSparkle 2.2s ease-in-out infinite;
+          transform-origin: 62px 19.5px;
+        }
+      `}</style>
+
       {/* Background Circular Aura & Base (Opaque white center to block line behind) */}
       <circle cx="40" cy="40" r="38" fill="#FFFFFF" />
       <circle cx="40" cy="40" r="36" fill="#FEF2F2" />
@@ -23,10 +50,12 @@ export function StepCancelledIllustration({
       {/* Decorative Sparkles & Ambient Dots */}
       <circle cx="68" cy="20" r="2" fill="#DC2626" fillOpacity="0.75" />
       <circle cx="13" cy="29" r="1.5" fill="#EF4444" fillOpacity="0.8" />
-      <path
-        d="M62 15L63.5 18L66.5 19.5L63.5 21L62 24L60.5 21L57.5 19.5L60.5 18L62 15Z"
-        fill="#F59E0B"
-      />
+      <g className="step-cancel-sparkle">
+        <path
+          d="M62 15L63.5 18L66.5 19.5L63.5 21L62 24L60.5 21L57.5 19.5L60.5 18L62 15Z"
+          fill="#F59E0B"
+        />
+      </g>
 
       {/* Soft Ground Shadow */}
       <ellipse
@@ -39,7 +68,7 @@ export function StepCancelledIllustration({
       />
 
       {/* ================= CANCELLED ORDER DOCUMENT ================= */}
-      <g>
+      <g className="step-cancel-paper-group">
         {/* Main Paper Sheet with subtle tilt */}
         <rect
           x="26"
@@ -114,51 +143,53 @@ export function StepCancelledIllustration({
         />
 
         {/* ================= 3D EMBOSSED CANCEL BADGE (SEAL) ================= */}
-        {/* Seal Drop Shadow */}
-        <circle
-          cx="47"
-          cy="46"
-          r="12.5"
-          fill="#991B1B"
-          fillOpacity="0.25"
-        />
+        <g className="step-cancel-seal-group">
+          {/* Seal Drop Shadow */}
+          <circle
+            cx="47"
+            cy="46"
+            r="12.5"
+            fill="#991B1B"
+            fillOpacity="0.25"
+          />
 
-        {/* Seal Outer Ring with White Border */}
-        <circle
-          cx="47"
-          cy="45"
-          r="12"
-          fill="#991B1B"
-          stroke="#FFFFFF"
-          strokeWidth="2"
-        />
+          {/* Seal Outer Ring with White Border */}
+          <circle
+            cx="47"
+            cy="45"
+            r="12"
+            fill="#991B1B"
+            stroke="#FFFFFF"
+            strokeWidth="2"
+          />
 
-        {/* Seal Inner Face */}
-        <circle
-          cx="47"
-          cy="45"
-          r="10"
-          fill="#DC2626"
-        />
+          {/* Seal Inner Face */}
+          <circle
+            cx="47"
+            cy="45"
+            r="10"
+            fill="#DC2626"
+          />
 
-        {/* Inner Subtle Ring */}
-        <circle
-          cx="47"
-          cy="45"
-          r="8.5"
-          stroke="#EF4444"
-          strokeWidth="1"
-          strokeDasharray="2 1"
-        />
+          {/* Inner Subtle Ring */}
+          <circle
+            cx="47"
+            cy="45"
+            r="8.5"
+            stroke="#EF4444"
+            strokeWidth="1"
+            strokeDasharray="2 1"
+          />
 
-        {/* White Cancel Cross ✕ with Rounded Caps */}
-        <path
-          d="M43 41L51 49M51 41L43 49"
-          stroke="#FFFFFF"
-          strokeWidth="2.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
+          {/* White Cancel Cross ✕ with Rounded Caps */}
+          <path
+            d="M43 41L51 49M51 41L43 49"
+            stroke="#FFFFFF"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </g>
       </g>
     </svg>
   );

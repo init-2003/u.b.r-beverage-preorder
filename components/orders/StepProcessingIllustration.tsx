@@ -21,6 +21,33 @@ export function StepProcessingIllustration({
       className={className}
       aria-hidden="true"
     >
+      <style>{`
+        @keyframes stepBoxFloat {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-2px); }
+        }
+        @keyframes stepGearSpin {
+          from { transform: translate(27.75px, 25.75px) rotate(0deg); }
+          to { transform: translate(27.75px, 25.75px) rotate(360deg); }
+        }
+        @keyframes stepBadgePulse {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.08); }
+        }
+        .step-proc-box-group {
+          ${!isInactive ? 'animation: stepBoxFloat 3s ease-in-out infinite;' : ''}
+          transform-origin: center center;
+        }
+        .step-gear-rotate {
+          animation: stepGearSpin 8s linear infinite;
+          transform-origin: 0px 0px;
+        }
+        .step-proc-badge-group {
+          ${isActive ? 'animation: stepBadgePulse 2.4s ease-in-out infinite;' : ''}
+          transform-origin: 53px 51px;
+        }
+      `}</style>
+
       {/* Background Circular Aura & Base (Opaque white center to block the line behind) */}
       <circle cx="40" cy="40" r="38" fill="#FFFFFF" />
       <circle
@@ -83,8 +110,7 @@ export function StepProcessingIllustration({
       />
 
       {/* ================= CARDBOARD PACKAGE / PROCESSING BOX ================= */}
-      {/* Box Base (Isometric 3D Parcel) */}
-      <g opacity={isInactive ? '0.55' : '1'}>
+      <g className="step-proc-box-group" opacity={isInactive ? '0.55' : '1'}>
         {/* Left Side */}
         <path
           d="M23 37L39 45V61L23 53V37Z"
@@ -158,58 +184,64 @@ export function StepProcessingIllustration({
 
       {/* Floating Gear for Processing in Active State */}
       {isActive && (
-        <g transform="translate(18, 16) scale(0.65)">
-          <circle cx="15" cy="15" r="9" fill="#EA580C" />
-          <circle cx="15" cy="15" r="4.5" fill="#FFFFFF" />
-          <path
-            d="M13 3H17V6H13V3ZM13 24H17V27H13V24ZM3 13H6V17H3V13ZM24 13H27V17H24V13Z"
-            fill="#EA580C"
-          />
+        <g className="step-gear-rotate">
+          <g transform="translate(-9.75, -9.75) scale(0.65)">
+            <circle cx="15" cy="15" r="9" fill="#EA580C" />
+            <circle cx="15" cy="15" r="4.5" fill="#FFFFFF" />
+            <path
+              d="M13 3H17V6H13V3ZM13 24H17V27H13V24ZM3 13H6V17H3V13ZM24 13H27V17H24V13Z"
+              fill="#EA580C"
+            />
+          </g>
         </g>
       )}
 
       {/* Status Badge Bubble (Bottom Right) */}
-      {isCompleted ? (
-        /* Amber Check Badge */
-        <g id="proc-check-badge">
-          <circle cx="53" cy="51" r="9" fill="#FFFFFF" />
-          <circle cx="53" cy="51" r="7.5" fill="#D97706" />
-          <path
-            d="M49.5 51L51.8 53.3L56.5 48.5"
-            stroke="#FFFFFF"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </g>
-      ) : isActive ? (
-        /* Orange Active Clock Badge */
-        <g id="proc-clock-badge">
-          <circle cx="53" cy="51" r="9" fill="#FFFFFF" />
-          <circle cx="53" cy="51" r="7.5" fill="#EA580C" />
-          <circle cx="53" cy="51" r="6" fill="#C2410C" />
-          <path
-            d="M53 48V51.2L55.5 52.8"
-            stroke="#FFFFFF"
-            strokeWidth="1.6"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </g>
-      ) : (
-        /* Inactive Subtle Clock / Step Indicator */
-        <g id="proc-inactive-badge">
-          <circle cx="53" cy="51" r="8" fill="#FFFFFF" />
-          <circle cx="53" cy="51" r="6.5" fill="#E2E8F0" />
-          <path
-            d="M53 48.5V51.2L55 52.5"
-            stroke="#94A3B8"
-            strokeWidth="1.4"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </g>
-      )}
+      <g className="step-proc-badge-group">
+        {isCompleted ? (
+          /* Amber Check Badge */
+          <g id="proc-check-badge">
+            <circle cx="53" cy="51" r="9" fill="#FFFFFF" />
+            <circle cx="53" cy="51" r="7.5" fill="#D97706" />
+            <path
+              d="M49.5 51L51.8 53.3L56.5 48.5"
+              stroke="#FFFFFF"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </g>
+        ) : isActive ? (
+          /* Orange Active Clock Badge */
+          <g id="proc-clock-badge">
+            <circle cx="53" cy="51" r="9" fill="#FFFFFF" />
+            <circle cx="53" cy="51" r="7.5" fill="#EA580C" />
+            <circle cx="53" cy="51" r="6" fill="#C2410C" />
+            <path
+              d="M53 48V51.2L55.5 52.8"
+              stroke="#FFFFFF"
+              strokeWidth="1.6"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </g>
+        ) : (
+          /* Inactive Subtle Clock / Step Indicator */
+          <g id="proc-inactive-badge">
+            <circle cx="53" cy="51" r="8" fill="#FFFFFF" />
+            <circle cx="53" cy="51" r="6.5" fill="#E2E8F0" />
+            <path
+              d="M53 48.5V51.2L55 52.5"
+              stroke="#94A3B8"
+              strokeWidth="1.4"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </g>
+        )}
+      </g>
     </svg>
   );
 }
+
+export default StepProcessingIllustration;

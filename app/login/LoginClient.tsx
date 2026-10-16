@@ -61,6 +61,14 @@ export default function LoginClient() {
     if (shouldAutoLogin || (urlUser && urlPass)) return;
     if (!loading && customer) {
       setIsLoggingIn(true);
+      try {
+        sessionStorage.setItem('ubr_sidebar_collapsed', 'false');
+        sessionStorage.setItem('ubr_sidebar_collapsed_wide', 'false');
+        document.cookie = 'ubr_sidebar_collapsed=false; path=/; max-age=31536000; SameSite=Lax';
+        document.cookie = 'ubr_sidebar_collapsed_wide=false; path=/; max-age=31536000; SameSite=Lax';
+        sessionStorage.removeItem('ubr_orders_active_tab');
+        sessionStorage.setItem('ubr_orders_active_tab', 'all');
+      } catch {}
       window.location.href = '/';
     }
   }, [customer, loading, previewLoading, shouldAutoLogin, urlUser, urlPass]);
@@ -68,7 +76,19 @@ export default function LoginClient() {
   const handleLoginSuccess = () => {
     setIsLoggingIn(true);
     try {
+      // เมื่อ Login ใหม่ รีเซ็ตค่าตั้งต้น: เปิด sidebar เสมอ (Expanded), รีเซ็ตตำแหน่ง scroll เป็น 0, ล้างหมวดหมู่ค้าง, และรีเซ็ตแท็บคำสั่งซื้อเป็น "ทั้งหมด"
       sessionStorage.setItem('ubr_home_scroll_y', '0');
+      sessionStorage.removeItem('ubr_navigating_away');
+      sessionStorage.setItem('ubr_sidebar_collapsed', 'false');
+      sessionStorage.setItem('ubr_sidebar_collapsed_wide', 'false');
+      document.cookie = 'ubr_sidebar_collapsed=false; path=/; max-age=31536000; SameSite=Lax';
+      document.cookie = 'ubr_sidebar_collapsed_wide=false; path=/; max-age=31536000; SameSite=Lax';
+      localStorage.removeItem('ubr_selected_category');
+      localStorage.removeItem('ubr_selected_submenu_id');
+      localStorage.removeItem('ubr_selected_type_id');
+      sessionStorage.removeItem('ubr_orders_active_tab');
+      sessionStorage.setItem('ubr_orders_active_tab', 'all');
+      localStorage.removeItem('ubr_orders_active_tab');
     } catch {}
     // ทุกครั้งที่ Login ใหม่ ให้เปิดหน้าหลัก (/) ขึ้นมาเสมอตามความต้องการของผู้ใช้
     window.location.href = '/';
