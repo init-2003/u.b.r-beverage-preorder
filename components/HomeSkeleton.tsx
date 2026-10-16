@@ -177,7 +177,7 @@ export function HomeSkeleton({
             aria-label="เมนูหมวดหมู่สินค้า (กำลังโหลด)"
             aria-hidden={collapsed}
           >
-            <div className="w-60 xl:w-64 bg-white rounded-[14px] apple-squircle-card border border-slate-200 shadow-2xs overflow-hidden flex flex-col p-4 sm:p-5 h-[calc(100vh-143px)]">
+            <div className="w-60 xl:w-64 bg-white rounded-[14px] apple-squircle-card border border-slate-200 shadow-2xs overflow-hidden flex flex-col p-4 sm:p-5 max-h-[calc(100vh-147px)]">
               {/* Top Pinned Option: "ทั้งหมด" + Collapse Button Placeholder */}
               <div className="shrink-0 pb-2 mb-1 border-b border-slate-100 flex items-center justify-between gap-1">
                 <div className="h-5 w-14 rounded-xs skeleton-shimmer" />

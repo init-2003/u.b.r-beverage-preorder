@@ -57,7 +57,6 @@ const CategorySidebar = React.memo(function CategorySidebar({
   const asideRef = useRef<HTMLElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const scrollDebounceTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const [syncedHeight, setSyncedHeight] = useState<number | null>(null);
   const [canScrollUp, setCanScrollUp] = useState(false);
   const [canScrollDown, setCanScrollDown] = useState(false);
 
@@ -164,58 +163,7 @@ const CategorySidebar = React.memo(function CategorySidebar({
       clearTimeout(t);
       ro.disconnect();
     };
-  }, [checkScroll, menuTree, expandedTypes, syncedHeight]);
-
-  // 0. Synchronize Sidebar bottom edge with the bottom edge of the product cards in Row 1
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    const updateHeight = () => {
-      // Only apply bottom alignment on desktop viewports (>= 1024px)
-      if (window.innerWidth < 1024) {
-        setSyncedHeight(null);
-        return;
-      }
-
-      const asideEl = asideRef.current;
-      const firstCard = document.querySelector('[data-first-product-card="true"]') as HTMLElement | null;
-
-      if (asideEl && asideEl.parentElement && firstCard) {
-        const parentTop = asideEl.parentElement.getBoundingClientRect().top + window.scrollY;
-        const cardBottom = firstCard.getBoundingClientRect().bottom + window.scrollY;
-        const exactHeight = Math.round(cardBottom - parentTop);
-        if (exactHeight > 200) {
-          setSyncedHeight(exactHeight);
-        }
-      }
-    };
-
-    updateHeight();
-
-    window.addEventListener('resize', updateHeight);
-
-    const observer = new ResizeObserver(() => {
-      updateHeight();
-    });
-
-    const firstCard = document.querySelector('[data-first-product-card="true"]');
-    if (firstCard) observer.observe(firstCard);
-
-    const banner = document.querySelector('[aria-label="ป้ายโฆษณาประชาสัมพันธ์"]');
-    if (banner) observer.observe(banner);
-
-    const t1 = setTimeout(updateHeight, 150);
-    const t2 = setTimeout(updateHeight, 500);
-    const t3 = setTimeout(updateHeight, 1000);
-
-    return () => {
-      window.removeEventListener('resize', updateHeight);
-      observer.disconnect();
-      clearTimeout(t1);
-      clearTimeout(t2);
-      clearTimeout(t3);
-    };
-  }, [menuTree]);
+  }, [checkScroll, menuTree, expandedTypes]);
 
   // 1. Initial State Logic:
   // - If user has custom toggle state in sessionStorage (e.g. after refresh/F5), restore it!
@@ -289,10 +237,7 @@ const CategorySidebar = React.memo(function CategorySidebar({
       aria-hidden={isCollapsed}
     >
       <div
-        style={syncedHeight ? { height: `${syncedHeight}px` } : undefined}
-        className={`w-60 xl:w-64 bg-white rounded-[14px] apple-squircle-card border border-slate-200 shadow-2xs overflow-hidden flex flex-col p-4 sm:p-5 transition-[height] duration-200 ${
-          syncedHeight ? '' : 'max-h-[calc(100vh-143px)]'
-        }`}
+        className="w-60 xl:w-64 bg-white rounded-[14px] apple-squircle-card border border-slate-200 shadow-2xs overflow-hidden flex flex-col p-4 sm:p-5 max-h-[calc(100vh-147px)] transition-[max-height] duration-200"
       >
           {/* Top Pinned Option: "ทั้งหมด" + Collapse Button '<' */}
           <div className="shrink-0 pb-2 mb-1 border-b border-slate-100 flex items-center justify-between gap-1">
