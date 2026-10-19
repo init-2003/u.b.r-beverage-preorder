@@ -6,13 +6,14 @@ import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { useCart } from '@/context/CartContext';
 import { useBreadcrumb } from '@/context/BreadcrumbContext';
-import { AlertCircle, ChevronRight, X } from 'lucide-react';
+import { AlertCircle, ChevronRight, X, Check } from 'lucide-react';
 import { EmptyCheckoutIllustration } from '@/components/EmptyCheckoutIllustration';
 import { CheckoutIllustration } from '@/components/CheckoutIllustration';
 import { WineLoading } from '@/components/WineLoading';
 import { ProductImage } from '@/components/ui/ProductImage';
 import { QuantityInput, Modal } from '@/components/ui';
 import { formatDepositPrice } from '@/lib/deposit';
+import Swal from '@/lib/swal';
 
 interface PreOrderItem {
   tradeId: string;
@@ -391,6 +392,7 @@ function PreOrderContent() {
 
   // Submit states & error feedback (Auto Scroll + Card Highlight)
   const [submitting, setSubmitting] = useState(false);
+  const [isOrderSuccessToastOpen, setIsOrderSuccessToastOpen] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [addressHasError, setAddressHasError] = useState(false);
   const [paymentHasError, setPaymentHasError] = useState(false);
@@ -438,24 +440,15 @@ function PreOrderContent() {
     if (type === 'address') {
       setAddressHasError(false);
       setTimeout(() => setAddressHasError(true), 15);
-      fastSmoothScrollTo(0, 380);
       errorResetTimeoutRef.current = setTimeout(() => setAddressHasError(false), 1450);
     } else if (type === 'payment' && paymentCardRef.current) {
       setPaymentHasError(false);
       setTimeout(() => setPaymentHasError(true), 15);
-      const yOffset = -100; // offset for sticky navbar
-      const top = paymentCardRef.current.getBoundingClientRect().top + window.pageYOffset + yOffset;
-      fastSmoothScrollTo(Math.max(0, top), 380);
       errorResetTimeoutRef.current = setTimeout(() => setPaymentHasError(false), 1450);
     } else if (type === 'items' && itemsCardRef.current) {
       setItemsHasError(false);
       setTimeout(() => setItemsHasError(true), 15);
-      const yOffset = -100; // offset for sticky navbar
-      const top = itemsCardRef.current.getBoundingClientRect().top + window.pageYOffset + yOffset;
-      fastSmoothScrollTo(Math.max(0, top), 380);
       errorResetTimeoutRef.current = setTimeout(() => setItemsHasError(false), 1450);
-    } else {
-      fastSmoothScrollTo(0, 380);
     }
   };
 
@@ -600,6 +593,13 @@ function PreOrderContent() {
   const handleSaveAddress = async () => {
     if (!tempName.trim() || !tempTel.trim() || !tempAddress.trim()) {
       setAddressError('กรุณาระบุชื่อผู้รับ เบอร์โทรศัพท์ และที่อยู่จัดส่งให้ครบถ้วน');
+      Swal.fire({
+        icon: 'warning',
+        title: 'แจ้งเตือน',
+        text: 'กรุณาระบุชื่อผู้รับ เบอร์โทรศัพท์ และที่อยู่จัดส่งให้ครบถ้วน',
+        confirmButtonText: 'ตกลง',
+        confirmButtonColor: '#800020',
+      });
       return;
     }
     setAddressError('');
@@ -748,29 +748,51 @@ function PreOrderContent() {
     }
 
     if (orderItems.length === 0) {
-      triggerCheckoutError('ไม่มีรายการสินค้าสำหรับสั่งจอง');
+      Swal.fire({
+        icon: 'warning',
+        title: 'แจ้งเตือน',
+        text: 'ไม่มีรายการสินค้าสำหรับสั่งจอง',
+        confirmButtonText: 'ตกลง',
+        confirmButtonColor: '#800020',
+      });
       return;
     }
 
     const validOrderItems = orderItems.filter((i) => i.qty > 0);
     if (validOrderItems.length === 0) {
-      triggerCheckoutError(
-        'กรุณาระบุจำนวนสินค้าให้มากกว่า 0 อย่างน้อย 1 รายการ หรือกดลบรายการที่ไม่ต้องการสั่งจองออก',
-        'items'
-      );
+      const msg =
+        'กรุณาระบุจำนวนสินค้าให้มากกว่า 0 อย่างน้อย 1 รายการ หรือกดลบรายการที่ไม่ต้องการสั่งจองออก';
+      Swal.fire({
+        icon: 'warning',
+        title: 'แจ้งเตือน',
+        text: msg,
+        confirmButtonText: 'ตกลง',
+        confirmButtonColor: '#800020',
+      });
       return;
     }
 
     if (!recipientAddress.trim() || !recipientTel.trim() || !recipientName.trim()) {
-      triggerCheckoutError(
-        'กรุณาระบุชื่อผู้สั่งซื้อ เบอร์โทรศัพท์ และที่อยู่จัดส่งให้ครบถ้วน',
-        'address'
-      );
+      Swal.fire({
+        icon: 'warning',
+        title: 'แจ้งเตือน',
+        text: 'กรุณาระบุชื่อผู้สั่งซื้อ เบอร์โทรศัพท์ และที่อยู่จัดส่งให้ครบถ้วน',
+        confirmButtonText: 'ตกลง',
+        confirmButtonColor: '#800020',
+        showCancelButton: false,
+      });
       return;
     }
 
     if (!paymentMethod) {
-      triggerCheckoutError('กรุณาเลือกวิธีการชำระเงิน', 'payment');
+      Swal.fire({
+        icon: 'warning',
+        title: 'แจ้งเตือน',
+        text: 'กรุณาเลือกวิธีการชำระเงิน',
+        confirmButtonText: 'ตกลง',
+        confirmButtonColor: '#800020',
+        showCancelButton: false,
+      });
       return;
     }
 
@@ -805,7 +827,15 @@ function PreOrderContent() {
       const data = await res.json();
 
       if (!res.ok || !data.success) {
-        triggerCheckoutError(data.message || 'บันทึกคำสั่งจองไม่สำเร็จ');
+        const msg = data.message || 'บันทึกคำสั่งจองไม่สำเร็จ';
+        triggerCheckoutError(msg);
+        Swal.fire({
+          icon: 'error',
+          title: 'ไม่สามารถสั่งจองได้',
+          text: msg,
+          confirmButtonText: 'ตกลง',
+          confirmButtonColor: '#800020',
+        });
         return;
       }
 
@@ -832,15 +862,19 @@ function PreOrderContent() {
         } catch { }
       }
 
-      // Navigate to dedicated payment page if PromptPay, or order details if COD
-      if (paymentMethod === 'T') {
-        router.push(`/orders/${data.data.docNo}/payment`);
-      } else {
-        router.push(`/orders/${data.data.docNo}`);
-      }
+      // Show success toast HUD matching CartSuccessToast
+      setIsOrderSuccessToastOpen(true);
+
+      setTimeout(() => {
+        // Navigate to dedicated payment page if PromptPay, or order details if COD
+        if (paymentMethod === 'T') {
+          router.push(`/orders/${data.data.docNo}/payment`);
+        } else {
+          router.push(`/orders/${data.data.docNo}`);
+        }
+      }, 1200);
     } catch (err: any) {
       triggerCheckoutError('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์: ' + err.message);
-    } finally {
       setSubmitting(false);
     }
   };
@@ -902,33 +936,15 @@ function PreOrderContent() {
           </div>
         ) : (
           <>
-            {errorMsg && (
-              <div className="p-3.5 sm:p-4 rounded-[14px] apple-squircle-card bg-red-50 border border-red-200 text-red-700 text-xs flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <AlertCircle className="w-5 h-5 shrink-0 text-red-600" />
-                  <span>{errorMsg}</span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setErrorMsg('')}
-                  aria-label="ปิดข้อความแจ้งเตือน"
-                  className="text-red-400 hover:text-red-700 p-1 transition-colors cursor-pointer"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-            )}
-
             <form onSubmit={handleSubmitOrder} className="space-y-3 sm:space-y-6">
 
               {/* Delivery Address Card with crisp border and apple-squircle rounded corners */}
               <div
                 ref={addressCardRef}
-                className={`bg-white rounded-[14px] apple-squircle-card overflow-hidden transition-all duration-300 ${
-                  addressHasError
+                className={`bg-white rounded-[14px] apple-squircle-card overflow-hidden transition-all duration-300 ${addressHasError
                     ? 'border-2 border-red-500 animate-red-blink shadow-lg'
                     : 'border border-slate-200 shadow-2xs'
-                }`}
+                  }`}
               >
                 {/* Decorative envelope ribbon strip */}
                 <div className="h-[3px] w-full bg-[repeating-linear-gradient(45deg,#6fa6d6,#6fa6d6_33px,transparent_0,transparent_41px,#f18d9b_0,#f18d9b_74px,transparent_0,transparent_82px)]" />
@@ -948,11 +964,10 @@ function PreOrderContent() {
                     <button
                       type="button"
                       onClick={handleStartEditAddress}
-                      className={`px-3.5 py-1.5 text-xs sm:text-sm font-semibold rounded-full cursor-pointer min-h-[36px] inline-flex items-center justify-center transition-all duration-200 ${
-                        addressHasError
+                      className={`px-3.5 py-1.5 text-xs sm:text-sm font-semibold rounded-full cursor-pointer min-h-[36px] inline-flex items-center justify-center transition-all duration-200 ${addressHasError
                           ? 'bg-red-600 hover:bg-red-700 text-white shadow-md ring-2 ring-red-400'
                           : 'text-blue-600 hover:text-blue-700 hover:bg-blue-50/70'
-                      }`}
+                        }`}
                     >
                       {recipientAddress ? 'เปลี่ยน' : 'ระบุที่อยู่'}
                     </button>
@@ -1140,11 +1155,10 @@ function PreOrderContent() {
               {/* Items Card with crisp border and apple-squircle rounded corners */}
               <div
                 ref={itemsCardRef}
-                className={`bg-white rounded-[14px] apple-squircle-card overflow-hidden transition-all duration-300 ${
-                  itemsHasError
+                className={`bg-white rounded-[14px] apple-squircle-card overflow-hidden transition-all duration-300 ${itemsHasError
                     ? 'border-2 border-red-500 animate-red-blink shadow-lg'
                     : 'border border-slate-200 shadow-2xs'
-                }`}
+                  }`}
               >
                 {/* Table Header Row */}
                 <div className="px-4 sm:px-6 py-3 sm:py-3.5 flex items-center justify-between border-b border-slate-100">
@@ -1543,11 +1557,10 @@ function PreOrderContent() {
               {/* 2. Payment Method Card with crisp border and apple-squircle rounded corners */}
               <div
                 ref={paymentCardRef}
-                className={`bg-white rounded-[14px] apple-squircle-card overflow-hidden transition-all duration-300 ${
-                  paymentHasError
+                className={`bg-white rounded-[14px] apple-squircle-card overflow-hidden transition-all duration-300 ${paymentHasError
                     ? 'border-2 border-red-500 animate-red-blink shadow-lg'
                     : 'border border-slate-200 shadow-2xs'
-                }`}
+                  }`}
               >
                 <div className="p-4 sm:p-6">
                   <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8">
@@ -1683,6 +1696,23 @@ function PreOrderContent() {
 
             </form>
           </>
+        )}
+
+        {/* Order Success Toast HUD matching CartSuccessToast */}
+        {isOrderSuccessToastOpen && (
+          <div
+            className="fixed inset-0 z-[100000] flex items-center justify-center pointer-events-none p-4 select-none"
+            aria-live="polite"
+          >
+            <div className="bg-neutral-900/90 text-white rounded-2xl shadow-2xl px-5 sm:px-8 py-5 sm:py-6 max-w-[92vw] sm:max-w-md w-auto flex flex-col items-center text-center animate-toast-pop backdrop-blur-md border border-white/10">
+              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-[#00bfa5] flex items-center justify-center text-white mb-3 shadow-lg">
+                <Check className="w-8 h-8 sm:w-9 sm:h-9 text-white stroke-[3.5]" />
+              </div>
+              <p className="text-xs sm:text-sm md:text-[15px] font-medium text-white/95 whitespace-nowrap">
+                สั่งซื้อสำเร็จ
+              </p>
+            </div>
+          </div>
         )}
 
       </div>

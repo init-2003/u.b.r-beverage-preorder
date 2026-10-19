@@ -5,8 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useBreadcrumb } from '@/context/BreadcrumbContext';
 import PromptPayQrCard from '@/components/checkout/PromptPayQrCard';
-import PaymentSuccessModal from '@/components/payment/PaymentSuccessModal';
-import PaymentErrorModal from '@/components/payment/PaymentErrorModal';
+import Swal from '@/lib/swal';
 import {
   CheckCircle2,
   RefreshCw,
@@ -49,8 +48,6 @@ function OrderPaymentContent() {
   const [slipPreview, setSlipPreview] = useState<string | null>(null);
   const [uploadingSlip, setUploadingSlip] = useState(false);
   const [uploadErrorMsg, setUploadErrorMsg] = useState('');
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [showErrorModal, setShowErrorModal] = useState(false);
 
   const [mounted, setMounted] = useState(false);
 
@@ -146,6 +143,32 @@ function OrderPaymentContent() {
     setUploadErrorMsg('');
   };
 
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      (window as any).__showSlipHelp = () => {
+        Swal.fire({
+          icon: 'info',
+          title: 'คำแนะนำการแนบสลิป',
+          html: `
+            <div class="text-left text-xs sm:text-sm space-y-2 text-slate-600">
+              <p>• รูปสลิปต้องมี <b>QR Code</b> ชัดเจน ไม่เบลอ ไม่มืด และไม่ถูกตัดขอบ</p>
+              <p>• ยอดโอนในสลิปต้องตรงกับยอดที่ระบุ <b>฿${payableAmount.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} บาท</b> พอดี</p>
+              <p>• ต้องเป็นสลิปจริงจากแอปพลิเคชันธนาคาร</p>
+            </div>
+          `,
+          confirmButtonText: 'รับทราบ',
+          confirmButtonColor: '#800020',
+          draggable: true,
+        });
+      };
+    }
+    return () => {
+      if (typeof window !== 'undefined') {
+        delete (window as any).__showSlipHelp;
+      }
+    };
+  }, [payableAmount]);
+
   // Handle Slip Upload and Verification
   const handleUploadSlip = async () => {
     if (!slipFile || !docNo) return;
@@ -172,11 +195,33 @@ function OrderPaymentContent() {
 
       setSlipFile(null);
       setSlipPreview(null);
-      setShowSuccessModal(true);
+
+      // กรณีที่ 1: ผ่าน (Success)
+      await Swal.fire({
+        title: 'แนบสลิปเรียบร้อยแล้ว!',
+        text: `เลขที่คำสั่งซื้อ: ${docNo}`,
+        icon: 'success',
+        draggable: true,
+        confirmButtonText: 'ตกลง',
+        confirmButtonColor: '#800020',
+      });
+
+      // นำทางไปยังหน้ารายละเอียดคำสั่งซื้อ
+      router.replace(`/orders/${encodeURIComponent(docNo)}`);
     } catch (err: any) {
+      // กรณีที่ 2: ไม่ผ่าน (Error)
       const msg = err.message || 'สลิปไม่ถูกต้อง! กรุณาอัปโหลดสลิปที่ถูกต้อง';
       setUploadErrorMsg(msg);
-      setShowErrorModal(true);
+
+      Swal.fire({
+        icon: 'error',
+        title: 'สลิปไม่ถูกต้อง',
+        text: msg,
+        footer: '<a href="javascript:void(0)" onclick="window.__showSlipHelp && window.__showSlipHelp(); return false;">ทำไมสลิปถึงไม่ผ่าน? (คำแนะนำการแนบสลิป)</a>',
+        draggable: true,
+        confirmButtonText: 'ลองใหม่อีกครั้ง',
+        confirmButtonColor: '#800020',
+      });
     } finally {
       setUploadingSlip(false);
     }
@@ -333,16 +378,7 @@ function OrderPaymentContent() {
         </p>
       </div>
 
-      {/* Success Lottie Animation Modal */}
-      {showSuccessModal && <PaymentSuccessModal docNo={docNo} />}
 
-      {/* Error Lottie Animation Modal */}
-      {showErrorModal && (
-        <PaymentErrorModal
-          message={uploadErrorMsg}
-          onClose={() => setShowErrorModal(false)}
-        />
-      )}
     </div>
   );
 }

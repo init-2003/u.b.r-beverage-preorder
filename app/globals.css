@@ -1349,3 +1349,181 @@ textarea {
   animation: redFrameBlink3 1.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
   will-change: border-color, box-shadow;
 }
+
+/* ============================================
+   SWEETALERT2 CUSTOM BRAND THEME (U.B.R.)
+   ============================================ */
+.swal2-container {
+  z-index: 100000 !important;
+  font-family: "Prompt", var(--font-prompt), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  overscroll-behavior: contain !important;
+  touch-action: none !important;
+}
+
+.swal2-popup {
+  touch-action: auto !important;
+  border-radius: 18px !important;
+  padding: 1.75rem 1.5rem !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+  font-family: inherit !important;
+  max-width: 90vw !important;
+  width: 440px !important;
+}
+
+.swal2-title {
+  font-size: 1.15rem !important;
+  font-weight: 700 !important;
+  color: #0f172a !important; /* slate-900 */
+  margin-bottom: 0.5rem !important;
+  padding: 0 !important;
+}
+
+.swal2-html-container {
+  font-size: 0.925rem !important;
+  color: #475569 !important; /* slate-600 */
+  line-height: 1.55 !important;
+  margin: 0.5rem 0 1.25rem 0 !important;
+  padding: 0 !important;
+}
+
+.swal2-icon {
+  margin: 0.5rem auto 1rem auto !important;
+  transform: scale(0.9);
+}
+
+.swal2-actions {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  margin-top: 1.25rem !important;
+  gap: 0.75rem !important;
+  width: 100% !important;
+}
+
+.swal2-styled.swal2-confirm,
+.ubr-swal-confirm-btn {
+  border-radius: 9999px !important; /* True Capsule shape */
+  corner-shape: round !important;
+  -webkit-corner-shape: round !important;
+  font-weight: 600 !important;
+  font-size: 0.875rem !important;
+  padding: 0.65rem 1.75rem !important;
+  min-width: 140px !important;
+  max-width: 180px !important;
+  margin: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  transition: all 0.2s ease !important;
+  outline: none !important;
+  cursor: pointer !important;
+  line-height: 1.35 !important;
+  background-color: #800020 !important;
+  color: #ffffff !important;
+  border: 1px solid #800020 !important;
+  box-shadow: none !important; /* ไม่เรืองแสง */
+}
+
+.swal2-styled.swal2-confirm:hover,
+.ubr-swal-confirm-btn:hover {
+  background-color: #68001a !important;
+  border-color: #68001a !important;
+  box-shadow: none !important;
+}
+
+.swal2-styled.swal2-confirm:focus,
+.swal2-styled.swal2-confirm:focus-visible,
+.swal2-styled.swal2-confirm:active,
+.ubr-swal-confirm-btn:focus,
+.ubr-swal-confirm-btn:focus-visible,
+.ubr-swal-confirm-btn:active,
+div:where(.swal2-container) button:where(.swal2-styled):focus-visible,
+div:where(.swal2-container) button:where(.swal2-styled):focus {
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+.swal2-styled.swal2-cancel,
+.ubr-swal-cancel-btn {
+  border-radius: 9999px !important;
+  corner-shape: round !important;
+  -webkit-corner-shape: round !important;
+  font-weight: 600 !important;
+  font-size: 0.875rem !important;
+  padding: 0.65rem 1.75rem !important;
+  min-width: 140px !important;
+  max-width: 180px !important;
+  margin: 0 !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  transition: all 0.2s ease !important;
+  outline: none !important;
+  cursor: pointer !important;
+  line-height: 1.35 !important;
+  background-color: #f8fafc !important;
+  color: #475569 !important;
+  border: 1px solid #cbd5e1 !important;
+  box-shadow: none !important;
+}
+
+.swal2-styled.swal2-cancel:hover,
+.ubr-swal-cancel-btn:hover {
+  background-color: #f1f5f9 !important;
+  border-color: #94a3b8 !important;
+  color: #0f172a !important;
+  box-shadow: none !important;
+}
+
+.swal2-styled.swal2-cancel:focus,
+.swal2-styled.swal2-cancel:focus-visible,
+.swal2-styled.swal2-cancel:active,
+.ubr-swal-cancel-btn:focus,
+.ubr-swal-cancel-btn:focus-visible,
+.ubr-swal-cancel-btn:active {
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+/* Ensure cancel button stays strictly hidden when SweetAlert2 sets display: none */
+.swal2-styled.swal2-cancel[style*="display: none"],
+.swal2-cancel[style*="display: none"] {
+  display: none !important;
+}
+
+/* SweetAlert2 Footer styling matching UBR brand */
+.swal2-footer {
+  margin-top: 1.25rem !important;
+  padding-top: 0.85rem !important;
+  border-top: 1px solid #f1f5f9 !important;
+  font-size: 0.825rem !important;
+  color: #64748b !important;
+}
+
+.swal2-footer a {
+  color: #800020 !important;
+  font-weight: 500 !important;
+  text-decoration: underline !important;
+  cursor: pointer !important;
+  transition: color 0.15s ease !important;
+}
+
+.swal2-footer a:hover {
+  color: #a0153e !important;
+}
+
+
+
+/* Prevent SweetAlert2 from breaking position: sticky on Navbar */
+html.swal2-shown,
+body.swal2-shown:not(.swal2-no-backdrop,.swal2-toast-shown) {
+  overflow-y: visible !important;
+  overflow: visible !important;
+  height: 100% !important;
+}
+
+html.swal2-height-auto,
+body.swal2-height-auto {
+  height: 100% !important;
+}
