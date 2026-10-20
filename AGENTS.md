@@ -84,9 +84,9 @@ This document provides developer and AI agent instructions, system architecture,
   - If a user directly accesses `/orders`, `app/orders/page.tsx` retrieves `ubr_active_order_doc_no` from `sessionStorage` and immediately redirects to `/orders/[docNo]`. If no active order exists in session storage, it safely redirects to `/orders/history`.
   - Order cards across `/orders/history`, `/purchases/history`, and `/orders/[docNo]` feature crisp `border border-slate-200 shadow-xs` with matching `border-slate-200` interior dividers to provide clear visual boundaries on the clean `#ffffff` canvas.
 - Pre-orders are saved to tables:
-  - `Fnt_Header_online` (header info: `Branch_Id`, `Fn_Doc_No`, `Fn_Doc_Date`, `Doc_Sts`, `Customer_Id`, `Fn_Total`, `Fn_Amount`, `money_sts`, `FILE_NAME_PIC`, `Fn_Remark`, `fn_deposit_H`, `fn_type_sale = 'Pre Order'`, etc.)
+  - `Fnt_Header_online` (header info: `Branch_Id`, `Fn_Doc_No`, `Fn_Doc_Date`, `Doc_Sts`, `Customer_Id`, `Fn_Total`, `Fn_Amount`, `money_sts`, `FILE_NAME_PIC`, `Fn_Remark`, `fn_deposit_H`, `fn_type_sale = 'PREORDER'`, etc.)
   - `Fnt_Detail_online` (line items: `Trade_Id`, `Qty`, `Unit_Name`, `Type_Name = 'Pre Order'`, `Sale_Price`, `Line_Total`, `fn_deposit_D`, etc. Note: `Fnt_Detail_online` does NOT have `fn_type_sale` column; that column is in `Fnt_Header_online`)
-  - `Customer_online` (ordering customer info snapshot: `Customer_Id`, `Customer_Name`, `Customer_Tel`, `Customer_Address`, `Customer_Zip`, `Customer_Email`, `Customer_Remark`, `Sts`, `Pb_User`, `Pb_Now`, `Fn_Doc_No`, `type_sale = 'Pre Order'`)
+  - `Customer_online` (ordering customer info snapshot: `Customer_Id`, `Customer_Name`, `Customer_Tel`, `Customer_Address`, `Customer_Zip`, `Customer_Email`, `Customer_Remark`, `Sts`, `Pb_User`, `Pb_Now`, `Fn_Doc_No`, `type_sale = 'PREORDER'`)
 - **Order Document Status (`Doc_Sts`)**:
   - `1` = `รอชำระ` (Waiting for payment - Bank transfer without slip attached)
   - `0` = `กำลังดำเนินการ` (In progress - COD or Bank transfer with slip attached)

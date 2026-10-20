@@ -161,7 +161,7 @@ export async function createPreOrder(params: CreateOrderParams) {
     headerReq.input('Pb_Now', sql.DateTime, now);
     headerReq.input('Fn_Remark', sql.NVarChar, finalHeaderRemark);
     headerReq.input('fn_deposit_H', sql.Money, totalDeposit);
-    headerReq.input('fn_type_sale', sql.NVarChar, 'Pre Order');
+    headerReq.input('fn_type_sale', sql.NVarChar, 'PREORDER');
     const dueDatePay = (moneySts === 'T' && Boolean(params.paymentSlipFilename)) ? now : null;
     headerReq.input('Due_Date_Pay', sql.DateTime, dueDatePay);
 
@@ -236,7 +236,7 @@ export async function createPreOrder(params: CreateOrderParams) {
     cusReq.input('Pb_User', sql.NVarChar, params.customerId.trim());
     cusReq.input('Pb_Now', sql.DateTime, now);
     cusReq.input('Fn_Doc_No', sql.NVarChar, docNo);
-    cusReq.input('type_sale', sql.NVarChar, 'Pre Order');
+    cusReq.input('type_sale', sql.NVarChar, 'PREORDER');
 
     await cusReq.query(`
       INSERT INTO Customer_online (
