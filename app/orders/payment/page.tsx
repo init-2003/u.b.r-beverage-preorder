@@ -253,7 +253,7 @@ function OrderPaymentContent() {
   }
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-center bg-white py-8 sm:py-12 px-4 font-sans">
+    <div className="flex-1 flex flex-col items-center justify-center bg-white py-8 sm:py-12 px-2 sm:px-6 lg:px-8 font-sans">
       {/* Top Heading matching reference */}
       <div 
         className="text-center space-y-1 mb-6 animate-payment-slide-up"

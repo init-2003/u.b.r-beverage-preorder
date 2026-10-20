@@ -85,10 +85,10 @@ export const BannerCarousel = React.memo(function BannerCarousel() {
   const activeSlide = !hasMultipleSlides
     ? 0
     : currentIndex === 0
-    ? slides.length - 1
-    : currentIndex === extendedSlides.length - 1
-    ? 0
-    : currentIndex - 1;
+      ? slides.length - 1
+      : currentIndex === extendedSlides.length - 1
+        ? 0
+        : currentIndex - 1;
 
   const nextSlide = useCallback(() => {
     setIsTransitioning(true);
@@ -144,7 +144,7 @@ export const BannerCarousel = React.memo(function BannerCarousel() {
 
   return (
     <div
-      className="relative apple-squircle-card shadow-sm border border-slate-200/80 bg-black overflow-hidden select-none group"
+      className="relative rounded-none shadow-sm border border-t-0 border-slate-200/80 bg-black overflow-hidden select-none group"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
       onTouchStart={handleTouchStart}
@@ -152,12 +152,11 @@ export const BannerCarousel = React.memo(function BannerCarousel() {
       onTouchEnd={handleTouchEnd}
       aria-label="ป้ายโฆษณาประชาสัมพันธ์"
     >
-      {/* Slides Container with Smooth Horizontal Slide */}
-      <div className="relative w-full h-[150px] sm:h-[200px] md:h-[240px] lg:h-[280px] xl:h-[300px] overflow-hidden bg-slate-950">
+      {/* Slides Container with Smooth Horizontal Slide - Aspect ratio matches real banner 1440x586 */}
+      <div className="relative w-full aspect-[1440/586] overflow-hidden bg-slate-950">
         <div
-          className={`flex w-full h-full ${
-            isTransitioning ? 'transition-transform duration-500 ease-out' : ''
-          } will-change-transform`}
+          className={`flex w-full h-full ${isTransitioning ? 'transition-transform duration-500 ease-out' : ''
+            } will-change-transform`}
           style={{ transform: `translateX(-${currentIndex * 100}%)` }}
           onTransitionEnd={handleTransitionEnd}
         >
@@ -199,21 +198,21 @@ export const BannerCarousel = React.memo(function BannerCarousel() {
           <button
             type="button"
             onClick={prevSlide}
-            className="absolute left-2.5 sm:left-4 top-1/2 -translate-y-1/2 z-20 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-black/40 hover:bg-black/75 text-white/90 hover:text-white border border-white/20 backdrop-blur-xs flex items-center justify-center transition-all duration-200 opacity-80 sm:opacity-0 sm:group-hover:opacity-100 hover:scale-110 active:scale-95 cursor-pointer shadow-lg"
+            className="absolute left-1.5 sm:left-3 top-1/2 -translate-y-1/2 z-20 p-2 text-white/80 hover:text-white transition-all duration-200 opacity-80 sm:opacity-0 sm:group-hover:opacity-100 hover:scale-115 active:scale-90 cursor-pointer focus:outline-none"
             title="สไลด์ก่อนหน้า"
             aria-label="สไลด์ก่อนหน้า"
           >
-            <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
+            <ChevronLeft className="w-7 h-7 sm:w-9 sm:h-9 stroke-[2] drop-shadow-[0_2px_6px_rgba(0,0,0,0.85)]" />
           </button>
 
           <button
             type="button"
             onClick={nextSlide}
-            className="absolute right-2.5 sm:right-4 top-1/2 -translate-y-1/2 z-20 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-black/40 hover:bg-black/75 text-white/90 hover:text-white border border-white/20 backdrop-blur-xs flex items-center justify-center transition-all duration-200 opacity-80 sm:opacity-0 sm:group-hover:opacity-100 hover:scale-110 active:scale-95 cursor-pointer shadow-lg"
+            className="absolute right-1.5 sm:right-3 top-1/2 -translate-y-1/2 z-20 p-2 text-white/80 hover:text-white transition-all duration-200 opacity-80 sm:opacity-0 sm:group-hover:opacity-100 hover:scale-115 active:scale-90 cursor-pointer focus:outline-none"
             title="สไลด์ถัดไป"
             aria-label="สไลด์ถัดไป"
           >
-            <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
+            <ChevronRight className="w-7 h-7 sm:w-9 sm:h-9 stroke-[2] drop-shadow-[0_2px_6px_rgba(0,0,0,0.85)]" />
           </button>
         </>
       )}
@@ -239,11 +238,10 @@ export const BannerCarousel = React.memo(function BannerCarousel() {
                 key={slide.id}
                 type="button"
                 onClick={() => goToSlide(idx)}
-                className={`relative overflow-hidden transition-all duration-300 rounded-full cursor-pointer p-0 border-0 ${
-                  isActive
-                    ? 'w-8 sm:w-12 h-1.5 sm:h-2 bg-white/30 backdrop-blur-xs shadow-xs'
-                    : 'w-1.5 sm:w-2 h-1.5 sm:h-2 bg-white/50 hover:bg-white/80'
-                }`}
+                className={`relative overflow-hidden transition-all duration-300 rounded-full cursor-pointer p-0 border-0 ${isActive
+                  ? 'w-8 sm:w-12 h-1.5 sm:h-2 bg-white/30 backdrop-blur-xs shadow-xs'
+                  : 'w-1.5 sm:w-2 h-1.5 sm:h-2 bg-white/50 hover:bg-white/80'
+                  }`}
                 title={`ไปยังสไลด์ที่ ${idx + 1}`}
                 aria-label={`ไปยังสไลด์ที่ ${idx + 1}`}
                 aria-current={isActive ? 'true' : undefined}

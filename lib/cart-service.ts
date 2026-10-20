@@ -12,6 +12,7 @@ export interface CartItemSyncInput {
   depositPrice?: number;
   qty: number;
   image?: string;
+  leadTimeText?: string;
 }
 
 export interface CartDbItem {
@@ -24,6 +25,7 @@ export interface CartDbItem {
   depositPrice?: number;
   qty: number;
   image?: string;
+  leadTimeText?: string;
 }
 
 /**
@@ -192,7 +194,8 @@ export async function getCartFromDb(customerId: string): Promise<CartDbItem[]> {
       t.Trade_NameEN,
       t.Sale_Price1,
       t.Trade_deposit,
-      t.Trade_Part_Image
+      t.Trade_Part_Image,
+      RTRIM(LTRIM(ISNULL(t.Trade_TrakDay_Text, ''))) AS Trade_TrakDay_Text
     FROM Fnt_Detail_online d
     LEFT JOIN Trade t ON RTRIM(LTRIM(d.Trade_Id)) = RTRIM(LTRIM(t.Trade_Id))
     WHERE d.Branch_Id = @branchId
@@ -210,6 +213,7 @@ export async function getCartFromDb(customerId: string): Promise<CartDbItem[]> {
       : (Number(row.fn_deposit_D) || 0) / (qty || 1);
 
     const image = resolveProductImageUrl(row.Trade_Part_Image);
+    const leadTimeText = (row.Trade_TrakDay_Text || '').trim();
 
     return {
       tradeId: (row.Trade_Id || '').trim(),
@@ -221,6 +225,7 @@ export async function getCartFromDb(customerId: string): Promise<CartDbItem[]> {
       depositPrice: unitDep,
       qty,
       image,
+      leadTimeText,
     };
   });
 }

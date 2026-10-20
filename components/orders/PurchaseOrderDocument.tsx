@@ -12,6 +12,7 @@ export interface PurchaseOrderItem {
   Sale_Price1?: number;
   Line_Total: number;
   fn_deposit_D?: number;
+  Trade_TrakDay_Text?: string;
 }
 
 export interface PurchaseOrderData {

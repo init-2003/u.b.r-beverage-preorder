@@ -1527,3 +1527,24 @@ html.swal2-height-auto,
 body.swal2-height-auto {
   height: 100% !important;
 }
+
+/* Mobile Category Sidebar Drawer Theme #3C3F43 (100% Solid Opaque) */
+.mobile-sidebar-drawer-bg {
+  background-color: #3C3F43 !important;
+}
+
+.mobile-sidebar-drawer-item {
+  background-color: #3C3F43 !important;
+  color: rgba(255, 255, 255, 0.92) !important;
+}
+
+.mobile-sidebar-drawer-item:hover,
+.mobile-sidebar-drawer-item:active {
+  background-color: rgba(0, 0, 0, 0.22) !important;
+}
+
+.mobile-sidebar-drawer-item-active {
+  background-color: rgba(0, 0, 0, 0.32) !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+}

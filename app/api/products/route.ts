@@ -123,7 +123,8 @@ export async function GET(req: NextRequest) {
         RTRIM(LTRIM(ISNULL(t.Trade_Part_Image, ''))) AS Trade_Part_Image,
         RTRIM(LTRIM(ISNULL(t.Trade_Province, ''))) AS Trade_Province,
         RTRIM(LTRIM(ISNULL(t.Trade_Note, ''))) AS Trade_Note,
-        ISNULL(t.Trade_deposit, 0) AS Trade_deposit
+        ISNULL(t.Trade_deposit, 0) AS Trade_deposit,
+        RTRIM(LTRIM(ISNULL(t.Trade_TrakDay_Text, ''))) AS Trade_TrakDay_Text
       FROM Trade t
       LEFT JOIN Type_SubMenu sm ON t.SubMenu_ID_Ref = sm.SubMenu_ID
       LEFT JOIN [Type] tp_by_name ON RTRIM(LTRIM(t.Type_Name)) = RTRIM(LTRIM(tp_by_name.Type_Name))
@@ -143,12 +144,15 @@ export async function GET(req: NextRequest) {
       const activePrice = Number(p.Active_Price ?? p.Sale_Price1 ?? 0);
       const { depositPercent, depositPrice } = calcDeposit(activePrice, p.Trade_deposit);
       const resolvedCategory = p.SubMenu_NameTH || p.Type_Name || 'Pre Order';
+      const trakDay = (p.Trade_TrakDay_Text || '').trim();
       return {
         ...p,
         category: resolvedCategory,
         Trade_Part_Image: resolveProductImageUrl(p.Trade_Part_Image),
         Deposit_Percent: depositPercent,
         Deposit_Price: depositPrice,
+        Trade_TrakDay_Text: trakDay,
+        leadTimeText: trakDay,
       };
     });
 

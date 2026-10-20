@@ -15,6 +15,7 @@ import {
   Check,
   AlertCircle,
   Clock,
+  Truck,
 } from 'lucide-react';
 import { formatDepositPrice } from '@/lib/deposit';
 
@@ -34,6 +35,8 @@ interface ProductDetail {
   depositPrice?: number;
   depositPercent: number;
   leadTimeDays?: number;
+  leadTimeText?: string;
+  Trade_TrakDay_Text?: string;
   origin?: string;
   alcoholPercent?: number;
   description?: string;
@@ -98,6 +101,7 @@ export default function ProductDetailPage({
         depositPrice: product.depositPrice,
         depositPercent: product.depositPercent,
         image: product.imageUrl,
+        leadTimeText: product.leadTimeText || product.Trade_TrakDay_Text,
       },
       qty,
       { showModal: false }
@@ -169,20 +173,20 @@ export default function ProductDetailPage({
   const originalPrice = product.salePrice1 && product.salePrice1 > product.price ? product.salePrice1 : 0;
 
   return (
-    <div className="flex-1 flex flex-col bg-white pt-6 sm:pt-8 min-h-[calc(100vh+80px)] min-h-[calc(100dvh+80px)] pb-36 sm:pb-64">
-      <div className="max-w-[1600px] mx-auto w-full px-4 sm:px-6 lg:px-8 space-y-4">
+    <div className="flex-1 flex flex-col bg-white pt-2 sm:pt-8 min-h-[calc(100vh+80px)] min-h-[calc(100dvh+80px)] pb-36 sm:pb-64">
+      <div className="max-w-[1600px] mx-auto w-full px-2 sm:px-6 lg:px-8 space-y-4">
 
-        {/* Main Product Showcase Card */}
-        <div className="bg-white rounded-[14px] apple-squircle-card border border-slate-200 shadow-2xs p-5 sm:p-8 lg:p-10 animate-product-detail-slide-up">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 lg:gap-12 items-center">
+        {/* Main Product Showcase Card (Close to edge on mobile, borderless clean layout) */}
+        <div className="bg-white p-0 sm:p-8 lg:p-10 animate-product-detail-slide-up">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-8 lg:gap-12 items-center">
 
-            {/* Left Column: Product Image Showcase (No Card / Clean Float) */}
-            <div className="lg:col-span-6 flex flex-col items-center justify-center relative min-h-[280px] sm:min-h-[380px] lg:min-h-[480px]">
+            {/* Left Column: Product Image Showcase (Full bleed on mobile / Clean Float) */}
+            <div className="lg:col-span-6 flex flex-col items-center justify-center relative min-h-[300px] sm:min-h-[380px] lg:min-h-[480px] w-full px-0">
 
               {/* Yellow Sticker Badge at Top-Right Corner */}
               {depositPercent > 0 && (
                 <div
-                  className="absolute top-2 right-2 sm:top-3 sm:right-3 lg:top-3 lg:right-3 z-20 flex flex-col items-center justify-center bg-[#ffe01b] border border-amber-300 rounded-[8px] apple-squircle-xs px-2.5 py-1 sm:px-3 sm:py-1.5 shadow-2xs select-none pointer-events-none min-w-[42px] sm:min-w-[48px]"
+                  className="absolute top-2 right-3 sm:top-3 sm:right-3 lg:top-3 lg:right-3 z-20 flex flex-col items-center justify-center bg-[#ffe01b] border border-amber-300 rounded-[8px] apple-squircle-xs px-2.5 py-1 sm:px-3 sm:py-1.5 shadow-2xs select-none pointer-events-none min-w-[42px] sm:min-w-[48px]"
                   title={`มัดจำ ${depositPercent}%`}
                 >
                   <span className="text-[10px] sm:text-[11px] font-bold text-blue-700 leading-tight">
@@ -211,8 +215,8 @@ export default function ProductDetailPage({
               </div>
             </div>
 
-            {/* Right Column: Modern Buy Box Details (6 Cols) */}
-            <div className="lg:col-span-6 flex flex-col space-y-5">
+            {/* Right Column: Modern Buy Box Details (6 Cols - Balanced mobile spacing: outer 8px + inner 8px = 16px standard gutter) */}
+            <div className="lg:col-span-6 flex flex-col space-y-5 px-2 sm:px-0 pb-6 sm:pb-0">
 
               {/* 1. SKU Header matching reference "SKU AI052-VA-A" */}
               <div className="space-y-1">
@@ -231,14 +235,21 @@ export default function ProductDetailPage({
                 )}
               </div>
 
-              {/* 3. Status Badge: Pre-order with clock icon matching reference */}
-              <div className="flex items-center text-xs pt-1 pb-1">
+              {/* 3. Status Badge: Pre-order with clock icon + Delivery Lead Time */}
+              <div className="flex items-center gap-3 sm:gap-4 flex-wrap text-xs pt-1 pb-1">
                 <div className="flex items-center gap-1.5 font-bold text-[#e59f19]">
                   <div className="w-4 h-4 rounded-full bg-[#ffb930] flex items-center justify-center text-white shadow-2xs">
                     <Clock className="w-2.5 h-2.5 stroke-[2.5]" />
                   </div>
                   <span className="font-semibold text-xs sm:text-sm text-[#e59f19]">Pre-order</span>
                 </div>
+
+                {(product.leadTimeText || product.Trade_TrakDay_Text) && (
+                  <div className="flex items-center gap-1.5 text-slate-600 text-xs sm:text-sm">
+                    <Truck className="w-4 h-4 text-slate-400 shrink-0" />
+                    <span>ระยะเวลาจัดส่ง: <strong className="font-bold text-slate-800">{product.leadTimeText || product.Trade_TrakDay_Text}</strong></span>
+                  </div>
+                )}
               </div>
 
               {/* 4. Pricing Block */}

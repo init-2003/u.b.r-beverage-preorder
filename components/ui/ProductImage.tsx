@@ -36,6 +36,7 @@ export interface ProductImageProps {
   src: string;
   alt: string;
   className?: string;
+  imgClassName?: string;
   priority?: boolean;
   objectFit?: 'cover' | 'contain' | 'auto';
   fallbackSrc?: string;
@@ -47,6 +48,7 @@ export function ProductImage({
   src,
   alt,
   className = '',
+  imgClassName = '',
   priority = false,
   objectFit = 'auto',
   fallbackSrc = DEFAULT_FALLBACK,
@@ -85,9 +87,7 @@ export function ProductImage({
     if (!img) return;
     const isLogoDims =
       (img.naturalWidth === 746 && img.naturalHeight === 660) ||
-      (img.naturalWidth === 1024 && img.naturalHeight === 1024) ||
-      (img.naturalWidth > 0 && Math.abs(img.naturalWidth / img.naturalHeight - 1.13) < 0.05) ||
-      (img.naturalWidth > 0 && Math.abs(img.naturalWidth / img.naturalHeight - 1.0) < 0.05 && img.naturalWidth >= 400);
+      (img.naturalWidth > 0 && Math.abs(img.naturalWidth / img.naturalHeight - 1.13) < 0.02);
 
     if (isLogoDims) {
       knownPlaceholderCache.add(currentSrc);
@@ -135,9 +135,13 @@ export function ProductImage({
   // กฎ: ภาพ logo ในสินค้าที่ยังไม่มีภาพสินค้า ให้ใส่เต็มกรอบสี่เหลี่ยม (object-cover p-0) เสมอ ไม่มีช่องว่างสีขาว
   // ส่วนสินค้าจริง ให้ใช้ object-contain p-2 หรือ p-2.5 เพื่อให้เห็นสินค้าเต็มขวด/เต็มชิ้นโดยไม่ถูกครอบ
   const computedFit = isLogo
-    ? 'object-cover p-0'
+    ? objectFit === 'contain'
+      ? 'object-contain p-0.5'
+      : 'object-cover p-0'
     : objectFit === 'cover'
     ? 'object-cover p-0'
+    : objectFit === 'contain'
+    ? 'object-contain p-0'
     : 'object-contain p-2 sm:p-2.5';
 
   // ถ้าเป็นรูปโลโก้ ตัด padding utility classes จาก caller ออก เพื่อให้เต็มกรอบสี่เหลี่ยม 100%
@@ -162,7 +166,7 @@ export function ProductImage({
         fetchPriority={priority ? 'high' : 'auto'}
         onLoad={handleLoad}
         onError={handleError}
-        className={`w-full h-full ${computedFit} block`}
+        className={`w-full h-full ${computedFit} ${imgClassName ? imgClassName : ''} block`}
       />
     </div>
   );

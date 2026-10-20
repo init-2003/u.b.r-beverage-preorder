@@ -4,7 +4,7 @@ import Link from 'next/link';
 
 export default function CookiePolicyPage() {
   return (
-    <div className="w-full flex-1 bg-white py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
+    <div className="w-full flex-1 bg-white py-8 sm:py-12 px-2 sm:px-6 lg:px-8">
       {/* Formal Document Container (สไตล์เอกสาร Word / Plain Document) */}
       <div className="max-w-4xl mx-auto bg-white text-slate-800 leading-relaxed text-sm sm:text-[15px]">
         {/* Document Header (จัดกึ่งกลางสไตล์หัวเอกสารทางการ) */}

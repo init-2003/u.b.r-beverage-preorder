@@ -99,7 +99,8 @@ export async function GET(req: NextRequest) {
             ISNULL(t.Sale_Price1, 0) AS Sale_Price1,
             (d.Qty * COALESCE(NULLIF(d.Sale_Price, 0), NULLIF(t.Sale_Price1, 0), 0)) AS Line_Total,
             ISNULL(d.fn_deposit_D, 0) AS fn_deposit_D,
-            RTRIM(LTRIM(ISNULL(t.Trade_Part_Image, ''))) AS Trade_Part_Image
+            RTRIM(LTRIM(ISNULL(t.Trade_Part_Image, ''))) AS Trade_Part_Image,
+            RTRIM(LTRIM(ISNULL(t.Trade_TrakDay_Text, ''))) AS Trade_TrakDay_Text
           FROM Fnt_Detail_online d
           LEFT JOIN Trade t ON RTRIM(LTRIM(d.Trade_Id)) = RTRIM(LTRIM(t.Trade_Id))
           WHERE d.Fn_Doc_No IN (${paramsList.join(',')})

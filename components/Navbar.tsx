@@ -350,10 +350,11 @@ function MobileCategorySidebarContent({
         aria-hidden="true"
       />
 
-      {/* Drawer Panel below Navbar (Full-Width on Mobile) */}
+      {/* Drawer Panel below Navbar (Full-Width on Mobile - Theme #3C3F43 Solid Opaque) */}
       <div
         ref={drawerRef}
-        className={`absolute inset-y-0 left-0 w-full bg-white shadow-2xl z-10 flex flex-col transform transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] overscroll-contain overflow-hidden ${
+        style={{ backgroundColor: '#3C3F43' }}
+        className={`absolute inset-y-0 left-0 w-full mobile-sidebar-drawer-bg shadow-2xl z-10 flex flex-col transform transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] overscroll-contain overflow-hidden ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
@@ -365,28 +366,38 @@ function MobileCategorySidebarContent({
           }}
         >
           {/* Panel 1 (Level 1: Main Categories List) */}
-          <div className="w-1/2 h-full overflow-y-auto dropdown-scrollbar divide-y divide-slate-100 overscroll-contain touch-pan-y bg-white">
+          <div
+            style={{ backgroundColor: '#3C3F43' }}
+            className="w-1/2 h-full overflow-y-auto dropdown-scrollbar divide-y divide-white/10 overscroll-contain touch-pan-y mobile-sidebar-drawer-bg"
+          >
             {/* Top Item: สินค้าทั้งหมด */}
             <button
               type="button"
               onClick={handleSelectAll}
               className={`w-full text-left px-5 py-4 text-sm sm:text-[14px] transition-colors flex items-center justify-between cursor-pointer animate-dropdown-item ${
                 isAll
-                  ? 'bg-slate-100 text-slate-900 font-bold'
-                  : 'bg-white text-slate-700 hover:bg-slate-50'
+                  ? 'text-white font-bold'
+                  : 'text-white/90 hover:bg-white/5 active:bg-black/20'
               }`}
-              style={{ animationDelay: '30ms' }}
+              style={{
+                backgroundColor: isAll ? 'rgba(0, 0, 0, 0.35)' : '#3C3F43',
+                animationDelay: '30ms',
+              }}
             >
               <span className="truncate">ทั้งหมด</span>
             </button>
 
             {/* Skeleton while loading */}
             {menuTree.length === 0 && (
-              <div className="divide-y divide-slate-100 select-none pointer-events-none">
+              <div className="divide-y divide-white/10 select-none pointer-events-none">
                 {[...Array(6)].map((_, i) => (
-                  <div key={i} className="h-14 bg-white flex items-center justify-between px-5">
-                    <div className="h-4 bg-slate-100 skeleton-shimmer rounded-xs w-28" />
-                    <div className="h-4 w-4 rounded-xs skeleton-shimmer" />
+                  <div
+                    key={i}
+                    style={{ backgroundColor: '#3C3F43' }}
+                    className="h-14 flex items-center justify-between px-5 mobile-sidebar-drawer-bg"
+                  >
+                    <div className="h-4 bg-white/10 skeleton-shimmer rounded-xs w-28" />
+                    <div className="h-4 w-4 rounded-xs skeleton-shimmer bg-white/10" />
                   </div>
                 ))}
               </div>
@@ -404,16 +415,19 @@ function MobileCategorySidebarContent({
                   onClick={() => handleTypeClick(typeItem)}
                   className={`w-full text-left px-5 py-4 text-sm sm:text-[14px] transition-colors flex items-center justify-between cursor-pointer animate-dropdown-item ${
                     isTypeSelected
-                      ? 'bg-slate-100 font-bold text-slate-900'
-                      : 'bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900'
+                      ? 'font-bold text-white'
+                      : 'text-white/90 hover:bg-white/5 active:bg-black/20'
                   }`}
-                  style={{ animationDelay: `${(idx + 1) * 35}ms` }}
+                  style={{
+                    backgroundColor: isTypeSelected ? 'rgba(0, 0, 0, 0.35)' : '#3C3F43',
+                    animationDelay: `${(idx + 1) * 35}ms`,
+                  }}
                 >
                   <span className="truncate">{typeItem.typeName}</span>
                   {hasSubMenus && (
                     <ChevronRight
                       className={`w-4 h-4 shrink-0 transition-colors ${
-                        isTypeSelected ? 'text-slate-700' : 'text-slate-400'
+                        isTypeSelected ? 'text-white' : 'text-white/60'
                       }`}
                     />
                   )}
@@ -423,15 +437,21 @@ function MobileCategorySidebarContent({
           </div>
 
           {/* Panel 2 (Level 2: Sub-categories of selected category) */}
-          <div className="w-1/2 h-full flex flex-col bg-white">
+          <div
+            style={{ backgroundColor: '#3C3F43' }}
+            className="w-1/2 h-full flex flex-col mobile-sidebar-drawer-bg"
+          >
             {/* Header: < [Category Name] (Back button with bottom border divider) */}
-            <div className="shrink-0 bg-white border-b border-slate-200 px-4 py-3.5 flex items-center">
+            <div
+              style={{ backgroundColor: '#3C3F43' }}
+              className="shrink-0 border-b border-white/10 px-4 py-3.5 flex items-center mobile-sidebar-drawer-bg"
+            >
               <button
                 type="button"
                 onClick={() => setActiveTypeId(null)}
-                className="flex items-center gap-2.5 text-slate-800 hover:text-slate-950 font-medium text-sm sm:text-[15px] cursor-pointer active:opacity-70 transition-opacity select-none"
+                className="flex items-center gap-2.5 text-white hover:text-white/90 font-medium text-sm sm:text-[15px] cursor-pointer active:opacity-70 transition-opacity select-none"
               >
-                <ChevronLeft className="w-5 h-5 text-slate-700 shrink-0" />
+                <ChevronLeft className="w-5 h-5 text-white/80 shrink-0" />
                 <span className="truncate font-semibold">{activeTypeItem?.typeName || ''}</span>
               </button>
             </div>
@@ -439,7 +459,8 @@ function MobileCategorySidebarContent({
             {/* Submenu List */}
             <div
               ref={level2ScrollRef}
-              className="flex-1 overflow-y-auto dropdown-scrollbar divide-y divide-slate-100 overscroll-contain touch-pan-y bg-white"
+              style={{ backgroundColor: '#3C3F43' }}
+              className="flex-1 overflow-y-auto dropdown-scrollbar divide-y divide-white/10 overscroll-contain touch-pan-y mobile-sidebar-drawer-bg"
             >
               {activeTypeItem && (
                 <>
@@ -447,10 +468,16 @@ function MobileCategorySidebarContent({
                   <button
                     type="button"
                     onClick={() => handleSelectType(activeTypeItem.typeId, activeTypeItem.typeName)}
+                    style={{
+                      backgroundColor:
+                        selectedTypeId === activeTypeItem.typeId && !selectedSubMenuId
+                          ? 'rgba(0, 0, 0, 0.35)'
+                          : '#3C3F43',
+                    }}
                     className={`w-full text-left px-5 py-4 text-sm sm:text-[14px] transition-colors flex items-center justify-between cursor-pointer ${
                       selectedTypeId === activeTypeItem.typeId && !selectedSubMenuId
-                        ? 'bg-slate-100 font-bold text-slate-900'
-                        : 'bg-white text-slate-700 hover:bg-slate-50'
+                        ? 'font-bold text-white'
+                        : 'text-white/90 hover:bg-white/5 active:bg-black/20'
                     }`}
                   >
                     <span className="truncate">{activeTypeItem.typeName}ทั้งหมด</span>
@@ -470,10 +497,13 @@ function MobileCategorySidebarContent({
                             activeTypeItem.typeId
                           )
                         }
+                        style={{
+                          backgroundColor: isSelected ? 'rgba(0, 0, 0, 0.35)' : '#3C3F43',
+                        }}
                         className={`w-full text-left px-5 py-4 text-sm sm:text-[14px] transition-colors flex items-center justify-between cursor-pointer ${
                           isSelected
-                            ? 'bg-slate-100 font-bold text-slate-900'
-                            : 'bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900'
+                            ? 'font-bold text-white'
+                            : 'text-white/90 hover:bg-white/5 active:bg-black/20'
                         }`}
                       >
                         <span className="truncate">{subItem.subMenuNameTH}</span>
@@ -593,10 +623,7 @@ function MobileSearchOverlay({
 
   useEffect(() => {
     if (isOpen) {
-      const timer = setTimeout(() => {
-        inputRef.current?.focus();
-      }, 100);
-      return () => clearTimeout(timer);
+      inputRef.current?.focus();
     } else {
       inputRef.current?.blur();
     }
@@ -614,6 +641,7 @@ function MobileSearchOverlay({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    inputRef.current?.blur();
     const query = searchTerm.trim();
     const params = new URLSearchParams();
     if (query) {
@@ -621,7 +649,6 @@ function MobileSearchOverlay({
     }
     const newUrl = params.toString() ? `/?${params.toString()}` : '/';
     router.push(newUrl);
-    onClose();
   };
 
   const handleClearOrClose = () => {
@@ -668,6 +695,7 @@ function MobileSearchOverlay({
 
         <div className="relative flex-1 flex items-center h-full min-w-0">
           <input
+            id="mobile-search-input"
             suppressHydrationWarning
             ref={inputRef}
             type="text"
@@ -675,6 +703,9 @@ function MobileSearchOverlay({
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="ค้นหาสินค้าที่ต้องการที่นี่....."
             className="w-full h-full pl-2 sm:pl-3 pr-7 bg-transparent text-base text-slate-800 placeholder:text-slate-400 outline-none border-none"
+            autoComplete="off"
+            autoCorrect="off"
+            enterKeyHint="search"
           />
           {searchTerm && (
             <button
@@ -762,16 +793,30 @@ function UserAccountMenu({
   };
 
   useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
+    function handleClickOutside(event: MouseEvent | TouchEvent) {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         closeMenu();
       }
     }
     if (isOpen && !isClosing) {
       document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('touchstart', handleClickOutside, { passive: true });
     }
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
+  }, [isOpen, isClosing]);
+
+  // Auto-close menu on page scroll (เลื่อนดูสินค้าแล้วปิดลงอัตโนมัติ)
+  useEffect(() => {
+    if (!isOpen || isClosing) return;
+    const handleScroll = () => {
+      closeMenu();
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
     };
   }, [isOpen, isClosing]);
 
@@ -1096,7 +1141,15 @@ export default function Navbar() {
                 {/* Mobile Search Trigger Button (Only on mobile < sm) */}
                 <button
                   type="button"
-                  onClick={() => setIsMobileSearchOpen(true)}
+                  onClick={() => {
+                    setIsMobileSearchOpen(true);
+                    const el = document.getElementById('mobile-search-input') as HTMLInputElement | null;
+                    if (el) el.focus();
+                  }}
+                  onPointerDown={() => {
+                    const el = document.getElementById('mobile-search-input') as HTMLInputElement | null;
+                    if (el) el.focus();
+                  }}
                   className="sm:hidden relative p-2 text-white hover:bg-white/10 active:bg-white/20 rounded-full transition-all duration-150 flex items-center justify-center cursor-pointer active:scale-90"
                   title="ค้นหาสินค้า"
                   aria-label="ค้นหาสินค้า"

@@ -79,7 +79,7 @@ function AddressContent() {
 
         {/* Card: ข้อมูลที่อยู่จัดส่งสินค้า (Apple-squircle card bounded on both mobile and desktop) */}
         <div id="address-card" className="bg-white rounded-[14px] apple-squircle-card border border-slate-200 shadow-xs overflow-hidden">
-          <div className="p-4 sm:p-6">
+          <div className="p-3.5 sm:p-6">
             <div className="flex items-start justify-between gap-4">
               {/* รายละเอียดที่อยู่จัดส่งสินค้า */}
               <div className="max-w-xl text-sm text-slate-700 leading-relaxed space-y-1.5">

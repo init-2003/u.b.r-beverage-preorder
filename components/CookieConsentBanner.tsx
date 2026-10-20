@@ -56,7 +56,7 @@ export default function CookieConsentBanner() {
       aria-label="Cookie consent notification"
     >
       <div className="bg-white border-t border-slate-200 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] pb-[env(safe-area-inset-bottom)]">
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-3.5 sm:py-4 relative">
+        <div className="max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-8 py-3.5 sm:py-4 relative">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-6">
             {/* Text content */}
             <div className="flex-1 min-w-0 pr-7 sm:pr-0">

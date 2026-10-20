@@ -221,7 +221,8 @@ export async function GET(
           d.Type_Free,
           d.Promotion_No,
           RTRIM(LTRIM(ISNULL(t.Trade_Part_Image, ''))) AS Trade_Part_Image,
-          RTRIM(LTRIM(ISNULL(t.Trade_NameEN, ''))) AS Trade_NameEN
+          RTRIM(LTRIM(ISNULL(t.Trade_NameEN, ''))) AS Trade_NameEN,
+          RTRIM(LTRIM(ISNULL(t.Trade_TrakDay_Text, ''))) AS Trade_TrakDay_Text
         FROM Fnt_Detail_online d
         LEFT JOIN Trade t ON RTRIM(LTRIM(d.Trade_Id)) = RTRIM(LTRIM(t.Trade_Id))
         WHERE d.Fn_Doc_No = @docNo

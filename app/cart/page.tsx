@@ -10,6 +10,7 @@ import { ProductImage } from '@/components/ui/ProductImage';
 import { WineLoading } from '@/components/WineLoading';
 import { QuantityInput } from '@/components/ui';
 import { formatDepositPrice } from '@/lib/deposit';
+import { Truck } from 'lucide-react';
 
 function TrashIcon({ className = 'w-5 h-5' }: { className?: string }) {
   return (
@@ -202,7 +203,7 @@ export default function CartPage() {
   if (items.length === 0) {
     return (
       <div className="flex-1 flex flex-col bg-white py-3 sm:py-8 min-h-[calc(100vh-120px)] min-h-[calc(100dvh-120px)] pb-24 sm:pb-36">
-        <div className="max-w-[1600px] mx-auto w-full px-4 sm:px-6 lg:px-8 space-y-3 sm:space-y-6">
+        <div className="max-w-[1600px] mx-auto w-full px-2 sm:px-6 lg:px-8 space-y-3 sm:space-y-6">
           {/* Page Title Header */}
           <div className="pb-2.5 sm:pb-3 border-b border-slate-200/80 animate-cart-slide-up">
             <div className="flex items-center gap-2.5 sm:gap-3.5">
@@ -244,7 +245,7 @@ export default function CartPage() {
 
   return (
     <div className="flex-1 flex flex-col bg-white pt-5 sm:pt-8 min-h-[calc(100vh+80px)] min-h-[calc(100dvh+80px)] pb-24 sm:pb-36">
-      <div className="max-w-[1600px] mx-auto w-full px-4 sm:px-6 lg:px-8 space-y-3 sm:space-y-6 pb-16">
+      <div className="max-w-[1600px] mx-auto w-full px-2 sm:px-6 lg:px-8 space-y-3 sm:space-y-6 pb-16">
 
         {/* Page Title Header */}
         <div className="pb-2.5 sm:pb-3 border-b border-slate-200/80 animate-cart-slide-up">
@@ -262,7 +263,7 @@ export default function CartPage() {
           style={{ animationDelay: '40ms' }}
         >
           {/* Top Table Header Row */}
-          <div className="px-4 sm:px-6 py-3 sm:py-3.5 flex items-center justify-between border-b border-slate-100 bg-white select-none">
+          <div className="px-3 sm:px-6 py-3 sm:py-3.5 flex items-center justify-between border-b border-slate-100 bg-white select-none">
             {/* Left: Checkbox + สินค้า */}
             <div className="flex items-center gap-3">
               <input
@@ -289,7 +290,7 @@ export default function CartPage() {
           </div>
 
           {/* DESKTOP ITEMS VIEW (>= 640px) matching screenshot */}
-          <div className="hidden sm:block divide-y divide-slate-100">
+          <div className="hidden sm:block">
             {items.map((item) => {
               const lineTotal = item.qty * item.salePrice;
               const isSelected = selectedIds.has(item.tradeId);
@@ -312,15 +313,15 @@ export default function CartPage() {
                       className="w-4 h-4 rounded-[4px] border-slate-300 text-black focus:ring-black accent-black cursor-pointer shrink-0"
                     />
 
-                    {/* Product Image */}
+                    {/* Product Image: Large & Borderless matching user reference */}
                     <Link
                       href={`/products/${encodeURIComponent(item.tradeId)}`}
-                      className="w-20 h-20 bg-white border border-slate-200 rounded-[10px] apple-squircle-sm shrink-0 flex items-center justify-center overflow-hidden shadow-2xs hover:border-slate-300 transition-colors"
+                      className="w-24 h-24 sm:w-28 sm:h-28 shrink-0 flex items-center justify-center select-none transition-transform hover:scale-105"
                     >
                       <ProductImage
                         src={item.image || '/images/ubr_beverage_logo.png'}
                         alt={item.tradeName}
-                        objectFit="auto"
+                        objectFit="contain"
                         className="w-full h-full"
                         priority={true}
                         fallbackSrc="/images/ubr_beverage_logo.png"
@@ -342,6 +343,12 @@ export default function CartPage() {
                       )}
                       <div className="flex items-center gap-2 flex-wrap text-[11px] text-slate-500">
                         <span>SKU: <span className="text-slate-600">{item.tradeId}</span></span>
+                        {item.leadTimeText ? (
+                          <span className="inline-flex items-center gap-1 text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full text-[10.5px]">
+                            <Truck className="w-3 h-3 text-slate-500" />
+                            <span>จัดส่ง {item.leadTimeText}</span>
+                          </span>
+                        ) : null}
                       </div>
                     </div>
                   </div>
@@ -436,7 +443,7 @@ export default function CartPage() {
           </div>
 
           {/* MOBILE ITEMS VIEW (< 640px) */}
-          <div className="block sm:hidden divide-y divide-slate-100">
+          <div className="block sm:hidden">
             {items.map((item) => {
               const lineTotal = item.qty * item.salePrice;
               const isSelected = selectedIds.has(item.tradeId);
@@ -446,7 +453,7 @@ export default function CartPage() {
               return (
                 <div
                   key={item.tradeId}
-                  className={`p-4 space-y-3 transition-colors ${isSelected ? 'bg-white' : 'bg-slate-50/40 opacity-70'
+                  className={`p-3 sm:p-4 space-y-2.5 sm:space-y-3 transition-colors ${isSelected ? 'bg-white' : 'bg-slate-50/40 opacity-70'
                     }`}
                 >
                   <div className="flex items-center gap-3">
@@ -457,27 +464,20 @@ export default function CartPage() {
                       className="w-4 h-4 rounded border-slate-300 text-black focus:ring-black accent-black cursor-pointer shrink-0"
                     />
 
-                    <div className="w-16 h-16 bg-white border border-slate-100 apple-squircle-sm shrink-0 flex items-center justify-center overflow-hidden shadow-2xs">
-                      <img
-                        src={
-                          item.image
-                            ? item.image.startsWith('/') || item.image.startsWith('http')
-                              ? item.image
-                              : `/${item.image}`
-                            : '/images/ubr_beverage_logo.png'
-                        }
+                    {/* Mobile Product Image: Large & Borderless matching example */}
+                    <Link
+                      href={`/products/${encodeURIComponent(item.tradeId)}`}
+                      className="w-20 h-20 xs:w-24 xs:h-24 shrink-0 flex items-center justify-center select-none"
+                    >
+                      <ProductImage
+                        src={item.image || '/images/ubr_beverage_logo.png'}
                         alt={item.tradeName}
-                        className={`w-full h-full ${!item.image || item.image.includes('ubr_beverage_logo')
-                            ? 'object-cover'
-                            : 'object-contain p-1'
-                          }`}
-                        onError={(e) => {
-                          const el = e.target as HTMLImageElement;
-                          el.src = '/images/ubr_beverage_logo.png';
-                          el.className = 'w-full h-full object-cover';
-                        }}
+                        objectFit="contain"
+                        className="w-full h-full"
+                        priority={true}
+                        fallbackSrc="/images/ubr_beverage_logo.png"
                       />
-                    </div>
+                    </Link>
 
                     <div className="min-w-0 flex-1 space-y-1">
                       <h4 className="font-bold text-slate-900 text-xs line-clamp-2 leading-snug">
@@ -492,6 +492,15 @@ export default function CartPage() {
                         <span>SKU: <span className="text-slate-600">{item.tradeId}</span></span>
                         <span>•</span>
                         <span>หน่วย: <strong className="text-slate-700">{item.unitName || 'หน่วย'}</strong></span>
+                        {item.leadTimeText ? (
+                          <>
+                            <span>•</span>
+                            <span className="inline-flex items-center gap-1 text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded text-[9.5px]">
+                              <Truck className="w-2.5 h-2.5 text-slate-500" />
+                              <span>จัดส่ง {item.leadTimeText}</span>
+                            </span>
+                          </>
+                        ) : null}
                       </div>
                     </div>
                   </div>
@@ -606,7 +615,7 @@ export default function CartPage() {
           </div>
 
           {/* Card Bottom Bar: Select All, Delete Selected, & Total Items Count (Integrated into items card matching /checkout) */}
-          <div className="border-t border-dashed border-slate-200 px-4 sm:px-6 py-3.5 sm:py-4 flex flex-row items-center justify-between gap-2 sm:gap-4 bg-white">
+          <div className="border-t border-dashed border-slate-200 px-3 sm:px-6 py-3.5 sm:py-4 flex flex-row items-center justify-between gap-2 sm:gap-4 bg-white">
             <div className="flex items-center gap-3 sm:gap-6 min-w-0">
               <label className="inline-flex items-center gap-1.5 sm:gap-2 cursor-pointer select-none text-xs sm:text-sm font-semibold text-slate-800 whitespace-nowrap">
                 <input
@@ -661,7 +670,7 @@ export default function CartPage() {
           style={{ animationDelay: '140ms' }}
         >
           {/* Financial Summary */}
-          <div className="p-4 sm:p-6 bg-white space-y-3">
+          <div className="p-3.5 sm:p-6 bg-white space-y-3">
             <h3 className="font-bold text-sm sm:text-base text-slate-900">
               สรุปยอดคำสั่งซื้อ
             </h3>
@@ -700,7 +709,7 @@ export default function CartPage() {
           <div className="border-t border-dashed border-slate-200" />
 
           {/* Bottom Action Footer: Button on right */}
-          <div className="p-4 sm:px-6 sm:py-5 flex justify-end bg-white">
+          <div className="p-3.5 sm:px-6 sm:py-5 flex justify-end bg-white">
             {selectedIds.size === 0 ? (
               <button
                 type="button"

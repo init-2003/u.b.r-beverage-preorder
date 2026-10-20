@@ -13,6 +13,7 @@ import {
   X,
   Clock,
   CheckCircle,
+  Truck,
 } from 'lucide-react';
 import { EmptyOrdersIllustration } from '@/components/EmptyOrdersIllustration';
 import PaidStamp from '@/components/orders/PaidStamp';
@@ -33,6 +34,7 @@ interface OrderItem {
   Line_Total: number;
   fn_deposit_D?: number;
   Trade_Part_Image?: string;
+  Trade_TrakDay_Text?: string;
 }
 
 interface OrderSummary {
@@ -127,6 +129,37 @@ function OrdersContent({
   });
   const tabRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
   const tabsContainerRef = useRef<HTMLDivElement | null>(null);
+  const scrollAnimIdRef = useRef<number | null>(null);
+  const isInitialMountRef = useRef<boolean>(true);
+
+  // Smooth scroll container to target position with cubic ease-out animation
+  const smoothScrollTabs = (targetLeft: number, duration: number = 350) => {
+    const container = tabsContainerRef.current;
+    if (!container) return;
+    if (scrollAnimIdRef.current) {
+      cancelAnimationFrame(scrollAnimIdRef.current);
+      scrollAnimIdRef.current = null;
+    }
+    const startLeft = container.scrollLeft;
+    const distance = targetLeft - startLeft;
+    if (Math.abs(distance) < 1) return;
+
+    const startTime = performance.now();
+    const step = (currentTime: number) => {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      // Buttery smooth cubic ease out: 1 - (1 - progress)^3
+      const ease = 1 - Math.pow(1 - progress, 3);
+      container.scrollLeft = startLeft + distance * ease;
+
+      if (progress < 1) {
+        scrollAnimIdRef.current = requestAnimationFrame(step);
+      } else {
+        scrollAnimIdRef.current = null;
+      }
+    };
+    scrollAnimIdRef.current = requestAnimationFrame(step);
+  };
 
   // ซิงค์แท็บเริ่มต้นตาม Query Param ?tab=... (หากไม่มี query param จะตั้งค่าเป็น "ทั้งหมด" เสมอ)
   useEffect(() => {
@@ -161,7 +194,7 @@ function OrdersContent({
     }
   }, [loading, orders.length]);
 
-  // คำนวณตำแหน่งและสไลด์แท็บที่เลือก (Sliding Active Capsule Indicator)
+  // คำนวณตำแหน่งและสไลด์เส้นขีดใต้แท็บ (Sliding Active Indicator)
   useEffect(() => {
     const updateIndicator = () => {
       const tabEl = tabRefs.current[filterSts];
@@ -171,26 +204,36 @@ function OrdersContent({
           width: tabEl.offsetWidth,
           isReady: true,
         });
-
-        // เลื่อนแท็บที่เลือกให้อยู่ในมุมมองอัตโนมัติเมื่อเปิดครั้งแรก
-        const container = tabsContainerRef.current;
-        if (filterSts === 'all') {
-          container.scrollTo({ left: 0, behavior: 'instant' });
-        } else {
-          const scrollLeft = tabEl.offsetLeft - (container.clientWidth / 2) + (tabEl.offsetWidth / 2);
-          container.scrollTo({ left: Math.max(0, scrollLeft), behavior: 'instant' });
-        }
       }
     };
 
     updateIndicator();
     const rafId = requestAnimationFrame(updateIndicator);
-    const timer = setTimeout(updateIndicator, 50);
+    const timer1 = setTimeout(updateIndicator, 50);
+    const timer2 = setTimeout(updateIndicator, 200);
+    const timer3 = setTimeout(updateIndicator, 500);
     window.addEventListener('resize', updateIndicator);
+
+    // เลื่อนตำแหน่งแท็บให้อยู่กึ่งกลางเฉพาะครั้งแรกสุดที่โหลดหน้า (Initial Mount Only)
+    if (isInitialMountRef.current) {
+      isInitialMountRef.current = false;
+      const tabEl = tabRefs.current[filterSts];
+      const container = tabsContainerRef.current;
+      if (tabEl && container) {
+        if (filterSts === 'all') {
+          container.scrollLeft = 0;
+        } else {
+          const scrollLeft = tabEl.offsetLeft - (container.clientWidth / 2) + (tabEl.offsetWidth / 2);
+          container.scrollLeft = Math.max(0, scrollLeft);
+        }
+      }
+    }
 
     return () => {
       cancelAnimationFrame(rafId);
-      clearTimeout(timer);
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+      clearTimeout(timer3);
       window.removeEventListener('resize', updateIndicator);
     };
   }, [filterSts, isPaymentTab]);
@@ -205,22 +248,21 @@ function OrdersContent({
     } catch { }
 
     const tabEl = tabRefs.current[tabKey];
-    if (tabEl && tabsContainerRef.current) {
-      // อัปเดตตำแหน่งเพื่อเริ่มแอนิเมชันเลื่อนสไลด์ทันที
+    const container = tabsContainerRef.current;
+    if (tabEl && container) {
+      // 1. อัปเดตตำแหน่งเส้นขีดใต้แท็บทันที
       setIndicatorStyle({
         left: tabEl.offsetLeft,
         width: tabEl.offsetWidth,
         isReady: true,
       });
 
-      // เลื่อนแท็บให้อยู่ในมุมมองอัตโนมัติเมื่ออยู่บนจอมือถือ
-      const container = tabsContainerRef.current;
-      if (tabKey === 'all') {
-        container.scrollTo({ left: 0, behavior: 'smooth' });
-      } else {
-        const scrollLeft = tabEl.offsetLeft - (container.clientWidth / 2) + (tabEl.offsetWidth / 2);
-        container.scrollTo({ left: Math.max(0, scrollLeft), behavior: 'smooth' });
+      // 2. แอนิเมชันเลื่อนแถบแท็บแนวนอนให้นุ่มนวลลื่นไหลสไตล์ iOS/Shopee
+      let targetScrollLeft = 0;
+      if (tabKey !== 'all') {
+        targetScrollLeft = Math.max(0, tabEl.offsetLeft - (container.clientWidth / 2) + (tabEl.offsetWidth / 2));
       }
+      smoothScrollTabs(targetScrollLeft, 350);
     }
   };
 
@@ -253,12 +295,12 @@ function OrdersContent({
     }
   }, [customer, authLoading]);
 
-  // Shopee-Style Tabs ตามเงื่อนไข Doc_Sts
+  // Shopee-Style Tabs ตามเงื่อนไข Doc_Sts (Matching user reference image)
   const statusTabs = [
-    { key: 'all', label: 'ทั้งหมด' },
-    { key: 'to_pay', label: 'รอชำระ' },
+    { key: 'all', label: 'All' },
+    { key: 'to_pay', label: 'ที่ต้องชำระ' },
     { key: 'processing', label: 'กำลังดำเนินการ' },
-    { key: 'receipt_issued', label: 'ออกใบเสร็จแล้ว' },
+    { key: 'receipt_issued', label: 'สำเร็จแล้ว' },
     { key: 'cancelled', label: 'ยกเลิก' },
   ];
 
@@ -331,17 +373,27 @@ function OrdersContent({
 
 
 
-        {/* 1. Status Tabs Bar (Capsule Style with Sliding Indicator) */}
+        {/* 1. Status Tabs Bar (Shopee Style with Bottom Underline Indicator - Matching User Reference Image) */}
         {!isPaymentTab && (
-          <div className="bg-white p-1 rounded-full border border-slate-200 shadow-2xs">
+          <div className="bg-white border-b border-slate-200 shadow-2xs -mx-2 sm:mx-0">
             <div
               ref={tabsContainerRef}
-              className="relative flex items-center overflow-x-auto no-scrollbar scroll-smooth overscroll-x-contain touch-pan-x gap-1 px-1 rounded-full"
-              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+              onTouchStart={() => {
+                if (scrollAnimIdRef.current) {
+                  cancelAnimationFrame(scrollAnimIdRef.current);
+                  scrollAnimIdRef.current = null;
+                }
+              }}
+              className="relative flex items-center overflow-x-auto no-scrollbar overscroll-x-contain touch-pan-x"
+              style={{
+                scrollbarWidth: 'none',
+                msOverflowStyle: 'none',
+                WebkitOverflowScrolling: 'touch',
+              }}
             >
-              {/* Animated Sliding Active Capsule Indicator */}
+              {/* Animated Sliding Active Underline Indicator */}
               <div
-                className={`absolute top-0 bottom-0 rounded-full bg-[#800020] shadow-xs pointer-events-none z-0 transition-all duration-300 ${
+                className={`absolute bottom-0 h-[2px] bg-black pointer-events-none z-10 transition-all duration-300 ${
                   indicatorStyle.isReady ? 'opacity-100' : 'opacity-0'
                 }`}
                 style={{
@@ -360,18 +412,18 @@ function OrdersContent({
                     ref={(el) => { tabRefs.current[tab.key] = el; }}
                     type="button"
                     onClick={() => handleTabChange(tab.key)}
-                    className={`relative z-10 shrink-0 sm:flex-1 whitespace-nowrap py-2 sm:py-2.5 px-4 sm:px-3 text-center text-[13px] sm:text-sm rounded-full transition-colors duration-200 cursor-pointer select-none active:scale-[0.97] ${
+                    className={`relative shrink-0 sm:flex-1 whitespace-nowrap py-3 px-[18px] sm:px-3.5 text-center text-[14px] transition-colors duration-150 cursor-pointer select-none active:opacity-80 min-w-[64px] sm:min-w-0 ${
                       isActive
-                        ? 'text-white font-bold'
-                        : 'text-slate-600 hover:text-slate-900 font-medium hover:bg-slate-100/50'
+                        ? 'text-black font-semibold'
+                        : 'text-slate-600 hover:text-black font-normal'
                     }`}
                   >
-                    <span className="inline-block transition-transform duration-150 whitespace-nowrap">
+                    <span className="inline-block whitespace-nowrap">
                       {tab.label}
                     </span>
-                    {/* Fallback capsule before JavaScript measurements */}
+                    {/* Fallback underline before JavaScript measurements */}
                     {!indicatorStyle.isReady && isActive && (
-                      <div className="absolute inset-0 rounded-full bg-[#800020] -z-10 shadow-xs" />
+                      <div className="absolute bottom-0 inset-x-0 h-[2px] bg-black" />
                     )}
                   </button>
                 );
@@ -492,7 +544,7 @@ function OrdersContent({
                     </div>
 
                     {/* Compact Body: Summary + Amount */}
-                    <div className="px-4 sm:px-6 py-4 flex items-center justify-between gap-4">
+                    <div className="px-3.5 sm:px-6 py-3.5 flex items-center justify-between gap-4">
                       <div className="flex-1 min-w-0">
                         <p className="text-xs sm:text-sm text-slate-700 line-clamp-1">
                           {order.Sample_Trade_Name || `คำสั่งซื้อ #${order.Fn_Doc_No}`}
@@ -538,7 +590,7 @@ function OrdersContent({
                     </div>
 
                     {/* Compact Actions */}
-                    <div className="bg-slate-50/50 border-t border-slate-200 px-4 sm:px-6 py-3 flex items-center justify-end gap-2 sm:gap-2.5 flex-wrap">
+                    <div className="bg-slate-50/50 border-t border-slate-200 px-3.5 sm:px-6 py-3 flex items-center justify-end gap-2 sm:gap-2.5 flex-wrap">
                       <Link
                         href={`/orders/${encodeURIComponent(order.Fn_Doc_No)}`}
                         className="whitespace-nowrap h-[38px] px-3.5 sm:px-4 rounded-full bg-white border border-slate-200 hover:bg-slate-50 active:bg-slate-100 active:scale-[0.98] text-slate-700 text-xs sm:text-sm font-semibold transition-all shadow-xs inline-flex items-center justify-center text-center"
@@ -616,6 +668,11 @@ function OrdersContent({
                         const unitPrice = Number(item.Sale_Price != null && item.Sale_Price > 0 ? item.Sale_Price : item.Sale_Price1 || 0);
                         const lineTotal = Number(item.Line_Total) > 0 ? Number(item.Line_Total) : (unitPrice * itemQty);
                         const originalLineTotal = Number(item.Sale_Price1 || 0) * itemQty;
+                        const imageSrc = item.Trade_Part_Image
+                          ? item.Trade_Part_Image.startsWith('/') || item.Trade_Part_Image.startsWith('http')
+                            ? item.Trade_Part_Image
+                            : `/${item.Trade_Part_Image}`
+                          : '/images/ubr_beverage_logo.png';
 
                         return (
                           <Link
@@ -623,12 +680,13 @@ function OrdersContent({
                             href={`/orders/${encodeURIComponent(order.Fn_Doc_No)}`}
                             className="p-3.5 sm:px-6 sm:py-4 flex items-center gap-3 sm:gap-4 hover:bg-slate-50/70 transition-colors group cursor-pointer block"
                           >
-                            {/* Thumbnail Image */}
-                            <div className="w-20 h-20 sm:w-22 sm:h-22 rounded border border-slate-200 bg-white shrink-0 flex items-center justify-center overflow-hidden">
+                            {/* Product Image: Large & Borderless matching order details */}
+                            <div className="w-20 h-20 xs:w-24 xs:h-24 sm:w-28 sm:h-28 shrink-0 flex items-center justify-center select-none transition-transform group-hover:scale-105">
                               <ProductImage
-                                src={item.Trade_Part_Image || '/images/ubr_beverage_logo.png'}
+                                src={imageSrc}
                                 alt={item.Trade_Name}
-                                objectFit="auto"
+                                objectFit="contain"
+                                className="w-full h-full"
                                 priority={true}
                                 fallbackSrc="/images/ubr_beverage_logo.png"
                               />
@@ -639,8 +697,14 @@ function OrdersContent({
                               <h4 className="text-xs sm:text-sm font-medium text-slate-900 line-clamp-2 leading-relaxed">
                                 {item.Trade_Name}
                               </h4>
-                              <div className="text-xs text-slate-600 mt-1">
-                                x{item.Qty}
+                              <div className="text-xs text-slate-600 mt-1 flex items-center gap-2 flex-wrap">
+                                <span>x{item.Qty}</span>
+                                {item.Trade_TrakDay_Text ? (
+                                  <span className="inline-flex items-center gap-1 text-[11px] text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">
+                                    <Truck className="w-2.5 h-2.5 text-slate-500" />
+                                    <span>จัดส่ง {item.Trade_TrakDay_Text}</span>
+                                  </span>
+                                ) : null}
                               </div>
                             </div>
 
@@ -664,11 +728,12 @@ function OrdersContent({
                         href={`/orders/${encodeURIComponent(order.Fn_Doc_No)}`}
                         className="p-4 sm:px-6 flex items-center gap-3 hover:bg-slate-50 transition-colors"
                       >
-                        <div className="w-16 h-16 rounded border border-slate-100 bg-white shrink-0 flex items-center justify-center overflow-hidden">
+                        <div className="w-20 h-20 xs:w-24 xs:h-24 sm:w-28 sm:h-28 shrink-0 flex items-center justify-center select-none">
                           <ProductImage
                             src="/images/ubr_beverage_logo.png"
                             alt="UBR"
-                            objectFit="auto"
+                            objectFit="contain"
+                            className="w-full h-full"
                             priority={true}
                             fallbackSrc="/images/ubr_beverage_logo.png"
                           />
@@ -691,7 +756,7 @@ function OrdersContent({
                   </div>
 
                   {/* Card Summary Row with Payment Method & Financial Breakdown */}
-                  <div className="bg-white border-t border-slate-200 px-4 sm:px-6 py-4 flex items-center justify-end">
+                  <div className="bg-white border-t border-slate-200 px-3.5 sm:px-6 py-4 flex items-center justify-end">
                     {(() => {
                       const totalOrderAmount = Number(order.Fn_Total) || 0;
                       const depositAmount = Number(order.fn_deposit_H) || 0;
@@ -766,7 +831,7 @@ function OrdersContent({
                   </div>
 
                   {/* Card Actions Row */}
-                  <div className="bg-white border-t border-slate-200 px-4 sm:px-6 py-3 flex items-center justify-end gap-2 sm:gap-2.5 flex-wrap">
+                  <div className="bg-white border-t border-slate-200 px-3.5 sm:px-6 py-3 flex items-center justify-end gap-2 sm:gap-2.5 flex-wrap">
                     {/* Secondary Button: ดูรายละเอียดคำสั่งซื้อ */}
                     <Link
                       href={`/orders/${encodeURIComponent(order.Fn_Doc_No)}`}

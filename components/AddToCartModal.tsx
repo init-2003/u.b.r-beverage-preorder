@@ -65,16 +65,18 @@ export default function AddToCartModal() {
         </h2>
       </div>
 
-      {/* Added Product Card */}
+      {/* Added Product Section (Borderless clean layout) */}
       <div className="px-6 py-2">
-        <div className="p-3.5 rounded-lg bg-slate-50/90 space-y-3.5">
+        <div className="space-y-3.5">
           <div className="flex items-start justify-between gap-3">
-            <div className="flex items-center gap-3 min-w-0 flex-1">
-              <div className="w-16 h-16 rounded bg-white border border-slate-200 flex items-center justify-center shrink-0 overflow-hidden shadow-2xs">
+            <div className="flex items-center gap-3.5 min-w-0 flex-1">
+              {/* Product Image: Clean & Borderless on pure white matching cart */}
+              <div className="w-16 h-16 sm:w-20 sm:h-20 shrink-0 flex items-center justify-center select-none">
                 <ProductImage
                   src={item.image || '/images/ubr_beverage_logo.png'}
                   alt={item.tradeName}
-                  objectFit="auto"
+                  objectFit="contain"
+                  className="w-full h-full"
                   priority={true}
                   fallbackSrc="/images/ubr_beverage_logo.png"
                 />
@@ -84,7 +86,7 @@ export default function AddToCartModal() {
                   {item.tradeName}
                 </h3>
                 <p className="text-xs text-slate-500 mt-1">
-                  ราคาต่อหน่วย: ฿{(item.salePrice || 0).toLocaleString()} {item.unitName ? `/ ${item.unitName}` : ''}
+                  ราคา: ฿{(item.salePrice || 0).toLocaleString()} {item.unitName ? `/ ${item.unitName}` : ''}
                 </p>
               </div>
             </div>
@@ -102,7 +104,7 @@ export default function AddToCartModal() {
           </div>
 
           {/* Stepper / Quantity Row */}
-          <div className="pt-2.5 border-t border-slate-200/70 flex items-center justify-start gap-2.5">
+          <div className="pt-2.5 border-t border-slate-100 flex items-center justify-start gap-2.5">
             <span className="text-xs font-semibold text-slate-700">
               จำนวน:
             </span>

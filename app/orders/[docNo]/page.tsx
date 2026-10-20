@@ -10,6 +10,7 @@ import {
   ArrowLeft,
   AlertCircle,
   XCircle,
+  Truck,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import PaidStamp from '@/components/orders/PaidStamp';
@@ -65,6 +66,7 @@ interface OrderDetail {
     Line_Total: number;
     fn_deposit_D?: number;
     Type_Free: string;
+    Trade_TrakDay_Text?: string;
   }>;
 }
 
@@ -316,7 +318,7 @@ export default function OrderDetailPage({ forcedDocNo }: OrderDetailPageProps = 
 
   return (
     <div className="flex-1 flex flex-col w-full bg-white pt-6 sm:pt-8 pb-16 sm:pb-24 min-h-[calc(100vh+80px)] min-h-[calc(100dvh+80px)]">
-      <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 space-y-3 sm:space-y-6">
+      <div className="w-full max-w-[1600px] mx-auto px-2 sm:px-6 lg:px-8 space-y-3 sm:space-y-6">
 
         {/* ================= 1. STATUS & STEPPER HEADER BANNER CARD ================= */}
         <div
@@ -324,7 +326,7 @@ export default function OrderDetailPage({ forcedDocNo }: OrderDetailPageProps = 
           style={{ animationDelay: '40ms' }}
         >
           {/* Header row: Doc No + Order Date + Status */}
-          <div className="p-4 sm:px-6 sm:py-5 border-b border-slate-200 bg-white sm:bg-slate-50/50">
+          <div className="p-3.5 sm:px-6 sm:py-5 border-b border-slate-200 bg-white sm:bg-slate-50/50">
             <div>
               <div className="flex items-center gap-2.5 flex-wrap">
                 <span className="text-xs text-slate-500 font-medium">หมายเลขคำสั่งซื้อ:</span>
@@ -483,7 +485,7 @@ export default function OrderDetailPage({ forcedDocNo }: OrderDetailPageProps = 
           {/* Signature envelope ribbon strip */}
           <div className="h-[3px] w-full bg-[repeating-linear-gradient(45deg,#6fa6d6,#6fa6d6_33px,transparent_0,transparent_41px,#f18d9b_0,#f18d9b_74px,transparent_0,transparent_82px)]" />
 
-          <div className="p-4 sm:p-6">
+          <div className="p-3.5 sm:p-6">
             {/* Header: Pin + ที่อยู่ในการจัดส่ง */}
             <div className="flex items-center gap-2 mb-3.5">
               <svg className="w-4 h-4 sm:w-5 sm:h-5 text-black shrink-0" viewBox="0 0 24 24" fill="currentColor">
@@ -533,7 +535,7 @@ export default function OrderDetailPage({ forcedDocNo }: OrderDetailPageProps = 
           style={{ animationDelay: '80ms' }}
         >
           {/* Table Header Row */}
-          <div className="px-4 sm:px-6 py-3 sm:py-3.5 flex items-center justify-between border-b border-slate-100">
+          <div className="px-3.5 sm:px-6 py-3 sm:py-3.5 flex items-center justify-between border-b border-slate-100">
             <div className="flex items-center gap-3">
               <h2 className="text-sm sm:text-base font-bold text-slate-900 tracking-tight">
                 รายการสินค้า
@@ -551,7 +553,7 @@ export default function OrderDetailPage({ forcedDocNo }: OrderDetailPageProps = 
 
           {/* MOBILE VIEW (< 640px) */}
           <div className="block sm:hidden">
-            <div className="divide-y divide-slate-100">
+            <div>
               {order.items && order.items.length > 0 ? (
                 order.items.map((item, idx) => {
                   const unitPrice = Number(item.Sale_Price != null && item.Sale_Price > 0 ? item.Sale_Price : item.Sale_Price1 || 0);
@@ -567,23 +569,31 @@ export default function OrderDetailPage({ forcedDocNo }: OrderDetailPageProps = 
                     : '/images/ubr_beverage_logo.png';
 
                   return (
-                    <div key={item.Trade_Id || idx} className="p-4 space-y-3">
+                    <div key={item.Trade_Id || idx} className="p-3 sm:p-4 space-y-3">
                       {/* Product Info Row: Image + Name */}
-                      <div className="flex items-center gap-3.5">
-                        <div className="w-14 h-14 bg-white border border-slate-100 rounded-[10px] apple-squircle-sm shrink-0 flex items-center justify-center overflow-hidden shadow-2xs">
+                      <div className="flex items-center gap-3">
+                        {/* Mobile Product Image: Large & Borderless matching cart */}
+                        <Link
+                          href={`/products/${encodeURIComponent(item.Trade_Id)}`}
+                          className="w-20 h-20 xs:w-24 xs:h-24 shrink-0 flex items-center justify-center select-none"
+                        >
                           <ProductImage
                             src={imageSrc}
                             alt={item.Trade_Name}
-                            objectFit="auto"
+                            objectFit="contain"
+                            className="w-full h-full"
                             priority={true}
                             fallbackSrc="/images/ubr_beverage_logo.png"
                           />
-                        </div>
+                        </Link>
 
                         <div className="min-w-0 flex-1 space-y-1">
-                          <h4 className="font-bold text-slate-900 text-xs sm:text-sm line-clamp-2 leading-snug">
+                          <Link
+                            href={`/products/${encodeURIComponent(item.Trade_Id)}`}
+                            className="font-bold text-slate-900 text-xs sm:text-sm line-clamp-2 leading-snug hover:text-[#800020] transition-colors"
+                          >
                             {item.Trade_Name}
-                          </h4>
+                          </Link>
                           {item.Trade_NameEN && (
                             <p className="text-[11px] text-slate-400 truncate italic">
                               {item.Trade_NameEN}
@@ -593,6 +603,15 @@ export default function OrderDetailPage({ forcedDocNo }: OrderDetailPageProps = 
                             <span>SKU: <span className="text-slate-600">{item.Trade_Id}</span></span>
                             <span>•</span>
                             <span>หน่วย: <strong className="text-slate-700">{item.Unit_Name || 'หน่วย'}</strong></span>
+                            {item.Trade_TrakDay_Text ? (
+                              <>
+                                <span>•</span>
+                                <span className="inline-flex items-center gap-1 text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded text-[10px]">
+                                  <Truck className="w-2.5 h-2.5 text-slate-500" />
+                                  <span>จัดส่ง {item.Trade_TrakDay_Text}</span>
+                                </span>
+                              </>
+                            ) : null}
                           </div>
                         </div>
                       </div>
@@ -674,7 +693,7 @@ export default function OrderDetailPage({ forcedDocNo }: OrderDetailPageProps = 
           {/* DESKTOP VIEW (>= 640px) matching checkout */}
           <div className="hidden sm:block overflow-x-auto">
             <div className="min-w-[560px] sm:min-w-0">
-              <div className="divide-y divide-slate-100">
+              <div>
                 {order.items && order.items.length > 0 ? (
                   order.items.map((item, idx) => {
                     const unitPrice = Number(item.Sale_Price != null && item.Sale_Price > 0 ? item.Sale_Price : item.Sale_Price1 || 0);
@@ -693,21 +712,29 @@ export default function OrderDetailPage({ forcedDocNo }: OrderDetailPageProps = 
                       <div key={item.Trade_Id || idx} className="px-6 py-5">
                         <div className="flex items-center justify-between">
                           {/* Product Image & Info */}
-                          <div className="flex items-center gap-3.5 min-w-0 flex-1 pr-4">
-                            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white border border-slate-100 rounded-[10px] apple-squircle-sm shrink-0 flex items-center justify-center overflow-hidden shadow-2xs">
+                          <div className="flex items-center gap-4 min-w-0 flex-1 pr-4">
+                            {/* Product Image: Large & Borderless matching cart */}
+                            <Link
+                              href={`/products/${encodeURIComponent(item.Trade_Id)}`}
+                              className="w-24 h-24 sm:w-28 sm:h-28 shrink-0 flex items-center justify-center select-none transition-transform hover:scale-105"
+                            >
                               <ProductImage
                                 src={imageSrc}
                                 alt={item.Trade_Name}
-                                objectFit="auto"
+                                objectFit="contain"
+                                className="w-full h-full"
                                 priority={true}
                                 fallbackSrc="/images/ubr_beverage_logo.png"
                               />
-                            </div>
+                            </Link>
 
-                            <div className="min-w-0 space-y-1">
-                              <h3 className="font-bold text-slate-900 text-xs sm:text-sm line-clamp-2 leading-snug">
+                            <div className="min-w-0 flex-1 space-y-1">
+                              <Link
+                                href={`/products/${encodeURIComponent(item.Trade_Id)}`}
+                                className="font-bold text-slate-900 text-xs sm:text-sm line-clamp-2 leading-snug hover:text-[#800020] transition-colors"
+                              >
                                 {item.Trade_Name}
-                              </h3>
+                              </Link>
                               {item.Trade_NameEN && (
                                 <p className="text-[11px] text-slate-400 truncate italic">
                                   {item.Trade_NameEN}
@@ -715,6 +742,12 @@ export default function OrderDetailPage({ forcedDocNo }: OrderDetailPageProps = 
                               )}
                               <div className="flex items-center gap-2 flex-wrap text-[11px] text-slate-500">
                                 <span>SKU: <span className="text-slate-600">{item.Trade_Id}</span></span>
+                                {item.Trade_TrakDay_Text ? (
+                                  <span className="inline-flex items-center gap-1 text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full text-[11px]">
+                                    <Truck className="w-3 h-3 text-slate-500" />
+                                    <span>จัดส่ง {item.Trade_TrakDay_Text}</span>
+                                  </span>
+                                ) : null}
                               </div>
                             </div>
                           </div>
@@ -773,7 +806,7 @@ export default function OrderDetailPage({ forcedDocNo }: OrderDetailPageProps = 
           </div>
 
           {/* Card Bottom Bar: Order Remark (Shopee Style) & Order Total */}
-          <div className="border-t border-dashed border-slate-200 px-4 sm:px-6 py-3.5 sm:py-4 flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4 bg-white">
+          <div className="border-t border-dashed border-slate-200 px-3.5 sm:px-6 py-3.5 sm:py-4 flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4 bg-white">
             <div className="flex-1 flex items-center gap-2.5 max-w-xl">
               <span className="text-xs sm:text-sm font-bold text-slate-700 whitespace-nowrap">
                 หมายเหตุ:
@@ -813,7 +846,7 @@ export default function OrderDetailPage({ forcedDocNo }: OrderDetailPageProps = 
           className="bg-white rounded-[14px] apple-squircle-card border border-slate-200 shadow-2xs overflow-hidden animate-order-slide-up"
           style={{ animationDelay: '120ms' }}
         >
-          <div className="p-4 sm:p-6">
+          <div className="p-3.5 sm:p-6">
             {/* Desktop View (>= sm): Single horizontal row perfectly centered */}
             <div className="hidden sm:flex sm:items-center justify-between gap-4">
               <div className="flex items-center gap-4 flex-wrap">
@@ -938,7 +971,7 @@ export default function OrderDetailPage({ forcedDocNo }: OrderDetailPageProps = 
           style={{ animationDelay: '140ms' }}
         >
           {/* Financial Breakdown */}
-          <div className="p-4 sm:p-6 bg-white space-y-3">
+          <div className="p-3.5 sm:p-6 bg-white space-y-3">
             <h3 className="font-bold text-sm sm:text-base text-slate-900">
               สรุปยอดคำสั่งซื้อ
             </h3>
@@ -971,7 +1004,7 @@ export default function OrderDetailPage({ forcedDocNo }: OrderDetailPageProps = 
           </div>
 
           {/* Bottom Action Footer inside Summary Card matching Checkout pattern */}
-          <div className="border-t border-dashed border-slate-200 p-4 sm:px-6 sm:py-5 flex items-center justify-between gap-2.5 bg-white">
+          <div className="border-t border-dashed border-slate-200 p-3.5 sm:px-6 sm:py-5 flex items-center justify-between gap-2.5 bg-white">
             <Link
               href="/"
               className="flex-1 sm:flex-initial min-w-0 px-4 sm:px-6 py-2.5 rounded-full bg-slate-100 hover:bg-slate-200 active:scale-[0.98] text-slate-800 font-bold text-xs sm:text-sm transition-all text-center min-h-[42px] inline-flex items-center justify-center whitespace-nowrap"

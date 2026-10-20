@@ -217,6 +217,13 @@ export function HomePageClient({ initialCollapsed = false }: HomePageClientProps
   const activeTypeId = persistedTypeId;
   const activeSubMenuId = persistedSubMenuId;
 
+  const isAllActive =
+    (!activeTypeId || activeTypeId === 'all') &&
+    !activeSubMenuId &&
+    (!activeCategory || activeCategory === 'all' || activeCategory === 'ทั้งหมด');
+
+  const showBanner = isAllActive && !urlSearch.trim();
+
   // 1. จัดการ Scroll Restoration: บันทึกตำแหน่ง scroll ขณะเลื่อนหน้าจอ และก่อน Reload / นำทาง
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -436,6 +443,8 @@ export function HomePageClient({ initialCollapsed = false }: HomePageClientProps
               depositPrice: dep.depositPrice,
               depositPercent: dep.depositPercent,
               leadTimeDays: 0,
+              leadTimeText: (p.Trade_TrakDay_Text || p.leadTimeText || '').trim(),
+              Trade_TrakDay_Text: (p.Trade_TrakDay_Text || p.leadTimeText || '').trim(),
               origin: p.Trade_Province || '',
               alcoholPercent: 0,
               description: p.Trade_Note || '',
@@ -586,12 +595,12 @@ export function HomePageClient({ initialCollapsed = false }: HomePageClientProps
   };
 
   if (authLoading) {
-    return <HomeSkeleton isSidebarCollapsed={isSidebarCollapsed} />;
+    return <HomeSkeleton isSidebarCollapsed={isSidebarCollapsed} showBanner={showBanner} />;
   }
 
   return (
     <div className="flex-1 flex flex-col w-full bg-white">
-      <div className="max-w-[1600px] mx-auto w-full px-4 sm:px-6 lg:px-8 pt-3 pb-12 flex-1 flex flex-col">
+      <div className="max-w-[1600px] mx-auto w-full px-2 sm:px-6 lg:px-8 pt-0 pb-12 flex-1 flex flex-col">
         {/* Main Layout: Left Category Sidebar + Right (Banner Carousel + Product Catalog) */}
         <div className="flex-1 flex flex-col sm:flex-row gap-4 lg:gap-6 items-start w-full">
           {/* Left Category Sidebar (Type as main menu, Type_SubMenu as sub menu - Perfectly aligned with Banner) */}
@@ -610,9 +619,9 @@ export function HomePageClient({ initialCollapsed = false }: HomePageClientProps
           />
 
           {/* Right Main Content Area: Top Banner Carousel + Product Catalog */}
-          <div className="flex-1 min-w-0 w-full flex flex-col space-y-6">
-            {/* Top Banner Carousel (Hidden when searching) */}
-            {!urlSearch.trim() && (
+          <div className={`flex-1 min-w-0 w-full flex flex-col ${!showBanner ? 'pt-4 sm:pt-5' : ''} space-y-6`}>
+            {/* Top Banner Carousel (Shown only when "ทั้งหมด" is active and not searching) */}
+            {showBanner && (
               <BannerCarousel />
             )}
 

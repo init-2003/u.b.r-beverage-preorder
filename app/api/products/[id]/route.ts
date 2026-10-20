@@ -51,7 +51,8 @@ export async function GET(
           RTRIM(LTRIM(ISNULL(t.Trade_Province, ''))) AS Trade_Province,
           RTRIM(LTRIM(ISNULL(t.Trade_Note, ''))) AS Trade_Note,
           RTRIM(LTRIM(ISNULL(t.Detail_Trade, ''))) AS Detail_Trade,
-          ISNULL(t.Trade_deposit, 0) AS Trade_deposit
+          ISNULL(t.Trade_deposit, 0) AS Trade_deposit,
+          RTRIM(LTRIM(ISNULL(t.Trade_TrakDay_Text, ''))) AS Trade_TrakDay_Text
         FROM Trade t
         LEFT JOIN Type_SubMenu sm ON t.SubMenu_ID_Ref = sm.SubMenu_ID
         WHERE t.Trade_Id = @id
@@ -69,6 +70,7 @@ export async function GET(
     const { depositPercent, depositPrice } = calcDeposit(activePrice, p.Trade_deposit);
 
     const origin = (p.Trade_Province || '').trim();
+    const trakDay = (p.Trade_TrakDay_Text || '').trim();
 
     const product = {
       id: p.Trade_Id,
@@ -90,6 +92,8 @@ export async function GET(
       depositPrice,
       depositPercent,
       leadTimeDays: 0,
+      leadTimeText: trakDay,
+      Trade_TrakDay_Text: trakDay,
       origin,
       description: (p.Detail_Trade || p.Trade_Note || '').trim(),
       imageUrl: resolveProductImageUrl(p.Trade_Part_Image),

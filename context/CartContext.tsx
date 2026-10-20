@@ -14,6 +14,7 @@ export interface CartItem {
   depositPercent?: number;
   qty: number;
   image?: string;
+  leadTimeText?: string;
 }
 
 export interface AddedModalData {

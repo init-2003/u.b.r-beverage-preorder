@@ -135,7 +135,7 @@ function AccountSidebar({ activeItemOverride }: { activeItemOverride?: string })
         </div>
 
         {/* Mobile Accordion Menu with Edge-to-Edge Layout & Dashed Line Dividers matching Image 2 */}
-        <div className={`-mx-4 sm:-mx-6 lg:mx-0 ${isMobileMenuOpen ? 'mobile-menu-enter mt-2 mb-3' : 'mobile-menu-exit mt-0 mb-0'}`}>
+        <div className={`-mx-2 sm:-mx-6 lg:mx-0 ${isMobileMenuOpen ? 'mobile-menu-enter mt-2 mb-3' : 'mobile-menu-exit mt-0 mb-0'}`}>
           <div className="overflow-hidden min-h-0">
             <div className="w-full bg-white border-t border-dashed border-slate-200">
               <nav className="text-sm sm:text-base">
@@ -149,7 +149,7 @@ function AccountSidebar({ activeItemOverride }: { activeItemOverride?: string })
                         handleItemClick(item.key);
                         setIsMobileMenuOpen(false);
                       }}
-                      className={`w-full flex items-center px-4 sm:px-6 py-3.5 border-b border-dashed border-slate-200 transition-colors duration-150 cursor-pointer active:bg-slate-50 ${
+                      className={`w-full flex items-center px-3.5 sm:px-6 py-3.5 border-b border-dashed border-slate-200 transition-colors duration-150 cursor-pointer active:bg-slate-50 ${
                         isActive
                           ? 'font-bold text-slate-900'
                           : 'font-normal text-slate-600 hover:text-slate-900'
@@ -167,7 +167,7 @@ function AccountSidebar({ activeItemOverride }: { activeItemOverride?: string })
                       setIsMobileMenuOpen(false);
                       logout();
                     }}
-                    className="w-full text-left px-4 sm:px-6 py-3.5 text-red-600 hover:bg-red-50/50 active:bg-red-50 transition-colors flex items-center gap-2 cursor-pointer font-medium text-sm sm:text-base border-b border-dashed border-slate-200"
+                    className="w-full text-left px-3.5 sm:px-6 py-3.5 text-red-600 hover:bg-red-50/50 active:bg-red-50 transition-colors flex items-center gap-2 cursor-pointer font-medium text-sm sm:text-base border-b border-dashed border-slate-200"
                   >
                     <LogOut className="w-4 h-4" />
                     <span>ออกจากระบบ</span>
@@ -257,7 +257,7 @@ export default function AccountLayout({
   if (authLoading) {
     return (
       <div className="flex-1 flex flex-col bg-white py-8">
-        <div className="max-w-[1600px] mx-auto w-full px-4 sm:px-6 lg:px-8">
+        <div className="max-w-[1600px] mx-auto w-full px-2 sm:px-6 lg:px-8">
           <div className="w-full flex flex-col lg:flex-row gap-8 lg:gap-12 items-start">
             <Suspense fallback={<AccountSidebarFallback activeItemOverride={activeItemOverride} />}>
               <AccountSidebar activeItemOverride={activeItemOverride} />
@@ -280,7 +280,7 @@ export default function AccountLayout({
 
   return (
     <div className="flex-1 flex flex-col bg-white py-8">
-      <div className="max-w-[1600px] mx-auto w-full px-4 sm:px-6 lg:px-8">
+      <div className="max-w-[1600px] mx-auto w-full px-2 sm:px-6 lg:px-8">
         <div className="w-full flex flex-col lg:flex-row gap-8 lg:gap-12 items-start">
           {/* Persistent Left Sidebar */}
           <Suspense fallback={<AccountSidebarFallback activeItemOverride={activeItemOverride} />}>

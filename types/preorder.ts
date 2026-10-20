@@ -107,7 +107,9 @@ export interface Product {
   description?: string;    // Trade_Note
   imageUrl: string;        // Trade_Part_Image (fallback: /images/ubr_beverage_logo.png)
   isPopular?: boolean;
-  leadTimeDays?: number;   // Optional (ไม่มีคอลัมน์ใน DB ตาม business rule)
+  leadTimeDays?: number;   // Optional
+  leadTimeText?: string;   // Trade.Trade_TrakDay_Text (เช่น '5-14 วัน', '5-30 วัน')
+  Trade_TrakDay_Text?: string; // Trade.Trade_TrakDay_Text
   alcoholPercent?: number; // Optional
 }
 
@@ -127,6 +129,7 @@ export interface CartItem {
   depositPercent?: number;
   qty: number;
   image?: string;
+  leadTimeText?: string;   // Trade.Trade_TrakDay_Text
 }
 
 // ==========================================
@@ -150,6 +153,8 @@ export interface OrderItemDetail {
   Type_Free?: string;
   Promotion_No?: string;
   fn_type_sale?: string;
+  Trade_TrakDay_Text?: string;
+  leadTimeText?: string;
 }
 
 /**
@@ -245,5 +250,6 @@ export interface CreateOrderPayload {
     typeName?: string;
     salePrice: number;
     depositPrice?: number;
+    leadTimeText?: string;
   }>;
 }

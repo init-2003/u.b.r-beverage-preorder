@@ -71,7 +71,7 @@ function AccountContent() {
 
         {/* 1. Header Profile Overview Card */}
         <div className="bg-white rounded-[14px] apple-squircle-card border border-slate-200 shadow-xs overflow-hidden">
-          <div className="p-4 sm:p-6">
+          <div className="p-3.5 sm:p-6">
             <div className="flex items-center gap-4">
               <div className="w-14 h-14 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center shadow-2xs shrink-0">
                 <User className="w-7 h-7 text-slate-500 stroke-[1.8]" />
@@ -94,12 +94,12 @@ function AccountContent() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
           {/* Card 2: ข้อมูลการติดต่อ */}
           <div className="bg-white rounded-[14px] apple-squircle-card border border-slate-200 shadow-xs overflow-hidden">
-            <div className="px-4 sm:px-6 py-3.5 border-b border-slate-200 bg-white sm:bg-slate-50/50">
+            <div className="px-3.5 sm:px-6 py-3.5 border-b border-slate-200 bg-white sm:bg-slate-50/50">
               <h3 className="font-bold text-slate-900 text-sm sm:text-base">
                 ข้อมูลการติดต่อ
               </h3>
             </div>
-            <div className="p-4 sm:p-6 divide-y divide-slate-100 text-xs sm:text-sm">
+            <div className="p-3.5 sm:p-6 divide-y divide-slate-100 text-xs sm:text-sm">
               <div className="flex justify-between items-center py-2.5 gap-3">
                 <span className="text-slate-500">ชื่อผู้ติดต่อ / ผู้ประสานงาน:</span>
                 <span className="font-medium text-slate-900 text-right truncate">
@@ -129,12 +129,12 @@ function AccountContent() {
 
           {/* Card 3: ข้อมูลภาษีและการออกเอกสาร */}
           <div className="bg-white rounded-[14px] apple-squircle-card border border-slate-200 shadow-xs overflow-hidden">
-            <div className="px-4 sm:px-6 py-3.5 border-b border-slate-200 bg-white sm:bg-slate-50/50">
+            <div className="px-3.5 sm:px-6 py-3.5 border-b border-slate-200 bg-white sm:bg-slate-50/50">
               <h3 className="font-bold text-slate-900 text-sm sm:text-base">
                 ข้อมูลภาษีและการออกเอกสาร
               </h3>
             </div>
-            <div className="p-4 sm:p-6 divide-y divide-slate-100 text-xs sm:text-sm">
+            <div className="p-3.5 sm:p-6 divide-y divide-slate-100 text-xs sm:text-sm">
               <div className="flex justify-between items-center py-2.5 gap-3">
                 <span className="text-slate-500">เลขประจำตัวผู้เสียภาษี:</span>
                 <span className="font-medium text-slate-900 text-right tabular-nums">

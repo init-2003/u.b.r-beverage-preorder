@@ -54,7 +54,7 @@ export function CategorySidebarSkeleton() {
 export function BannerCarouselSkeleton() {
   return (
     <div
-      className="relative apple-squircle-card shadow-sm border border-slate-200/80 bg-slate-950 overflow-hidden select-none pointer-events-none w-full h-[150px] sm:h-[200px] md:h-[240px] lg:h-[280px] xl:h-[300px] shrink-0"
+      className="relative rounded-none shadow-sm border border-t-0 border-slate-200/80 bg-slate-950 overflow-hidden select-none pointer-events-none w-full aspect-[1440/586] shrink-0"
       aria-hidden="true"
     >
       {/* Dark Animated Shimmer Background */}
@@ -153,8 +153,10 @@ export function ProductGridSkeleton({
  */
 export function HomeSkeleton({
   isSidebarCollapsed: propCollapsed = false,
+  showBanner = true,
 }: {
   isSidebarCollapsed?: boolean;
+  showBanner?: boolean;
 } = {}) {
   const [collapsed, setCollapsed] = React.useState<boolean>(propCollapsed);
 
@@ -164,12 +166,12 @@ export function HomeSkeleton({
 
   return (
     <div className="flex-1 flex flex-col w-full bg-white select-none">
-      <div className="max-w-[1600px] mx-auto w-full px-4 sm:px-6 lg:px-8 pt-3 pb-12 flex-1 flex flex-col">
+      <div className="max-w-[1600px] mx-auto w-full px-2 sm:px-6 lg:px-8 pt-0 pb-12 flex-1 flex flex-col">
         {/* Main Layout Skeleton: Left Category Sidebar + Right (Banner + Product Grid) */}
         <div className="flex-1 flex flex-col sm:flex-row gap-4 lg:gap-6 items-start w-full">
           {/* Left Category Sidebar Skeleton (Supports both Open and Collapsed states) */}
           <aside
-            className={`hidden sm:block shrink-0 sticky top-[127px] self-start z-30 transition-[width,margin,opacity] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+            className={`hidden sm:block shrink-0 sticky top-[115px] self-start z-30 transition-[width,margin,opacity] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
               collapsed
                 ? 'w-0 -mr-4 lg:-mr-6 overflow-hidden opacity-0 pointer-events-none'
                 : 'w-60 xl:w-64 opacity-100'
@@ -177,7 +179,7 @@ export function HomeSkeleton({
             aria-label="เมนูหมวดหมู่สินค้า (กำลังโหลด)"
             aria-hidden={collapsed}
           >
-            <div className="w-60 xl:w-64 bg-white rounded-[14px] apple-squircle-card border border-slate-200 shadow-2xs overflow-hidden flex flex-col p-4 sm:p-5 max-h-[calc(100vh-147px)]">
+            <div className="w-60 xl:w-64 bg-white rounded-[14px] apple-squircle-card overflow-hidden flex flex-col p-4 sm:p-5 max-h-[calc(100vh-135px)]">
               {/* Top Pinned Option: "ทั้งหมด" + Collapse Button Placeholder */}
               <div className="shrink-0 pb-2 mb-1 border-b border-slate-100 flex items-center justify-between gap-1">
                 <div className="h-5 w-14 rounded-xs skeleton-shimmer" />
@@ -192,9 +194,9 @@ export function HomeSkeleton({
           </aside>
 
           {/* Right Content Area Skeleton: Banner + Product Grid */}
-          <div className="flex-1 min-w-0 w-full flex flex-col space-y-6">
-            {/* Top Banner Carousel Skeleton */}
-            <BannerCarouselSkeleton />
+          <div className={`flex-1 min-w-0 w-full flex flex-col ${!showBanner ? 'pt-4 sm:pt-5' : ''} space-y-6`}>
+            {/* Top Banner Carousel Skeleton (Shown only when "ทั้งหมด" is active) */}
+            {showBanner && <BannerCarouselSkeleton />}
 
             {/* Product Grid Skeleton (10 cards in 5 cols when collapsed, 8 cards in 4 cols when open) */}
             <ProductGridSkeleton

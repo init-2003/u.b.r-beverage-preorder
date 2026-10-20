@@ -207,6 +207,7 @@ const OrderItemSchema = z.object(
     salePrice: priceField,
     depositPrice: depositField,
     remark: textOrUndefined(200),
+    leadTimeText: textOrUndefined(100),
   },
   'ข้อมูลไม่ถูกต้อง'
 );
@@ -242,6 +243,7 @@ const CartItemSchema = z.object({
   depositPrice: depositField,
   qty: qtyField,
   image: textOrUndefined(500),
+  leadTimeText: textOrUndefined(100),
 });
 
 /** POST /api/cart — รายการที่ไม่ผ่านจะถูกข้าม (คง behavior เดิม) แทนที่จะปฏิเสธทั้งตะกร้า */

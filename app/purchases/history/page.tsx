@@ -272,7 +272,7 @@ function PurchasesContent() {
                   className="bg-white rounded-[14px] apple-squircle-card border border-slate-200 shadow-xs overflow-hidden transition-all hover:border-slate-300 hover:shadow-md"
                 >
                   {/* Row 1: Order Info + Amount */}
-                  <div className="px-4 sm:px-6 py-3.5 flex items-center justify-between gap-3">
+                  <div className="px-3.5 sm:px-6 py-3.5 flex items-center justify-between gap-3">
                     {/* Left: Order Number & Date */}
                     <div className="flex flex-col gap-0.5">
                       <div className="flex items-center gap-2">
@@ -305,7 +305,7 @@ function PurchasesContent() {
                   </div>
 
                   {/* Row 2: Status + Actions */}
-                  <div className="px-4 sm:px-6 py-2.5 border-t border-slate-200 bg-slate-50/40 flex flex-wrap items-center justify-between gap-3">
+                  <div className="px-3.5 sm:px-6 py-2.5 border-t border-slate-200 bg-slate-50/40 flex flex-wrap items-center justify-between gap-3">
                     {/* Left: Status Stamp */}
                     <div className="shrink-0">
                       {isPending ? (

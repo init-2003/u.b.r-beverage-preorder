@@ -120,7 +120,7 @@ export default function LoginClient() {
       </header>
 
       {/* Main Area: ตรงกลาง สีขาว โปร่งสบาย ไร้กรอบการ์ด (Seamless Canvas) */}
-      <div className="flex-1 flex flex-col items-center justify-start pt-12 sm:pt-16 md:pt-20 pb-16 px-4 bg-white">
+      <div className="flex-1 flex flex-col items-center justify-start pt-12 sm:pt-16 md:pt-20 pb-16 px-3 sm:px-4 bg-white">
         <div className="w-full max-w-[420px] text-slate-800">
           {/* Header: หัวข้อ "เข้าสู่ระบบ" ชิดซ้าย พร้อมคำอธิบายบรรทัดถัดไป */}
           <LoginHeader

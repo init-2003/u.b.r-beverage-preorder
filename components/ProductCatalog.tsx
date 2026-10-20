@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Product } from '@/types/preorder';
-import { Check, ShoppingCart } from 'lucide-react';
+import { Check, ShoppingCart, Truck } from 'lucide-react';
 import { EmptySearchIllustration } from './EmptySearchIllustration';
 import { EmptyCategoryIllustration } from './EmptyCategoryIllustration';
 import { useCart } from '@/context/CartContext';
@@ -73,6 +73,7 @@ export default function ProductCatalog({
         depositPrice: product.depositPrice,
         depositPercent: product.depositPercent,
         image: product.imageUrl,
+        leadTimeText: product.leadTimeText,
         qty: 1,
       },
       1
@@ -156,11 +157,11 @@ export default function ProductCatalog({
   });
 
   return (
-    <div className="space-y-6">
+    <div className="flex-1 flex flex-col space-y-6">
 
       {/* Active Search Results Feedback */}
       {activeSearch && (
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 pt-1 sm:pt-1.5">
           <div className="flex items-center gap-2 text-sm text-slate-600">
             <span>ผลการค้นหาสำหรับ: <strong className="text-slate-900 font-bold">&quot;{activeSearch}&quot;</strong></span>
             <button
@@ -188,7 +189,7 @@ export default function ProductCatalog({
           isSidebarCollapsed={isSidebarCollapsed}
         />
       ) : filteredProducts.length === 0 ? (
-        <div className="min-h-[380px] sm:min-h-[440px] text-center flex flex-col items-center justify-center space-y-4 p-8 sm:p-12 my-2">
+        <div className="flex-1 min-h-[500px] sm:min-h-[580px] lg:min-h-[calc(100vh-260px)] text-center flex flex-col items-center justify-center space-y-4 p-8 sm:p-12 my-auto animate-cart-slide-up">
           <div className="flex items-center justify-center mx-auto">
             {activeSearch ? (
               <EmptySearchIllustration className="w-36 h-36 sm:w-40 sm:h-40" />
@@ -312,6 +313,12 @@ export default function ProductCatalog({
                           {product.name}
                         </h3>
                       </Link>
+                      {product.leadTimeText ? (
+                        <div className="flex items-center gap-1 text-[11px] text-slate-500 font-normal pt-0.5 truncate" title={`ระยะเวลาจัดส่ง: ${product.leadTimeText}`}>
+                          <Truck className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                          <span>จัดส่ง {product.leadTimeText}</span>
+                        </div>
+                      ) : null}
                     </div>
 
                     {/* Bottom Section: Price, Deposit & Action Buttons */}

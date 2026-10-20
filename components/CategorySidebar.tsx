@@ -228,7 +228,7 @@ const CategorySidebar = React.memo(function CategorySidebar({
   return (
     <aside
       ref={asideRef}
-      className={`hidden sm:block shrink-0 sticky top-[127px] self-start z-30 transition-[width,margin,opacity] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+      className={`hidden sm:block shrink-0 sticky top-[115px] self-start z-30 transition-[width,margin,opacity] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
         isCollapsed
           ? 'w-0 -mr-4 lg:-mr-6 overflow-hidden opacity-0 pointer-events-none'
           : 'w-60 xl:w-64 opacity-100'
@@ -237,7 +237,7 @@ const CategorySidebar = React.memo(function CategorySidebar({
       aria-hidden={isCollapsed}
     >
       <div
-        className="w-60 xl:w-64 bg-white rounded-[14px] apple-squircle-card border border-slate-200 shadow-2xs overflow-hidden flex flex-col p-4 sm:p-5 max-h-[calc(100vh-147px)] transition-[max-height] duration-200"
+        className="w-60 xl:w-64 bg-white rounded-[14px] apple-squircle-card overflow-hidden flex flex-col p-4 sm:p-5 max-h-[calc(100vh-135px)] transition-[max-height] duration-200"
       >
           {/* Top Pinned Option: "ทั้งหมด" + Collapse Button '<' */}
           <div className="shrink-0 pb-2 mb-1 border-b border-slate-100 flex items-center justify-between gap-1">
